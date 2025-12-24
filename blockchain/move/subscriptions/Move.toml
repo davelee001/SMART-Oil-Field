@@ -1,0 +1,6 @@
+﻿[package]
+name = "subscriptions"
+version = "0.1.0"
+
+[addresses]
+subscriptions = "0xA11CE5"
