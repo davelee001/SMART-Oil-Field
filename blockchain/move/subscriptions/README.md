@@ -19,6 +19,17 @@ Minimal Aptos Move module to manage subscription plans and user subscriptions.
 ## Unit Test
 A simple end-to-end unit test is included in the module (`#[test]`), covering `init`, `create_plan`, `subscribe`, `get_subscription`, and `cancel`.
 
+## Events
+- `PlanCreated { plan_id, duration_secs }` — emitted under the admin on `create_plan`.
+- `Subscribed { user, plan_admin, plan_id, expires_at }` — emitted under the plan admin on `subscribe`.
+- `Canceled { user }` — emitted under the plan admin on `cancel`.
+
+You can query events via the Aptos CLI or SDKs by using the admin account's event handles. For quick inspection with CLI:
+
+```powershell
+aptos account events --profile <admin_profile> --query all --limit 10
+```
+
 ## Prerequisites
 - Windows PowerShell
 - Aptos CLI installed and on PATH
@@ -44,3 +55,4 @@ Pop-Location
 ## Notes
 - This package avoids coin transfers; it only manages plan metadata and user subscription state.
 - For payments, integrate an escrow or coin transfer flow in a separate module and call it from `subscribe`.
+- Events are included for off-chain indexing; production apps should index these for analytics and user notifications.
