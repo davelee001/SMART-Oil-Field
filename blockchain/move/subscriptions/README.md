@@ -12,8 +12,7 @@ Minimal Aptos Move module to manage subscription plans and user subscriptions.
 ## Functions
 - `init(admin: &signer)` — initializes admin + empty plans under the caller
 - `create_plan(admin: &signer, plan_id: u64, duration_secs: u64)` — registers a plan
-- `subscribe(user: &signer, plan_admin: address, plan_id: u64, now_secs: u64)` — subscribes caller to a plan
-- `subscribe_now(user: &signer, plan_admin: address, plan_id: u64)` — subscribes using on-chain time
+- `subscribe(user: &signer, plan_admin: address, plan_id: u64)` — subscribes using on-chain time
 - `cancel(user: &signer)` — cancels the caller's subscription
 - `get_subscription(addr: address)` — returns `(exists, plan_admin, plan_id, expires_at)`
 - `is_active(addr: address, now_secs: u64)` — returns whether subscription is active
@@ -22,7 +21,7 @@ Minimal Aptos Move module to manage subscription plans and user subscriptions.
 - `renew(user: &signer, now_secs: u64)` — extends expiry from `max(current_expires, now_secs)` by plan duration
 
 ## Unit Test
-A simple end-to-end unit test is included in the module (`#[test]`), covering `init`, `create_plan`, `subscribe`, `get_subscription`, and `cancel`.
+A simple end-to-end unit test is included in the module (`#[test]`), covering `init`, `create_plan`, `subscribe`, `get_subscription`, and `cancel`, and asserting event counters for `PlanCreated`, `Subscribed`, and `Canceled`.
 
 ## Events
 - `PlanCreated { plan_id, duration_secs }` — emitted under the admin on `create_plan`.

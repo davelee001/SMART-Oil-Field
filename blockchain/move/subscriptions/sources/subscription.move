@@ -1,4 +1,5 @@
-﻿module subscriptions::subscription {
+﻿address subscriptions {
+module subscription {
     use std::signer;
     use std::vector;
     use aptos_std::event;
@@ -56,26 +57,21 @@
         event::emit_event(&mut admin_cap.plan_created_events, PlanCreated{ plan_id, duration_secs });
     }
 
-    /// Subscribe the caller to a plan defined by `plan_admin` and `plan_id`. `now_secs` is the current timestamp.
-    public entry fun subscribe(user: &signer, plan_admin: address, plan_id: u64, now_secs: u64) acquires Admin, Plans, UserSubscription {
+    /// Subscribe the caller to a plan defined by `plan_admin` and `plan_id` using on-chain time.
+    public entry fun subscribe(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription {
         let user_addr = signer::address_of(user);
         assert!(!exists<UserSubscription>(user_addr), 4);
         let plans = borrow_global<Plans>(plan_admin);
         let (found, idx) = find_index(&plans.ids, plan_id);
         assert!(found, 5);
         let dur = *vector::borrow(&plans.durations, idx);
+        let now_secs = timestamp::now_seconds();
         let expires = now_secs + dur;
         move_to(user, UserSubscription{ plan_admin, plan_id, expires_at: expires });
 
         // emit event under the plan admin
         let admin_cap = borrow_global_mut<Admin>(plan_admin);
         event::emit_event(&mut admin_cap.subscribed_events, Subscribed{ user: user_addr, plan_admin, plan_id, expires_at: expires });
-    }
-
-    /// Subscribe using on-chain time source
-    public entry fun subscribe_now(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription {
-        let now = timestamp::now_seconds();
-        subscribe(user, plan_admin, plan_id, now);
     }
 
     /// Cancel the caller's current subscription (if any)
@@ -168,20 +164,32 @@
         init(admin);
         create_plan(admin, 1, 3600);
 
-        // subscribe at timestamp 100
-        subscribe(user, admin_addr, 1, 100);
+        // set on-chain timestamp to 100 and subscribe
+        timestamp::set_time_has_started_for_testing_only();
+        timestamp::set_time_for_testing_only(100);
+        subscribe(user, admin_addr, 1);
         let (ok, a, pid, exp) = get_subscription(user_addr);
         assert!(ok, 1000);
         assert!(a == admin_addr, 1001);
         assert!(pid == 1, 1002);
         assert!(exp == 3700, 1003);
 
-        // cancel and verify removal
+        // event assertions: one plan created, one subscribed so far
+        let admin_read = borrow_global<Admin>(admin_addr);
+        assert!(event::counter(&admin_read.plan_created_events) == 1, 1100);
+        assert!(event::counter(&admin_read.subscribed_events) == 1, 1101);
+        assert!(event::counter(&admin_read.canceled_events) == 0, 1102);
+
+        // cancel and verify removal + event counter
         cancel(user);
         assert!(!exists<UserSubscription>(user_addr), 1004);
+        let admin_read2 = borrow_global<Admin>(admin_addr);
+        assert!(event::counter(&admin_read2.canceled_events) == 1, 1103);
 
         // re-subscribe and test renewal + status helpers
-        subscribe(user, admin_addr, 1, 100);
+        // re-set on-chain time to 100 for deterministic expiry and re-subscribe
+        timestamp::set_time_for_testing_only(100);
+        subscribe(user, admin_addr, 1);
         // initially active at t=200
         assert!(is_active(user_addr, 200), 1005);
         assert!(time_remaining(user_addr, 200) == 3500, 1006);
@@ -192,5 +200,10 @@
         assert!(exp2 == 7300, 1008);
         assert!(is_active(user_addr, 5000), 1009);
         assert!(time_remaining(user_addr, 5000) == 2300, 1010);
+
+        // event assertions: subscribed should count initial subscribe + resubscribe + renew (reuse Subscribed)
+        let admin_read3 = borrow_global<Admin>(admin_addr);
+        assert!(event::counter(&admin_read3.subscribed_events) == 3, 1104);
     }
+}
 }

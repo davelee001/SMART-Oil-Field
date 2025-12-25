@@ -10,4 +10,4 @@ app.get('/health', (_req, res) => {
 });
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-app.listen(port, () => console.log(TS backend listening on ));
+app.listen(port, () => console.log(`TS backend listening on ${port}`));
