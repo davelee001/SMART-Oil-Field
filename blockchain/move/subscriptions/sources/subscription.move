@@ -2,6 +2,7 @@
     use std::signer;
     use std::vector;
     use aptos_std::event;
+    use aptos_std::timestamp;
 
     /// Event types
     struct PlanCreated has drop, store { plan_id: u64, duration_secs: u64 }
@@ -71,6 +72,12 @@
         event::emit_event(&mut admin_cap.subscribed_events, Subscribed{ user: user_addr, plan_admin, plan_id, expires_at: expires });
     }
 
+    /// Subscribe using on-chain time source
+    public entry fun subscribe_now(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription {
+        let now = timestamp::now_seconds();
+        subscribe(user, plan_admin, plan_id, now);
+    }
+
     /// Cancel the caller's current subscription (if any)
     public entry fun cancel(user: &signer) acquires Admin, UserSubscription {
         let addr = signer::address_of(user);
@@ -94,6 +101,50 @@
         } else {
             (false, @0x0, 0, 0)
         }
+    }
+
+    /// Read-only: return whether subscription is active relative to `now_secs`
+    public fun is_active(addr: address, now_secs: u64): bool acquires UserSubscription {
+        if (exists<UserSubscription>(addr)) {
+            let s = borrow_global<UserSubscription>(addr);
+            s.expires_at > now_secs
+        } else { false }
+    }
+
+    /// Read-only: remaining seconds until expiry; 0 if none or expired
+    public fun time_remaining(addr: address, now_secs: u64): u64 acquires UserSubscription {
+        if (exists<UserSubscription>(addr)) {
+            let s = borrow_global<UserSubscription>(addr);
+            if (s.expires_at > now_secs) { s.expires_at - now_secs } else { 0 }
+        } else { 0 }
+    }
+
+    /// Read-only: get plan duration; returns (found, duration)
+    public fun get_plan_duration(plan_admin: address, plan_id: u64): (bool, u64) acquires Plans {
+        if (exists<Plans>(plan_admin)) {
+            let plans = borrow_global<Plans>(plan_admin);
+            let (found, idx) = find_index(&plans.ids, plan_id);
+            if (found) { (true, *vector::borrow(&plans.durations, idx)) } else { (false, 0) }
+        } else { (false, 0) }
+    }
+
+    /// Renew existing subscription by extending from max(current_expiry, now_secs)
+    public entry fun renew(user: &signer, now_secs: u64) acquires Admin, Plans, UserSubscription {
+        let addr = signer::address_of(user);
+        assert!(exists<UserSubscription>(addr), 7);
+        let s_mut = borrow_global_mut<UserSubscription>(addr);
+        let plan_admin = s_mut.plan_admin;
+        let plan_id = s_mut.plan_id;
+        let plans = borrow_global<Plans>(plan_admin);
+        let (found, idx) = find_index(&plans.ids, plan_id);
+        assert!(found, 8);
+        let dur = *vector::borrow(&plans.durations, idx);
+        let base = if (s_mut.expires_at > now_secs) { s_mut.expires_at } else { now_secs };
+        s_mut.expires_at = base + dur;
+
+        // emit event under the plan admin (reuse Subscribed for renewals)
+        let admin_cap = borrow_global_mut<Admin>(plan_admin);
+        event::emit_event(&mut admin_cap.subscribed_events, Subscribed{ user: addr, plan_admin, plan_id, expires_at: s_mut.expires_at });
     }
 
     /// Linear search for plan id; returns (found, index)
@@ -128,5 +179,18 @@
         // cancel and verify removal
         cancel(user);
         assert!(!exists<UserSubscription>(user_addr), 1004);
+
+        // re-subscribe and test renewal + status helpers
+        subscribe(user, admin_addr, 1, 100);
+        // initially active at t=200
+        assert!(is_active(user_addr, 200), 1005);
+        assert!(time_remaining(user_addr, 200) == 3500, 1006);
+        // renew at time equal to expiry to extend by another duration
+        renew(user, 3700);
+        let (ok2, _, _, exp2) = get_subscription(user_addr);
+        assert!(ok2, 1007);
+        assert!(exp2 == 7300, 1008);
+        assert!(is_active(user_addr, 5000), 1009);
+        assert!(time_remaining(user_addr, 5000) == 2300, 1010);
     }
 }
