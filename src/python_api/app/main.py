@@ -113,3 +113,49 @@ def export_csv(device_id: Optional[str] = None, ts_from: Optional[int] = None, t
     header = 'id,device_id,ts,temperature,pressure,status'
     lines = [header] + [f"{r[0]},{r[1]},{r[2]},{r[3]},{r[4]},{r[5]}" for r in rows]
     return "\n".join(lines)
+
+@app.get('/api/telemetry/stats')
+def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None):
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    base = 'FROM telemetry'
+    clauses = []
+    params = []
+    if device_id:
+        clauses.append('device_id = ?')
+        params.append(device_id)
+    if ts_from is not None:
+        clauses.append('ts >= ?')
+        params.append(ts_from)
+    if ts_to is not None:
+        clauses.append('ts <= ?')
+        params.append(ts_to)
+    where = (' WHERE ' + ' AND '.join(clauses)) if clauses else ''
+    # aggregates
+    q = (
+        'SELECT COUNT(*) as count,'
+        ' MIN(temperature), MAX(temperature), AVG(temperature),'
+        ' MIN(pressure), MAX(pressure), AVG(pressure) '
+        + base + where
+    )
+    cur.execute(q, tuple(params))
+    row = cur.fetchone()
+    count = row[0] if row and row[0] is not None else 0
+    tmin = row[1]
+    tmax = row[2]
+    tavg = row[3]
+    pmin = row[4]
+    pmax = row[5]
+    pavg = row[6]
+    # latest status
+    q2 = 'SELECT status FROM telemetry' + where + ' ORDER BY ts DESC LIMIT 1'
+    cur.execute(q2, tuple(params))
+    row2 = cur.fetchone()
+    latest_status = row2[0] if row2 else None
+    conn.close()
+    return {
+        'count': count,
+        'temperature': {'min': tmin, 'max': tmax, 'avg': tavg},
+        'pressure': {'min': pmin, 'max': pmax, 'avg': pavg},
+        'latest_status': latest_status,
+    }
