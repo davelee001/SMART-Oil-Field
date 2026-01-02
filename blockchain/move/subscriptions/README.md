@@ -24,6 +24,8 @@ Aptos Move module to manage subscription plans with APT payment integration and 
 - `init(admin: &signer)` — initializes admin + empty plans under the caller
 - `create_plan(admin: &signer, plan_id: u64, duration_secs: u64, price_octas: u64)` — registers a plan with pricing (1 APT = 100,000,000 octas)
 - `subscribe(user: &signer, plan_admin: address, plan_id: u64)` — subscribes using on-chain time, validates balance, and transfers payment to admin
+- `subscribe_with_code(user: &signer, plan_admin: address, plan_id: u64, discount_code: vector<u8>)` — subscribes with optional promotional discount code
+- `create_discount_code(admin: &signer, code: vector<u8>, discount_percent: u64, expiry_timestamp: u64, max_uses: u64)` — creates a promotional discount code (admin only)
 - `cancel(user: &signer)` — cancels the caller's subscription (no refund)
 - `get_subscription(addr: address)` — returns `(exists, plan_admin, plan_id, expires_at)`
 - `is_active(addr: address, now_secs: u64)` — returns whether subscription is active
@@ -42,6 +44,7 @@ A simple end-to-end unit test is included in the module (`#[test]`), covering `i
 - `PaymentReceived { from, plan_id, amount_octas }` — emitted under the plan admin when payment is received.
 - `PaymentFailed { from, plan_id, required_octas, reason }` — emitted when payment validation fails (e.g., insufficient balance).
 - `DiscountApplied { user, plan_id, original_price, discounted_price, month }` — emitted when seasonal discount is applied.
+- `DiscountCodeUsed { user, code, discount_percent, savings }` — emitted when a promotional code is successfully used.
 
 You can query events via the Aptos CLI or SDKs by using the admin account's event handles. For quick inspection with CLI:
 
@@ -103,5 +106,19 @@ renew(user, timestamp::now_seconds());
 - **Discount Months**: March (3), August (8), October (10)
 - **Discount Amount**: 30% off the plan price
 - **Applied To**: New subscriptions only (not renewals)
+
+## Promotional Discount Codes
+- **Create Codes**: Admins can create promotional discount codes with custom percentages, expiry times, and usage limits
+- **Usage**: Users can subscribe with `subscribe_with_code(user, admin, plan_id, b"PROMO2024")` to apply a discount
+- **Validation**: Codes are validated for expiry and usage limits before application
+- **Stacking**: If both seasonal discount and promo code are valid, the **higher discount** is applied
+- **Example**:
+  ```move
+  // Admin creates a 50% off code, expires timestamp 1735689600, unlimited uses
+  create_discount_code(admin, b"HALFPRICE", 50, 1735689600, 0);
+  
+  // User subscribes with code
+  subscribe_with_code(user, admin_address, 1, b"HALFPRICE");
+  ```
 - **Event**: `DiscountApplied` event logs all discount applications
 - **Example**: 1 APT plan → 0.7 APT during discount months

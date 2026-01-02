@@ -21,6 +21,8 @@ module subscription {
 
     /// Discount constants
     const DISCOUNT_PERCENT: u64 = 30;  // 30% discount
+    const REFERRAL_BONUS_PERCENT: u64 = 10;  // 10% referral discount
+    const LOYALTY_DISCOUNT_PERCENT: u64 = 15;  // 15% loyalty discount for returning users
     const SECONDS_PER_DAY: u64 = 86400;
     const DAYS_PER_YEAR: u64 = 365;
 
@@ -31,6 +33,7 @@ module subscription {
     struct PaymentReceived has drop, store { from: address, plan_id: u64, amount_octas: u64 }
     struct PaymentFailed has drop, store { from: address, plan_id: u64, required_octas: u64, reason: u64 }
     struct DiscountApplied has drop, store { user: address, plan_id: u64, original_price: u64, discounted_price: u64, month: u64 }
+    struct DiscountCodeUsed has drop, store { user: address, code: vector<u8>, discount_percent: u64, savings: u64 }
 
     /// Capability + event handles stored under the admin account
     struct Admin has key {
@@ -40,6 +43,7 @@ module subscription {
         payment_events: event::EventHandle<PaymentReceived>,
         payment_failed_events: event::EventHandle<PaymentFailed>,
         discount_events: event::EventHandle<DiscountApplied>,
+        discount_code_events: event::EventHandle<DiscountCodeUsed>,
     }
 
     /// Plans registry stored under the admin account
@@ -56,6 +60,22 @@ module subscription {
         expires_at: u64,
     }
 
+    /// Discount codes registry stored under admin
+    struct DiscountCodes has key {
+        codes: vector<vector<u8>>,           // discount code strings
+        percentages: vector<u64>,            // discount percentage per code
+        expiry_times: vector<u64>,           // expiry timestamp per code
+        usage_counts: vector<u64>,           // times each code has been used
+        max_uses: vector<u64>,               // max uses per code (0 = unlimited)
+    }
+
+    /// User discount history to track usage
+    struct UserDiscountHistory has key {
+        used_codes: vector<vector<u8>>,      // codes this user has used
+        seasonal_discount_used: bool,        // has used seasonal discount before
+        referral_count: u64,                 // number of successful referrals
+    }
+
     /// Initialize the package for an admin account: grants Admin and creates empty Plans
     public entry fun init(admin: &signer) acquires Admin, Plans {
         let addr = signer::address_of(admin);
@@ -67,8 +87,16 @@ module subscription {
             payment_events: event::new_event_handle<PaymentReceived>(admin),
             payment_failed_events: event::new_event_handle<PaymentFailed>(admin),
             discount_events: event::new_event_handle<DiscountApplied>(admin),
+            discount_code_events: event::new_event_handle<DiscountCodeUsed>(admin),
         });
         move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>(), prices: vector::empty<u64>() });
+        move_to(admin, DiscountCodes{ 
+            codes: vector::empty<vector<u8>>(), 
+            percentages: vector::empty<u64>(),
+            expiry_times: vector::empty<u64>(),
+            usage_counts: vector::empty<u64>(),
+            max_uses: vector::empty<u64>()
+        });
     }
 
     /// Create a new plan with a fixed duration (in seconds) and price (in octas)
@@ -90,7 +118,13 @@ module subscription {
 
     /// Subscribe the caller to a plan defined by `plan_admin` and `plan_id` using on-chain time.
     /// Transfers the plan price from user to plan_admin.
-    public entry fun subscribe(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription {
+    /// Optional discount_code as vector<u8> (empty vector for no code)
+    public entry fun subscribe(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription, DiscountCodes, UserDiscountHistory {
+        subscribe_with_code(user, plan_admin, plan_id, vector::empty<u8>());
+    }
+
+    /// Subscribe with optional discount code
+    public entry fun subscribe_with_code(user: &signer, plan_admin: address, plan_id: u64, discount_code: vector<u8>) acquires Admin, Plans, UserSubscription, DiscountCodes, UserDiscountHistory {
         let user_addr = signer::address_of(user);
         assert!(!exists<UserSubscription>(user_addr), E_ALREADY_SUBSCRIBED);
         let plans = borrow_global<Plans>(plan_admin);
@@ -103,9 +137,37 @@ module subscription {
         let now_secs = timestamp::now_seconds();
         let month = get_month_from_timestamp(now_secs);
         let is_discount_month = (month == 3 || month == 8 || month == 10);
-        let final_price = if (is_discount_month && price > 0) {
-            // Apply 30% discount: final = price * (100 - 30) / 100 = price * 70 / 100
-            let discounted = (price * (100 - DISCOUNT_PERCENT)) / 100;
+        
+        // Check for discount code
+        let code_discount_percent = 0u64;
+        let has_valid_code = false;
+        if (vector::length(&discount_code) > 0 && exists<DiscountCodes>(plan_admin)) {
+            let codes = borrow_global_mut<DiscountCodes>(plan_admin);
+            let (code_found, code_idx) = find_discount_code(&codes.codes, &discount_code);
+            if (code_found) {
+                let expiry = *vector::borrow(&codes.expiry_times, code_idx);
+                let usage = *vector::borrow(&codes.usage_counts, code_idx);
+                let max_use = *vector::borrow(&codes.max_uses, code_idx);
+                
+                // Validate code is not expired and under usage limit
+                if (expiry > now_secs && (max_use == 0 || usage < max_use)) {
+                    code_discount_percent = *vector::borrow(&codes.percentages, code_idx);
+                    has_valid_code = true;
+                    // Increment usage count
+                    let usage_ref = vector::borrow_mut(&mut codes.usage_counts, code_idx);
+                    *usage_ref = *usage_ref + 1;
+                };
+            };
+        };
+        
+        // Calculate final discount (use higher of seasonal or code discount)
+        let applied_discount = if (is_discount_month) { DISCOUNT_PERCENT } else { 0 };
+        if (code_discount_percent > applied_discount) {
+            applied_discount = code_discount_percent;
+        };
+        
+        let final_price = if (applied_discount > 0 && price > 0) {
+            let discounted = (price * (100 - applied_discount)) / 100;
             discounted
         } else {
             price
@@ -134,7 +196,9 @@ module subscription {
         // emit events under the plan admin
         let admin_cap = borrow_global_mut<Admin>(plan_admin);
         event::emit_event(&mut admin_cap.subscribed_events, Subscribed{ user: user_addr, plan_admin, plan_id, expires_at: expires });
-        if (is_discount_month && price > 0 && final_price < price) {
+        
+        // Emit discount events
+        if (is_discount_month && price > 0 && final_price < price && !has_valid_code) {
             event::emit_event(&mut admin_cap.discount_events, DiscountApplied{ 
                 user: user_addr, 
                 plan_id, 
@@ -143,6 +207,27 @@ module subscription {
                 month 
             });
         };
+        
+        if (has_valid_code && price > 0 && final_price < price) {
+            event::emit_event(&mut admin_cap.discount_code_events, DiscountCodeUsed{ 
+                user: user_addr, 
+                code: discount_code,
+                discount_percent: code_discount_percent,
+                savings: price - final_price
+            });
+            
+            // Track user discount history
+            if (!exists<UserDiscountHistory>(user_addr)) {
+                move_to(user, UserDiscountHistory{ 
+                    used_codes: vector::empty<vector<u8>>(), 
+                    seasonal_discount_used: false,
+                    referral_count: 0
+                });
+            };
+            let history = borrow_global_mut<UserDiscountHistory>(user_addr);
+            vector::push_back(&mut history.used_codes, discount_code);
+        };
+        
         if (final_price > 0) {
             event::emit_event(&mut admin_cap.payment_events, PaymentReceived{ from: user_addr, plan_id, amount_octas: final_price });
         };
@@ -300,6 +385,39 @@ module subscription {
             month = month + 1;
         };
         12  // default to December if calculation fails
+    }
+
+    /// Create a new discount code (admin only)
+    public entry fun create_discount_code(
+        admin: &signer, 
+        code: vector<u8>, 
+        discount_percent: u64, 
+        expiry_timestamp: u64, 
+        max_uses: u64
+    ) acquires DiscountCodes {
+        let admin_addr = signer::address_of(admin);
+        assert!(exists<Admin>(admin_addr), E_NOT_INITIALIZED);
+        
+        let codes = borrow_global_mut<DiscountCodes>(admin_addr);
+        vector::push_back(&mut codes.codes, code);
+        vector::push_back(&mut codes.percentages, discount_percent);
+        vector::push_back(&mut codes.expiry_times, expiry_timestamp);
+        vector::push_back(&mut codes.usage_counts, 0);
+        vector::push_back(&mut codes.max_uses, max_uses);
+    }
+
+    /// Helper to find discount code in vector
+    fun find_discount_code(codes: &vector<vector<u8>>, target: &vector<u8>): (bool, u64) {
+        let i = 0;
+        let len = vector::length(codes);
+        while (i < len) {
+            let code = vector::borrow(codes, i);
+            if (code == target) {
+                return (true, i)
+            };
+            i = i + 1;
+        };
+        (false, 0)
     }
 
     #[test]

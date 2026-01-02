@@ -341,9 +341,17 @@
                         <strong>Create Plan</strong>
                         <span>Define subscription pricing tiers</span>
                     </li>
+                    <li class="action-item" onclick="showModal('createCode')">
+                        <strong>Create Discount Code</strong>
+                        <span>Set up promotional discount codes</span>
+                    </li>
                     <li class="action-item" onclick="showModal('subscribe')">
                         <strong>Subscribe</strong>
                         <span>Subscribe with APT payment (30% off in promo months)</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('subscribeWithCode')">
+                        <strong>Subscribe with Code</strong>
+                        <span>Use promo code for additional discount</span>
                     </li>
                     <li class="action-item" onclick="showModal('renew')">
                         <strong>Renew</strong>
@@ -384,6 +392,15 @@
                     </ul>
                 </div>
                 <div>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Promo Codes</h3>
+                    <ul class="feature-list">
+                        <li>Custom discount percentages</li>
+                        <li>Expiry time validation</li>
+                        <li>Usage limit tracking</li>
+                        <li>Stackable with seasonal discounts</li>
+                    </ul>
+                </div>
+                <div>
                     <h3 style="color: #1e3c72; margin-bottom: 15px;">Error Handling</h3>
                     <ul class="feature-list">
                         <li>10 named error codes</li>
@@ -398,7 +415,7 @@
                         <li>PaymentReceived events</li>
                         <li>PaymentFailed events</li>
                         <li>DiscountApplied events</li>
-                        <li>Subscription lifecycle events</li>
+                        <li>DiscountCodeUsed events</li>
                     </ul>
                 </div>
             </div>
@@ -406,8 +423,9 @@
 
         <footer>
             <div class="discount-banner">
-                <h3>🎉 Special Offer!</h3>
-                <p>Subscribe in March, August, or October and get 30% OFF your first subscription!</p>
+                <h3>🎉 Special Offers!</h3>
+                <p>Subscribe in March, August, or October and get 30% OFF your first subscription! Use promo codes for
+                    additional discounts.</p>
             </div>
         </footer>
     </div>
@@ -477,6 +495,21 @@
                 <button onclick="alert('Blockchain integration required. Use Aptos CLI to create plans.')">Create Plan</button>
                 <button class="close-btn" onclick="closeModal()">Close</button>
             `,
+            createCode: `
+                <h3>Create Discount Code</h3>
+                <label>Discount Code</label>
+                <input type="text" id="codeText" placeholder="PROMO2024" value="PROMO2024">
+                <label>Discount Percentage</label>
+                <input type="number" id="codePercent" placeholder="50" value="50" min="1" max="100">
+                <p style="color: #6c757d; font-size: 0.9em;">Percentage off the plan price</p>
+                <label>Expiry Timestamp (Unix seconds)</label>
+                <input type="number" id="codeExpiry" value="${Math.floor(Date.now() / 1000) + 2592000}">
+                <p style="color: #6c757d; font-size: 0.9em;">Current time + 30 days</p>
+                <label>Max Uses (0 = unlimited)</label>
+                <input type="number" id="codeMaxUses" placeholder="0" value="0">
+                <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::create_discount_code --args string:[code] u64:[percent] u64:[expiry] u64:[max_uses]')">Create Code</button>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
             subscribe: `
                 <h3>Subscribe to Plan</h3>
                 <p style="color: #28a745; margin-bottom: 15px;">✅ Current Month: ${getCurrentMonth()}</p>
@@ -486,6 +519,20 @@
                 <label>Plan ID</label>
                 <input type="number" id="subPlanId" placeholder="1" value="1">
                 <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::subscribe --args address:[admin] u64:[plan_id]')">Subscribe Now</button>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            subscribeWithCode: `
+                <h3>Subscribe with Promo Code</h3>
+                <p style="color: #28a745; margin-bottom: 15px;">✅ Current Month: ${getCurrentMonth()}</p>
+                <p style="color: #f5576c; margin-bottom: 15px;">${isDiscountMonth() ? '🎉 30% Seasonal Discount Active!' : 'Use promo code for discount'}</p>
+                <label>Plan Admin Address</label>
+                <input type="text" id="adminAddrCode" placeholder="0xA11CE5">
+                <label>Plan ID</label>
+                <input type="number" id="subPlanIdCode" placeholder="1" value="1">
+                <label>Discount Code</label>
+                <input type="text" id="discountCode" placeholder="PROMO2024">
+                <p style="color: #6c757d; font-size: 0.9em;">Higher of seasonal or promo discount will apply</p>
+                <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::subscribe_with_code --args address:[admin] u64:[plan_id] string:[code]')">Subscribe with Code</button>
                 <button class="close-btn" onclick="closeModal()">Close</button>
             `,
             renew: `
@@ -511,6 +558,7 @@
                     <li>PaymentReceived - Payment successful</li>
                     <li>PaymentFailed - Payment validation failed</li>
                     <li>DiscountApplied - Seasonal discount applied</li>
+                    <li>DiscountCodeUsed - Promo code redeemed</li>
                     <li>Canceled - Subscription canceled</li>
                 </ul>
                 <h4 style="color: #1e3c72; margin-top: 20px;">Error Codes</h4>
@@ -519,6 +567,12 @@
                     <li>E_COIN_NOT_REGISTERED (10)</li>
                     <li>E_ALREADY_SUBSCRIBED (4)</li>
                     <li>E_PLAN_NOT_FOUND (5)</li>
+                </ul>
+                <h4 style="color: #1e3c72; margin-top: 20px;">Discount Types</h4>
+                <ul class="feature-list">
+                    <li>Seasonal: 30% off in March, August, October</li>
+                    <li>Promo Codes: Custom percentages with expiry</li>
+                    <li>Smart Stacking: Highest discount applied</li>
                 </ul>
                 <button class="close-btn" onclick="closeModal()">Close</button>
             `
