@@ -19,12 +19,18 @@ module subscription {
     const E_INSUFFICIENT_BALANCE: u64 = 9;
     const E_COIN_NOT_REGISTERED: u64 = 10;
 
+    /// Discount constants
+    const DISCOUNT_PERCENT: u64 = 30;  // 30% discount
+    const SECONDS_PER_DAY: u64 = 86400;
+    const DAYS_PER_YEAR: u64 = 365;
+
     /// Event types
     struct PlanCreated has drop, store { plan_id: u64, duration_secs: u64, price_octas: u64 }
     struct Subscribed has drop, store { user: address, plan_admin: address, plan_id: u64, expires_at: u64 }
     struct Canceled has drop, store { user: address }
     struct PaymentReceived has drop, store { from: address, plan_id: u64, amount_octas: u64 }
     struct PaymentFailed has drop, store { from: address, plan_id: u64, required_octas: u64, reason: u64 }
+    struct DiscountApplied has drop, store { user: address, plan_id: u64, original_price: u64, discounted_price: u64, month: u64 }
 
     /// Capability + event handles stored under the admin account
     struct Admin has key {
@@ -33,6 +39,7 @@ module subscription {
         canceled_events: event::EventHandle<Canceled>,
         payment_events: event::EventHandle<PaymentReceived>,
         payment_failed_events: event::EventHandle<PaymentFailed>,
+        discount_events: event::EventHandle<DiscountApplied>,
     }
 
     /// Plans registry stored under the admin account
@@ -59,6 +66,7 @@ module subscription {
             canceled_events: event::new_event_handle<Canceled>(admin),
             payment_events: event::new_event_handle<PaymentReceived>(admin),
             payment_failed_events: event::new_event_handle<PaymentFailed>(admin),
+            discount_events: event::new_event_handle<DiscountApplied>(admin),
         });
         move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>(), prices: vector::empty<u64>() });
     }
@@ -91,32 +99,52 @@ module subscription {
         let dur = *vector::borrow(&plans.durations, idx);
         let price = *vector::borrow(&plans.prices, idx);
         
+        // Apply seasonal discount for new subscribers in August, October, March
+        let now_secs = timestamp::now_seconds();
+        let month = get_month_from_timestamp(now_secs);
+        let is_discount_month = (month == 3 || month == 8 || month == 10);
+        let final_price = if (is_discount_month && price > 0) {
+            // Apply 30% discount: final = price * (100 - 30) / 100 = price * 70 / 100
+            let discounted = (price * (100 - DISCOUNT_PERCENT)) / 100;
+            discounted
+        } else {
+            price
+        };
+        
         // Validate and transfer payment from user to admin
-        if (price > 0) {
+        if (final_price > 0) {
             assert!(coin::is_account_registered<AptosCoin>(user_addr), E_COIN_NOT_REGISTERED);
             let balance = coin::balance<AptosCoin>(user_addr);
-            if (balance < price) {
+            if (balance < final_price) {
                 let admin_cap = borrow_global_mut<Admin>(plan_admin);
                 event::emit_event(&mut admin_cap.payment_failed_events, PaymentFailed{ 
                     from: user_addr, 
                     plan_id, 
-                    required_octas: price,
+                    required_octas: final_price,
                     reason: E_INSUFFICIENT_BALANCE 
                 });
                 abort E_INSUFFICIENT_BALANCE
             };
-            coin::transfer<AptosCoin>(user, plan_admin, price);
+            coin::transfer<AptosCoin>(user, plan_admin, final_price);
         };
         
-        let now_secs = timestamp::now_seconds();
         let expires = now_secs + dur;
         move_to(user, UserSubscription{ plan_admin, plan_id, expires_at: expires });
 
         // emit events under the plan admin
         let admin_cap = borrow_global_mut<Admin>(plan_admin);
         event::emit_event(&mut admin_cap.subscribed_events, Subscribed{ user: user_addr, plan_admin, plan_id, expires_at: expires });
-        if (price > 0) {
-            event::emit_event(&mut admin_cap.payment_events, PaymentReceived{ from: user_addr, plan_id, amount_octas: price });
+        if (is_discount_month && price > 0 && final_price < price) {
+            event::emit_event(&mut admin_cap.discount_events, DiscountApplied{ 
+                user: user_addr, 
+                plan_id, 
+                original_price: price, 
+                discounted_price: final_price,
+                month 
+            });
+        };
+        if (final_price > 0) {
+            event::emit_event(&mut admin_cap.payment_events, PaymentReceived{ from: user_addr, plan_id, amount_octas: final_price });
         };
     }
 
@@ -232,6 +260,46 @@ module subscription {
             i = i + 1;
         };
         (false, 0)
+    }
+
+    /// Helper: get month (1-12) from Unix timestamp
+    /// Simplified calculation: assumes 365-day years, doesn't account for leap years perfectly
+    fun get_month_from_timestamp(ts: u64): u64 {
+        // Days since Unix epoch
+        let days = ts / SECONDS_PER_DAY;
+        // Days in current year (approximate)
+        let day_of_year = (days % DAYS_PER_YEAR);
+        // Approximate month based on 30-day months
+        // Jan=1, Feb=2, Mar=3, Apr=4, May=5, Jun=6, Jul=7, Aug=8, Sep=9, Oct=10, Nov=11, Dec=12
+        let cumulative_days = vector[
+            0,   // placeholder for index 0
+            0,   // Jan starts at day 0
+            31,  // Feb starts at day 31
+            59,  // Mar starts at day 59
+            90,  // Apr starts at day 90
+            120, // May starts at day 120
+            151, // Jun starts at day 151
+            181, // Jul starts at day 181
+            212, // Aug starts at day 212
+            243, // Sep starts at day 243
+            273, // Oct starts at day 273
+            304, // Nov starts at day 304
+            334  // Dec starts at day 334
+        ];
+        
+        let month = 1u64;
+        while (month <= 12) {
+            let start_day = *vector::borrow(&cumulative_days, month);
+            if (month == 12) {
+                return 12
+            };
+            let next_start = *vector::borrow(&cumulative_days, month + 1);
+            if (day_of_year >= start_day && day_of_year < next_start) {
+                return month
+            };
+            month = month + 1;
+        };
+        12  // default to December if calculation fails
     }
 
     #[test]
