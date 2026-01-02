@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -33,7 +33,7 @@
         }
 
         h1 {
-            color: #667eea;
+            color: #1e3c72;
             font-size: 2.5em;
             margin-bottom: 10px;
         }
@@ -63,7 +63,7 @@
         }
 
         .card h2 {
-            color: #667eea;
+            color: #1e3c72;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
@@ -103,7 +103,7 @@
             margin-bottom: 10px;
             background: #f8f9fa;
             border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #1e3c72;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -163,7 +163,7 @@
         }
 
         button {
-            background: #667eea;
+            background: #1e3c72;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -176,7 +176,7 @@
         }
 
         button:hover {
-            background: #5568d3;
+            background: #2a5298;
         }
 
         .modal {
@@ -207,7 +207,7 @@
         }
 
         .modal-content h3 {
-            color: #667eea;
+            color: #1e3c72;
             margin-bottom: 20px;
         }
 
@@ -238,7 +238,7 @@
         }
 
         .discount-banner {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #4a6fa5 100%);
             color: white;
             padding: 20px;
             border-radius: 10px;
@@ -249,6 +249,18 @@
         .discount-banner h3 {
             margin-bottom: 10px;
         }
+
+        footer {
+            margin-top: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        footer .discount-banner {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 
@@ -258,11 +270,6 @@
             <h1>🛢️ SMART Oil Field Project</h1>
             <p class="subtitle">IoT-Enabled Oil Field Management with Blockchain Subscriptions</p>
         </header>
-
-        <div class="discount-banner">
-            <h3>🎉 Special Offer!</h3>
-            <p>Subscribe in March, August, or October and get 30% OFF your first subscription!</p>
-        </div>
 
         <div class="grid">
             <!-- Python API Card -->
@@ -359,7 +366,7 @@
             <div class="grid"
                 style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
                 <div>
-                    <h3 style="color: #667eea; margin-bottom: 15px;">Payment Processing</h3>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Payment Processing</h3>
                     <ul class="feature-list">
                         <li>APT cryptocurrency payments</li>
                         <li>Pricing tiers in octas</li>
@@ -368,7 +375,7 @@
                     </ul>
                 </div>
                 <div>
-                    <h3 style="color: #667eea; margin-bottom: 15px;">Seasonal Discounts</h3>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Seasonal Discounts</h3>
                     <ul class="feature-list">
                         <li>30% off in March, August, October</li>
                         <li>Automatic discount application</li>
@@ -377,7 +384,7 @@
                     </ul>
                 </div>
                 <div>
-                    <h3 style="color: #667eea; margin-bottom: 15px;">Error Handling</h3>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Error Handling</h3>
                     <ul class="feature-list">
                         <li>10 named error codes</li>
                         <li>Insufficient balance checks</li>
@@ -386,7 +393,7 @@
                     </ul>
                 </div>
                 <div>
-                    <h3 style="color: #667eea; margin-bottom: 15px;">Event Tracking</h3>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Event Tracking</h3>
                     <ul class="feature-list">
                         <li>PaymentReceived events</li>
                         <li>PaymentFailed events</li>
@@ -396,6 +403,13 @@
                 </div>
             </div>
         </div>
+
+        <footer>
+            <div class="discount-banner">
+                <h3>🎉 Special Offer!</h3>
+                <p>Subscribe in March, August, or October and get 30% OFF your first subscription!</p>
+            </div>
+        </footer>
     </div>
 
     <!-- Modal -->
@@ -490,7 +504,7 @@
             `,
             blockchainInfo: `
                 <h3>Blockchain Contract Features</h3>
-                <h4 style="color: #667eea; margin-top: 20px;">Events</h4>
+                <h4 style="color: #1e3c72; margin-top: 20px;">Events</h4>
                 <ul class="feature-list">
                     <li>PlanCreated - New plan registered</li>
                     <li>Subscribed - User subscribed/renewed</li>
@@ -499,7 +513,7 @@
                     <li>DiscountApplied - Seasonal discount applied</li>
                     <li>Canceled - Subscription canceled</li>
                 </ul>
-                <h4 style="color: #667eea; margin-top: 20px;">Error Codes</h4>
+                <h4 style="color: #1e3c72; margin-top: 20px;">Error Codes</h4>
                 <ul class="feature-list">
                     <li>E_INSUFFICIENT_BALANCE (9)</li>
                     <li>E_COIN_NOT_REGISTERED (10)</li>
