@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART Oil Field - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .badge.python {
+            background: #3776ab;
+            color: white;
+        }
+
+        .badge.typescript {
+            background: #3178c6;
+            color: white;
+        }
+
+        .badge.blockchain {
+            background: #f7931a;
+            color: white;
+        }
+
+        .action-list {
+            list-style: none;
+        }
+
+        .action-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .action-item strong {
+            color: #495057;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .action-item span {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #495057;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li::before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status.online {
+            background: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+
+        .status.offline {
+            background: #dc3545;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: #dc3545;
+            margin-top: 10px;
+        }
+
+        .close-btn:hover {
+            background: #c82333;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .discount-banner {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .discount-banner h3 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🛢️ SMART Oil Field Project</h1>
+            <p class="subtitle">IoT-Enabled Oil Field Management with Blockchain Subscriptions</p>
+        </header>
+
+        <div class="discount-banner">
+            <h3>🎉 Special Offer!</h3>
+            <p>Subscribe in March, August, or October and get 30% OFF your first subscription!</p>
+        </div>
+
+        <div class="grid">
+            <!-- Python API Card -->
+            <div class="card">
+                <span class="badge python">Python FastAPI</span>
+                <h2>
+                    <span class="status online"></span>
+                    Telemetry API
+                </h2>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    Real-time oilfield sensor data management
+                </p>
+                <ul class="action-list">
+                    <li class="action-item" onclick="showModal('ingest')">
+                        <strong>POST /api/telemetry</strong>
+                        <span>Ingest sensor data (temperature, pressure, status)</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('list')">
+                        <strong>GET /api/telemetry</strong>
+                        <span>Query telemetry with filters</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('stats')">
+                        <strong>GET /api/telemetry/stats</strong>
+                        <span>View aggregated statistics</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('export')">
+                        <strong>GET /api/telemetry/export</strong>
+                        <span>Export data as CSV</span>
+                    </li>
+                </ul>
+                <button onclick="window.open('http://127.0.0.1:8000/docs', '_blank')">
+                    Open API Documentation
+                </button>
+            </div>
+
+            <!-- TypeScript Backend Card -->
+            <div class="card">
+                <span class="badge typescript">TypeScript Express</span>
+                <h2>
+                    <span class="status offline"></span>
+                    Backend Service
+                </h2>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    Middleware and gateway services
+                </p>
+                <ul class="feature-list">
+                    <li>Express REST API</li>
+                    <li>CORS enabled</li>
+                    <li>Health check endpoint</li>
+                    <li>TypeScript strict mode</li>
+                </ul>
+                <button onclick="startService('ts')">
+                    Start TypeScript Backend
+                </button>
+            </div>
+
+            <!-- Blockchain Subscriptions Card -->
+            <div class="card">
+                <span class="badge blockchain">Aptos Move</span>
+                <h2>
+                    <span class="status offline"></span>
+                    Subscription Smart Contract
+                </h2>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    Blockchain-based subscription management
+                </p>
+                <ul class="action-list">
+                    <li class="action-item" onclick="showModal('createPlan')">
+                        <strong>Create Plan</strong>
+                        <span>Define subscription pricing tiers</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('subscribe')">
+                        <strong>Subscribe</strong>
+                        <span>Subscribe with APT payment (30% off in promo months)</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('renew')">
+                        <strong>Renew</strong>
+                        <span>Extend subscription with payment</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('cancel')">
+                        <strong>Cancel</strong>
+                        <span>Cancel active subscription</span>
+                    </li>
+                </ul>
+                <button onclick="showModal('blockchainInfo')">
+                    View Features & Events
+                </button>
+            </div>
+        </div>
+
+        <!-- Features Overview -->
+        <div class="card">
+            <h2>✨ Project Features</h2>
+            <div class="grid"
+                style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Payment Processing</h3>
+                    <ul class="feature-list">
+                        <li>APT cryptocurrency payments</li>
+                        <li>Pricing tiers in octas</li>
+                        <li>Balance validation</li>
+                        <li>Payment failure tracking</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Seasonal Discounts</h3>
+                    <ul class="feature-list">
+                        <li>30% off in March, August, October</li>
+                        <li>Automatic discount application</li>
+                        <li>Discount event logging</li>
+                        <li>New subscriber promotions</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Error Handling</h3>
+                    <ul class="feature-list">
+                        <li>10 named error codes</li>
+                        <li>Insufficient balance checks</li>
+                        <li>Coin registration validation</li>
+                        <li>Atomic transactions</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Event Tracking</h3>
+                    <ul class="feature-list">
+                        <li>PaymentReceived events</li>
+                        <li>PaymentFailed events</li>
+                        <li>DiscountApplied events</li>
+                        <li>Subscription lifecycle events</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modalContent">
+        </div>
+    </div>
+
+    <script>
+        const modalTemplates = {
+            ingest: `
+                <h3>Ingest Telemetry Data</h3>
+                <label>Device ID</label>
+                <input type="text" id="deviceId" placeholder="well-001" value="well-001">
+                <label>Temperature (°F)</label>
+                <input type="number" id="temperature" placeholder="75.5" value="75.5">
+                <label>Pressure (PSI)</label>
+                <input type="number" id="pressure" placeholder="200.0" value="200.0">
+                <label>Status</label>
+                <select id="status">
+                    <option value="OK">OK</option>
+                    <option value="WARN">WARN</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+                <button onclick="sendTelemetry()">Send Data</button>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            list: `
+                <h3>Query Telemetry Data</h3>
+                <label>Device ID (optional)</label>
+                <input type="text" id="queryDevice" placeholder="well-001">
+                <label>Limit</label>
+                <input type="number" id="queryLimit" value="10">
+                <button onclick="queryTelemetry()">Query Data</button>
+                <div id="queryResults" style="margin-top: 20px; max-height: 300px; overflow-y: auto;"></div>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            stats: `
+                <h3>Telemetry Statistics</h3>
+                <label>Device ID (optional)</label>
+                <input type="text" id="statsDevice" placeholder="well-001">
+                <button onclick="getStats()">Get Statistics</button>
+                <div id="statsResults" style="margin-top: 20px;"></div>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            export: `
+                <h3>Export Telemetry to CSV</h3>
+                <label>Device ID (optional)</label>
+                <input type="text" id="exportDevice" placeholder="well-001">
+                <label>Limit</label>
+                <input type="number" id="exportLimit" value="100">
+                <button onclick="exportCSV()">Download CSV</button>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            createPlan: `
+                <h3>Create Subscription Plan</h3>
+                <label>Plan ID</label>
+                <input type="number" id="planId" placeholder="1" value="1">
+                <label>Duration (seconds)</label>
+                <input type="number" id="duration" placeholder="2592000" value="2592000">
+                <p style="color: #6c757d; font-size: 0.9em;">2592000 = 30 days</p>
+                <label>Price (octas)</label>
+                <input type="number" id="price" placeholder="100000000" value="100000000">
+                <p style="color: #6c757d; font-size: 0.9em;">100000000 octas = 1 APT</p>
+                <button onclick="alert('Blockchain integration required. Use Aptos CLI to create plans.')">Create Plan</button>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            subscribe: `
+                <h3>Subscribe to Plan</h3>
+                <p style="color: #28a745; margin-bottom: 15px;">✅ Current Month: ${getCurrentMonth()}</p>
+                <p style="color: #f5576c; margin-bottom: 15px;">${isDiscountMonth() ? '🎉 30% Discount Active!' : '❌ No discount this month'}</p>
+                <label>Plan Admin Address</label>
+                <input type="text" id="adminAddr" placeholder="0xA11CE5">
+                <label>Plan ID</label>
+                <input type="number" id="subPlanId" placeholder="1" value="1">
+                <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::subscribe --args address:[admin] u64:[plan_id]')">Subscribe Now</button>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            renew: `
+                <h3>Renew Subscription</h3>
+                <p style="color: #6c757d; margin-bottom: 15px;">Extends your subscription by the plan duration</p>
+                <label>Current Timestamp</label>
+                <input type="number" id="renewTime" value="${Math.floor(Date.now() / 1000)}" readonly>
+                <button onclick="alert('Blockchain integration required. Use Aptos CLI to renew.')">Renew Subscription</button>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            cancel: `
+                <h3>Cancel Subscription</h3>
+                <p style="color: #dc3545; margin-bottom: 15px;">⚠️ Warning: Canceling does not refund payments</p>
+                <button onclick="alert('Blockchain integration required. Use Aptos CLI to cancel.')">Cancel Subscription</button>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `,
+            blockchainInfo: `
+                <h3>Blockchain Contract Features</h3>
+                <h4 style="color: #667eea; margin-top: 20px;">Events</h4>
+                <ul class="feature-list">
+                    <li>PlanCreated - New plan registered</li>
+                    <li>Subscribed - User subscribed/renewed</li>
+                    <li>PaymentReceived - Payment successful</li>
+                    <li>PaymentFailed - Payment validation failed</li>
+                    <li>DiscountApplied - Seasonal discount applied</li>
+                    <li>Canceled - Subscription canceled</li>
+                </ul>
+                <h4 style="color: #667eea; margin-top: 20px;">Error Codes</h4>
+                <ul class="feature-list">
+                    <li>E_INSUFFICIENT_BALANCE (9)</li>
+                    <li>E_COIN_NOT_REGISTERED (10)</li>
+                    <li>E_ALREADY_SUBSCRIBED (4)</li>
+                    <li>E_PLAN_NOT_FOUND (5)</li>
+                </ul>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            `
+        };
+
+        function showModal(type) {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            content.innerHTML = modalTemplates[type] || '<h3>Feature not available</h3><button class="close-btn" onclick="closeModal()">Close</button>';
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function getCurrentMonth() {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            return months[new Date().getMonth()];
+        }
+
+        function isDiscountMonth() {
+            const month = new Date().getMonth() + 1; // 1-12
+            return month === 3 || month === 8 || month === 10;
+        }
+
+        async function sendTelemetry() {
+            const data = {
+                device_id: document.getElementById('deviceId').value,
+                ts: Math.floor(Date.now() / 1000),
+                temperature: parseFloat(document.getElementById('temperature').value),
+                pressure: parseFloat(document.getElementById('pressure').value),
+                status: document.getElementById('status').value
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/telemetry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                alert(`Success! Created record ID: ${result.id}`);
+            } catch (error) {
+                alert(`Error: ${error.message}. Make sure the Python API is running.`);
+            }
+        }
+
+        async function queryTelemetry() {
+            const device = document.getElementById('queryDevice').value;
+            const limit = document.getElementById('queryLimit').value;
+            const url = `http://127.0.0.1:8000/api/telemetry?${device ? 'device_id=' + device + '&' : ''}limit=${limit}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                document.getElementById('queryResults').innerHTML = `
+                    <h4>Results (${data.length} records)</h4>
+                    <pre style="background: #f8f9fa; padding: 15px; border-radius: 8px; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function getStats() {
+            const device = document.getElementById('statsDevice').value;
+            const url = `http://127.0.0.1:8000/api/telemetry/stats${device ? '?device_id=' + device : ''}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                document.getElementById('statsResults').innerHTML = `
+                    <h4>Statistics</h4>
+                    <pre style="background: #f8f9fa; padding: 15px; border-radius: 8px;">${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function exportCSV() {
+            const device = document.getElementById('exportDevice').value;
+            const limit = document.getElementById('exportLimit').value;
+            const url = `http://127.0.0.1:8000/api/telemetry/export?${device ? 'device_id=' + device + '&' : ''}limit=${limit}`;
+            window.open(url, '_blank');
+        }
+
+        function startService(type) {
+            if (type === 'ts') {
+                alert('To start TypeScript backend, run:\\n\\ncd src/ts_backend\\nnpm install\\nnpm run dev\\n\\nOr use the VS Code task: "Run TS Backend"');
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('modal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+
+</html>
