@@ -41,6 +41,7 @@ A simple end-to-end unit test is included in the module (`#[test]`), covering `i
 - `Canceled { user }` — emitted under the plan admin on `cancel`.
 - `PaymentReceived { from, plan_id, amount_octas }` — emitted under the plan admin when payment is received.
 - `PaymentFailed { from, plan_id, required_octas, reason }` — emitted when payment validation fails (e.g., insufficient balance).
+- `DiscountApplied { user, plan_id, original_price, discounted_price, month }` — emitted when seasonal discount is applied.
 
 You can query events via the Aptos CLI or SDKs by using the admin account's event handles. For quick inspection with CLI:
 
@@ -72,9 +73,10 @@ Pop-Location
 
 ## Notes
 - **Payment Integration**: This module includes APT coin transfers from subscriber to plan admin on `subscribe` and `renew`.
+- **Seasonal Discounts**: New subscribers registering in **March, August, or October** automatically receive a **30% discount** on their first subscription payment. The discount is only applied on initial subscribe, not on renewals.
 - **Payment Validation**: Before transferring funds, the contract validates:
   - User account is registered for AptosCoin
-  - User has sufficient balance to cover the plan price
+  - User has sufficient balance to cover the plan price (after discount, if applicable)
   - If validation fails, a `PaymentFailed` event is emitted and the transaction aborts
 - **Pricing**: Prices are stored in octas (1 APT = 100,000,000 octas). Free plans can be created with `price_octas = 0`.
 - **No Refunds**: Canceling a subscription does not refund payments. Implement a separate refund mechanism if needed.
@@ -88,9 +90,18 @@ create_plan(admin, 1, 2592000, 100000000);  // Premium: 30 days, 1 APT
 create_plan(admin, 2, 604800, 10000000);    // Basic: 7 days, 0.1 APT
 create_plan(admin, 3, 259200, 0);           // Trial: 3 days, Free
 
-// User subscribes to basic plan (auto-transfers 0.1 APT)
+// User subscribes to basic plan
+// If subscribing in March, August, or October: pays 0.07 APT (30% off)
+// Otherwise: pays full 0.1 APT
 subscribe(user, admin_address, 2);
 
-// User renews (auto-transfers another 0.1 APT)
+// User renews (no discount on renewal, pays full price)
 renew(user, timestamp::now_seconds());
 ```
+
+## Seasonal Discount Details
+- **Discount Months**: March (3), August (8), October (10)
+- **Discount Amount**: 30% off the plan price
+- **Applied To**: New subscriptions only (not renewals)
+- **Event**: `DiscountApplied` event logs all discount applications
+- **Example**: 1 APT plan → 0.7 APT during discount months
