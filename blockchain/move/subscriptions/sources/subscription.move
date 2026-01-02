@@ -7,11 +7,24 @@ module subscription {
     use aptos_framework::coin;
     use aptos_framework::aptos_coin::AptosCoin;
 
+    /// Error codes
+    const E_ALREADY_INITIALIZED: u64 = 1;
+    const E_NOT_ADMIN: u64 = 2;
+    const E_PLAN_EXISTS: u64 = 3;
+    const E_ALREADY_SUBSCRIBED: u64 = 4;
+    const E_PLAN_NOT_FOUND: u64 = 5;
+    const E_NOT_SUBSCRIBED: u64 = 6;
+    const E_SUBSCRIPTION_NOT_FOUND: u64 = 7;
+    const E_PLAN_MISMATCH: u64 = 8;
+    const E_INSUFFICIENT_BALANCE: u64 = 9;
+    const E_COIN_NOT_REGISTERED: u64 = 10;
+
     /// Event types
     struct PlanCreated has drop, store { plan_id: u64, duration_secs: u64, price_octas: u64 }
     struct Subscribed has drop, store { user: address, plan_admin: address, plan_id: u64, expires_at: u64 }
     struct Canceled has drop, store { user: address }
     struct PaymentReceived has drop, store { from: address, plan_id: u64, amount_octas: u64 }
+    struct PaymentFailed has drop, store { from: address, plan_id: u64, required_octas: u64, reason: u64 }
 
     /// Capability + event handles stored under the admin account
     struct Admin has key {
@@ -19,6 +32,7 @@ module subscription {
         subscribed_events: event::EventHandle<Subscribed>,
         canceled_events: event::EventHandle<Canceled>,
         payment_events: event::EventHandle<PaymentReceived>,
+        payment_failed_events: event::EventHandle<PaymentFailed>,
     }
 
     /// Plans registry stored under the admin account
@@ -38,12 +52,13 @@ module subscription {
     /// Initialize the package for an admin account: grants Admin and creates empty Plans
     public entry fun init(admin: &signer) acquires Admin, Plans {
         let addr = signer::address_of(admin);
-        assert!(!exists<Admin>(addr), 1);
+        assert!(!exists<Admin>(addr), E_ALREADY_INITIALIZED);
         move_to(admin, Admin{
             plan_created_events: event::new_event_handle<PlanCreated>(admin),
             subscribed_events: event::new_event_handle<Subscribed>(admin),
             canceled_events: event::new_event_handle<Canceled>(admin),
             payment_events: event::new_event_handle<PaymentReceived>(admin),
+            payment_failed_events: event::new_event_handle<PaymentFailed>(admin),
         });
         move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>(), prices: vector::empty<u64>() });
     }
@@ -52,10 +67,10 @@ module subscription {
     /// Note: 1 APT = 100,000,000 octas
     public entry fun create_plan(admin: &signer, plan_id: u64, duration_secs: u64, price_octas: u64) acquires Admin, Plans {
         let addr = signer::address_of(admin);
-        assert!(exists<Admin>(addr), 2);
+        assert!(exists<Admin>(addr), E_NOT_ADMIN);
         let plans = borrow_global_mut<Plans>(addr);
         let (found, _) = find_index(&plans.ids, plan_id);
-        assert!(!found, 3);
+        assert!(!found, E_PLAN_EXISTS);
         vector::push_back(&mut plans.ids, plan_id);
         vector::push_back(&mut plans.durations, duration_secs);
         vector::push_back(&mut plans.prices, price_octas);
@@ -69,15 +84,27 @@ module subscription {
     /// Transfers the plan price from user to plan_admin.
     public entry fun subscribe(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription {
         let user_addr = signer::address_of(user);
-        assert!(!exists<UserSubscription>(user_addr), 4);
+        assert!(!exists<UserSubscription>(user_addr), E_ALREADY_SUBSCRIBED);
         let plans = borrow_global<Plans>(plan_admin);
         let (found, idx) = find_index(&plans.ids, plan_id);
-        assert!(found, 5);
+        assert!(found, E_PLAN_NOT_FOUND);
         let dur = *vector::borrow(&plans.durations, idx);
         let price = *vector::borrow(&plans.prices, idx);
         
-        // Transfer payment from user to admin
+        // Validate and transfer payment from user to admin
         if (price > 0) {
+            assert!(coin::is_account_registered<AptosCoin>(user_addr), E_COIN_NOT_REGISTERED);
+            let balance = coin::balance<AptosCoin>(user_addr);
+            if (balance < price) {
+                let admin_cap = borrow_global_mut<Admin>(plan_admin);
+                event::emit_event(&mut admin_cap.payment_failed_events, PaymentFailed{ 
+                    from: user_addr, 
+                    plan_id, 
+                    required_octas: price,
+                    reason: E_INSUFFICIENT_BALANCE 
+                });
+                abort E_INSUFFICIENT_BALANCE
+            };
             coin::transfer<AptosCoin>(user, plan_admin, price);
         };
         
@@ -96,7 +123,7 @@ module subscription {
     /// Cancel the caller's current subscription (if any)
     public entry fun cancel(user: &signer) acquires Admin, UserSubscription {
         let addr = signer::address_of(user);
-        assert!(exists<UserSubscription>(addr), 6);
+        assert!(exists<UserSubscription>(addr), E_NOT_SUBSCRIBED);
         // read admin address, then emit event, then remove resource
         let admin_addr = {
             let s_ref = borrow_global<UserSubscription>(addr);
@@ -156,18 +183,30 @@ module subscription {
     /// Transfers the plan price from user to plan_admin.
     public entry fun renew(user: &signer, now_secs: u64) acquires Admin, Plans, UserSubscription {
         let addr = signer::address_of(user);
-        assert!(exists<UserSubscription>(addr), 7);
+        assert!(exists<UserSubscription>(addr), E_SUBSCRIPTION_NOT_FOUND);
         let s_mut = borrow_global_mut<UserSubscription>(addr);
         let plan_admin = s_mut.plan_admin;
         let plan_id = s_mut.plan_id;
         let plans = borrow_global<Plans>(plan_admin);
         let (found, idx) = find_index(&plans.ids, plan_id);
-        assert!(found, 8);
+        assert!(found, E_PLAN_MISMATCH);
         let dur = *vector::borrow(&plans.durations, idx);
         let price = *vector::borrow(&plans.prices, idx);
         
-        // Transfer payment from user to admin
+        // Validate and transfer payment from user to admin
         if (price > 0) {
+            assert!(coin::is_account_registered<AptosCoin>(addr), E_COIN_NOT_REGISTERED);
+            let balance = coin::balance<AptosCoin>(addr);
+            if (balance < price) {
+                let admin_cap = borrow_global_mut<Admin>(plan_admin);
+                event::emit_event(&mut admin_cap.payment_failed_events, PaymentFailed{ 
+                    from: addr, 
+                    plan_id, 
+                    required_octas: price,
+                    reason: E_INSUFFICIENT_BALANCE 
+                });
+                abort E_INSUFFICIENT_BALANCE
+            };
             coin::transfer<AptosCoin>(user, plan_admin, price);
         };
         
