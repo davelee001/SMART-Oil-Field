@@ -4,23 +4,28 @@ module subscription {
     use std::vector;
     use aptos_std::event;
     use aptos_std::timestamp;
+    use aptos_framework::coin;
+    use aptos_framework::aptos_coin::AptosCoin;
 
     /// Event types
-    struct PlanCreated has drop, store { plan_id: u64, duration_secs: u64 }
+    struct PlanCreated has drop, store { plan_id: u64, duration_secs: u64, price_octas: u64 }
     struct Subscribed has drop, store { user: address, plan_admin: address, plan_id: u64, expires_at: u64 }
     struct Canceled has drop, store { user: address }
+    struct PaymentReceived has drop, store { from: address, plan_id: u64, amount_octas: u64 }
 
     /// Capability + event handles stored under the admin account
     struct Admin has key {
         plan_created_events: event::EventHandle<PlanCreated>,
         subscribed_events: event::EventHandle<Subscribed>,
         canceled_events: event::EventHandle<Canceled>,
+        payment_events: event::EventHandle<PaymentReceived>,
     }
 
     /// Plans registry stored under the admin account
     struct Plans has key {
         ids: vector<u64>,            // plan ids
         durations: vector<u64>,      // duration in seconds per plan id
+        prices: vector<u64>,         // price in octas (1 APT = 100,000,000 octas) per plan id
     }
 
     /// User subscription stored under the subscriber account
@@ -38,12 +43,14 @@ module subscription {
             plan_created_events: event::new_event_handle<PlanCreated>(admin),
             subscribed_events: event::new_event_handle<Subscribed>(admin),
             canceled_events: event::new_event_handle<Canceled>(admin),
+            payment_events: event::new_event_handle<PaymentReceived>(admin),
         });
-        move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>() });
+        move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>(), prices: vector::empty<u64>() });
     }
 
-    /// Create a new plan with a fixed duration (in seconds)
-    public entry fun create_plan(admin: &signer, plan_id: u64, duration_secs: u64) acquires Admin, Plans {
+    /// Create a new plan with a fixed duration (in seconds) and price (in octas)
+    /// Note: 1 APT = 100,000,000 octas
+    public entry fun create_plan(admin: &signer, plan_id: u64, duration_secs: u64, price_octas: u64) acquires Admin, Plans {
         let addr = signer::address_of(admin);
         assert!(exists<Admin>(addr), 2);
         let plans = borrow_global_mut<Plans>(addr);
@@ -51,13 +58,15 @@ module subscription {
         assert!(!found, 3);
         vector::push_back(&mut plans.ids, plan_id);
         vector::push_back(&mut plans.durations, duration_secs);
+        vector::push_back(&mut plans.prices, price_octas);
 
         // emit event
         let admin_cap = borrow_global_mut<Admin>(addr);
-        event::emit_event(&mut admin_cap.plan_created_events, PlanCreated{ plan_id, duration_secs });
+        event::emit_event(&mut admin_cap.plan_created_events, PlanCreated{ plan_id, duration_secs, price_octas });
     }
 
     /// Subscribe the caller to a plan defined by `plan_admin` and `plan_id` using on-chain time.
+    /// Transfers the plan price from user to plan_admin.
     public entry fun subscribe(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription {
         let user_addr = signer::address_of(user);
         assert!(!exists<UserSubscription>(user_addr), 4);
@@ -65,13 +74,23 @@ module subscription {
         let (found, idx) = find_index(&plans.ids, plan_id);
         assert!(found, 5);
         let dur = *vector::borrow(&plans.durations, idx);
+        let price = *vector::borrow(&plans.prices, idx);
+        
+        // Transfer payment from user to admin
+        if (price > 0) {
+            coin::transfer<AptosCoin>(user, plan_admin, price);
+        };
+        
         let now_secs = timestamp::now_seconds();
         let expires = now_secs + dur;
         move_to(user, UserSubscription{ plan_admin, plan_id, expires_at: expires });
 
-        // emit event under the plan admin
+        // emit events under the plan admin
         let admin_cap = borrow_global_mut<Admin>(plan_admin);
         event::emit_event(&mut admin_cap.subscribed_events, Subscribed{ user: user_addr, plan_admin, plan_id, expires_at: expires });
+        if (price > 0) {
+            event::emit_event(&mut admin_cap.payment_events, PaymentReceived{ from: user_addr, plan_id, amount_octas: price });
+        };
     }
 
     /// Cancel the caller's current subscription (if any)
@@ -124,7 +143,17 @@ module subscription {
         } else { (false, 0) }
     }
 
+    /// Read-only: get plan price in octas; returns (found, price_octas)
+    public fun get_plan_price(plan_admin: address, plan_id: u64): (bool, u64) acquires Plans {
+        if (exists<Plans>(plan_admin)) {
+            let plans = borrow_global<Plans>(plan_admin);
+            let (found, idx) = find_index(&plans.ids, plan_id);
+            if (found) { (true, *vector::borrow(&plans.prices, idx)) } else { (false, 0) }
+        } else { (false, 0) }
+    }
+
     /// Renew existing subscription by extending from max(current_expiry, now_secs)
+    /// Transfers the plan price from user to plan_admin.
     public entry fun renew(user: &signer, now_secs: u64) acquires Admin, Plans, UserSubscription {
         let addr = signer::address_of(user);
         assert!(exists<UserSubscription>(addr), 7);
@@ -135,12 +164,22 @@ module subscription {
         let (found, idx) = find_index(&plans.ids, plan_id);
         assert!(found, 8);
         let dur = *vector::borrow(&plans.durations, idx);
+        let price = *vector::borrow(&plans.prices, idx);
+        
+        // Transfer payment from user to admin
+        if (price > 0) {
+            coin::transfer<AptosCoin>(user, plan_admin, price);
+        };
+        
         let base = if (s_mut.expires_at > now_secs) { s_mut.expires_at } else { now_secs };
         s_mut.expires_at = base + dur;
 
-        // emit event under the plan admin (reuse Subscribed for renewals)
+        // emit events under the plan admin (reuse Subscribed for renewals)
         let admin_cap = borrow_global_mut<Admin>(plan_admin);
         event::emit_event(&mut admin_cap.subscribed_events, Subscribed{ user: addr, plan_admin, plan_id, expires_at: s_mut.expires_at });
+        if (price > 0) {
+            event::emit_event(&mut admin_cap.payment_events, PaymentReceived{ from: addr, plan_id, amount_octas: price });
+        };
     }
 
     /// Linear search for plan id; returns (found, index)
@@ -162,7 +201,8 @@ module subscription {
         let user_addr = signer::address_of(user);
 
         init(admin);
-        create_plan(admin, 1, 3600);
+        // Create a free plan (price = 0) for testing
+        create_plan(admin, 1, 3600, 0);
 
         // set on-chain timestamp to 100 and subscribe
         timestamp::set_time_has_started_for_testing_only();
