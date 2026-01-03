@@ -250,6 +250,76 @@
             margin-bottom: 10px;
         }
 
+        .subscription-reminder {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            animation: slideDown 0.5s ease;
+        }
+
+        .subscription-reminder.show {
+            display: block;
+        }
+
+        .subscription-reminder.warning {
+            background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+        }
+
+        .subscription-reminder.critical {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            50% {
+                box-shadow: 0 0 20px 10px rgba(220, 53, 69, 0);
+            }
+        }
+
+        .reminder-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .renew-btn {
+            background: white;
+            color: #1e3c72;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            width: auto;
+        }
+
+        .renew-btn:hover {
+            background: #f8f9fa;
+            transform: scale(1.05);
+        }
+
         footer {
             margin-top: 40px;
             padding: 30px;
@@ -270,6 +340,14 @@
             <h1>🛢️ SMART Oil Field Project</h1>
             <p class="subtitle">IoT-Enabled Oil Field Management with Blockchain Subscriptions</p>
         </header>
+
+        <!-- Subscription Reminder Banner -->
+        <div id="subscriptionReminder" class="subscription-reminder">
+            <span class="reminder-icon">⏰</span>
+            <span id="reminderMessage"></span>
+            <br>
+            <button class="renew-btn" onclick="showModal('renew')">Renew Now</button>
+        </div>
 
         <div class="grid">
             <!-- Python API Card -->
@@ -673,6 +751,139 @@
                 closeModal();
             }
         });
+
+        // Subscription expiration reminder functionality
+        async function checkSubscriptionStatus() {
+            // In production, this would query blockchain via API
+            // For demo, we support both API and localStorage
+            const userId = localStorage.getItem('userId') || 'demo_user';
+
+            try {
+                // Try to fetch from API first
+                const response = await fetch(`http://127.0.0.1:8000/api/subscription/${userId}`);
+                if (response.ok) {
+                    const subscription = await response.json();
+                    if (subscription.error) {
+                        // No subscription found in API, check localStorage
+                        checkLocalSubscription();
+                        return;
+                    }
+                    displaySubscriptionReminder(subscription);
+                } else {
+                    // API not available, fallback to localStorage
+                    checkLocalSubscription();
+                }
+            } catch (error) {
+                // Network error, fallback to localStorage
+                console.log('API unavailable, using local data:', error.message);
+                checkLocalSubscription();
+            }
+        }
+
+        function checkLocalSubscription() {
+            // Check if subscription exists in localStorage (for demo purposes)
+            const savedSubscription = localStorage.getItem('userSubscription');
+            const subscription = savedSubscription ? JSON.parse(savedSubscription) : null;
+
+            if (!subscription || !subscription.isActive) {
+                return; // No active subscription
+            }
+
+            const now = Math.floor(Date.now() / 1000);
+            const expiresAt = subscription.expiresAt;
+            const daysRemaining = Math.floor((expiresAt - now) / (24 * 60 * 60));
+
+            displaySubscriptionReminder({
+                is_active: subscription.isActive,
+                expires_at: expiresAt,
+                days_remaining: daysRemaining,
+                expired: expiresAt <= now
+            });
+        }
+
+        function displaySubscriptionReminder(subscription) {
+            if (!subscription.is_active && !subscription.expired) {
+                return; // Inactive and not expired - don't show
+            }
+
+            const daysRemaining = subscription.days_remaining;
+            const reminderBanner = document.getElementById('subscriptionReminder');
+            const reminderMessage = document.getElementById('reminderMessage');
+
+            if (subscription.expired || daysRemaining <= 0) {
+                // Expired
+                reminderBanner.className = 'subscription-reminder critical show';
+                reminderMessage.innerHTML = `<strong>Your subscription has expired!</strong><br>Renew now to continue accessing premium features.`;
+            } else if (daysRemaining <= 3) {
+                // Critical - 3 days or less
+                reminderBanner.className = 'subscription-reminder critical show';
+                reminderMessage.innerHTML = `<strong>Urgent!</strong> Your subscription expires in <strong>${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}</strong>!`;
+            } else if (daysRemaining <= 7) {
+                // Warning - 7 days or less
+                reminderBanner.className = 'subscription-reminder warning show';
+                reminderMessage.innerHTML = `Your subscription expires in ${daysRemaining} days. Renew soon to avoid service interruption.`;
+            } else if (daysRemaining <= 14) {
+                // Info - 14 days or less
+                reminderBanner.className = 'subscription-reminder show';
+                reminderMessage.innerHTML = `Your subscription expires in ${daysRemaining} days.`;
+            }
+        }
+
+        // For demo: Set a mock subscription (remove this in production)
+        function setMockSubscription(daysUntilExpiry) {
+            const subscription = {
+                planId: 1,
+                expiresAt: Math.floor(Date.now() / 1000) + (daysUntilExpiry * 24 * 60 * 60),
+                isActive: true
+            };
+            localStorage.setItem('userSubscription', JSON.stringify(subscription));
+            checkSubscriptionStatus();
+            console.log(`Demo: Subscription set to expire in ${daysUntilExpiry} days`);
+        }
+
+        // Create subscription via API
+        async function createSubscription(userId, planId, durationDays) {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        plan_id: planId,
+                        duration_days: durationDays
+                    })
+                });
+                const result = await response.json();
+                console.log('Subscription created:', result);
+                checkSubscriptionStatus();
+                return result;
+            } catch (error) {
+                reateSubscription('demo_user', 1, 5) - create via API, expires in 5 days
+                // clearSubscription() - clear the subscription
+                console.log('Subscription reminder feature loaded.');
+                console.log('Try: createSubscription(\"demo_user\", 1, ing.');
+            }
+        }
+
+        // Clear subscription (for testing)
+        function clearSubscription() {
+            localStorage.removeItem('userSubscription');
+            document.getElementById('subscriptionReminder').classList.remove('show');
+            console.log('Demo: Subscription cleared');
+        }
+
+        // Check subscription status on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkSubscriptionStatus();
+            // Recheck every 5 minutes
+            setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
+        });
+
+        // Demo function - call this in console to test:
+        // setMockSubscription(5) - expires in 5 days
+        // setMockSubscription(2) - expires in 2 days (critical)
+        // clearSubscription() - clear the subscription
+        console.log('Subscription reminder feature loaded. Try: setMockSubscription(5) or setMockSubscription(2)');
     </script>
 </body>
 

@@ -1,5 +1,6 @@
 ﻿from pathlib import Path
 import sqlite3
+import time
 from typing import Optional
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
@@ -11,6 +12,13 @@ def init_db():
     DB.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB)
     conn.execute('CREATE TABLE IF NOT EXISTS telemetry (id INTEGER PRIMARY KEY AUTOINCREMENT, device_id TEXT, ts INTEGER, temperature REAL, pressure REAL, status TEXT)')
+    # Table for subscription tracking (demo purposes - production would use blockchain)
+    conn.execute('''CREATE TABLE IF NOT EXISTS subscriptions 
+                    (user_id TEXT PRIMARY KEY, 
+                     plan_id INTEGER, 
+                     expires_at INTEGER, 
+                     is_active BOOLEAN DEFAULT 1,
+                     created_at INTEGER)''')
     conn.commit()
     conn.close()
 
@@ -159,3 +167,72 @@ def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to:
         'pressure': {'min': pmin, 'max': pmax, 'avg': pavg},
         'latest_status': latest_status,
     }
+
+# Subscription endpoints
+class SubscriptionCreate(BaseModel):
+    user_id: str = Field(min_length=1, max_length=64)
+    plan_id: int = Field(ge=1)
+    duration_days: int = Field(ge=1, default=30)
+
+@app.post('/api/subscription')
+def create_subscription(payload: SubscriptionCreate):
+    """Create or update a user subscription (demo endpoint - production uses blockchain)"""
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    now = int(time.time())
+    expires_at = now + (payload.duration_days * 24 * 60 * 60)
+    
+    # Upsert subscription
+    cur.execute('''INSERT OR REPLACE INTO subscriptions 
+                   (user_id, plan_id, expires_at, is_active, created_at) 
+                   VALUES (?, ?, ?, 1, ?)''', 
+                (payload.user_id, payload.plan_id, expires_at, now))
+    conn.commit()
+    conn.close()
+    return {
+        'user_id': payload.user_id,
+        'plan_id': payload.plan_id,
+        'expires_at': expires_at,
+        'is_active': True
+    }
+
+@app.get('/api/subscription/{user_id}')
+def get_subscription(user_id: str):
+    """Get subscription status for a user"""
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    cur.execute('SELECT user_id, plan_id, expires_at, is_active, created_at FROM subscriptions WHERE user_id = ?', (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    
+    if not row:
+        return {'error': 'not_found', 'message': 'No subscription found for this user'}
+    
+    now = int(time.time())
+    expires_at = row[2]
+    is_active = row[3] and expires_at > now
+    days_remaining = max(0, (expires_at - now) // (24 * 60 * 60))
+    hours_remaining = max(0, (expires_at - now) // 3600)
+    
+    return {
+        'user_id': row[0],
+        'plan_id': row[1],
+        'expires_at': expires_at,
+        'is_active': is_active,
+        'created_at': row[4],
+        'days_remaining': days_remaining,
+        'hours_remaining': hours_remaining,
+        'expired': expires_at <= now,
+        'needs_reminder': days_remaining <= 7 and is_active
+    }
+
+@app.delete('/api/subscription/{user_id}')
+def cancel_subscription(user_id: str):
+    """Cancel a user subscription"""
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    cur.execute('UPDATE subscriptions SET is_active = 0 WHERE user_id = ?', (user_id,))
+    conn.commit()
+    count = cur.rowcount
+    conn.close()
+    return {'canceled': count > 0, 'user_id': user_id}
