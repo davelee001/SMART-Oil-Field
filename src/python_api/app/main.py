@@ -3,6 +3,7 @@ import sqlite3
 import time
 from typing import Optional
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
@@ -23,6 +24,15 @@ def init_db():
     conn.close()
 
 app = FastAPI(title='SMART Oilfield API', version='0.4.0')
+
+# Enable CORS for frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify exact origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class TelemetryIn(BaseModel):
     device_id: str = Field(min_length=1, max_length=64)
