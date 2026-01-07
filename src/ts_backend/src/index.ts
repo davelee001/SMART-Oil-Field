@@ -32,7 +32,22 @@ app.get('/api/status', async (_req, res) => {
   }
 });
 
-// Gateway endpoint for telemetry
+// Gateway endpoint for telemetry - ingest data
+app.post('/api/telemetry', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/telemetry`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to ingest telemetry data' });
+  }
+});
+
+// Gateway endpoint for telemetry - query
 app.get('/api/telemetry', async (req, res) => {
   try {
     const queryParams = new URLSearchParams(req.query as Record<string, string>);
@@ -41,6 +56,46 @@ app.get('/api/telemetry', async (req, res) => {
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch telemetry data' });
+  }
+});
+
+// Gateway endpoint for telemetry stats
+app.get('/api/telemetry/stats', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/telemetry/stats?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch telemetry statistics' });
+  }
+});
+
+// Gateway endpoint for telemetry export
+app.get('/api/telemetry/export', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/telemetry/export?${queryParams}`);
+    const text = await response.text();
+    res.header('Content-Type', 'text/csv');
+    res.send(text);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to export telemetry data' });
+  }
+});
+
+// Gateway endpoint for subscription creation
+app.post('/api/subscription', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/subscription`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create subscription' });
   }
 });
 
