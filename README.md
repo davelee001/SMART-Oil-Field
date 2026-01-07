@@ -1,5 +1,14 @@
 # SMART-Oil-Field
-A SMART oil field can be seen as a digitally connected environment where production, safety, and maintenance systems are monitored and optimized using technologies like the Internet of Things (IoT), Supervisory Control and Data Acquisition (SCADA), and data analytics.
+
+A SMART oil field digital platform combining IoT sensor data, real-time tracking, and blockchain verification for comprehensive oilfield operations management.
+
+## Overview
+
+This project integrates multiple technologies:
+- **IoT & SCADA**: Real-time telemetry from oilfield sensors
+- **RESTful APIs**: FastAPI (Python) and Express (TypeScript)
+- **Blockchain**: Aptos Move smart contracts for immutable records
+- **Web Dashboard**: Interactive frontend with live status monitoring
 
 ## Project Components
 
@@ -170,27 +179,81 @@ The TypeScript backend acts as a smart proxy layer:
 ## Architecture
 
 ```
-Frontend (index.html)
-    ↓
-config.js (API Configuration)
-    ↓
-┌─────────────────┬────────────────────┐
-│  Direct Mode    │   Gateway Mode     │
-│  (default)      │   (optional)       │
-├─────────────────┼────────────────────┤
-│                 │                    │
-│  Python API     │  TypeScript API    │
-│  :8000          │  :3000             │
-│                 │      ↓             │
-│                 │  Python API        │
-│                 │  :8000             │
-└─────────────────┴────────────────────┘
+                          Frontend (index.html)
+                                  ↓
+                      config.js (API Configuration)
+                                  ↓
+        ┌─────────────────────────┴─────────────────────────┐
+        │                                                    │
+   Direct Mode                                        Gateway Mode
+   (default)                                           (optional)
+        │                                                    │
+        ↓                                                    ↓
+  Python API ←─────────────────────────────────→  TypeScript API
+   :8000                                                   :3000
+        │                                                    │
+        ├── SQLite Database                                 │
+        │   └── Telemetry, Oil Batches, Subscriptions       │
+        │                                                    │
+        └────────────────────────────────────────────────────┘
+                                  ↓
+                         Blockchain Layer (Optional)
+                                  │
+                    ┌─────────────┴─────────────┐
+                    │                           │
+            Aptos Move Modules                  │
+                    │                           │
+        ┌───────────┴───────────┐               │
+        │                       │               │
+  Subscription Module    Oil Tracker Module     │
+        │                       │               │
+        └───────────────────────┴───────────────┘
+          • Payment processing     • Immutable batches
+          • Promo codes           • Ownership transfer
+          • Seasonal discounts    • Lifecycle events
 ```
+
+### Data Flow
+
+- **Database (SQLite)**: Fast queries, analytics, CSV export
+- **Blockchain (Aptos)**: Immutable records, ownership proof, audit trail
+- **Hybrid Model**: Store operational data in DB, critical records on-chain
 
 ## Quick Start (Python API)
 
-- Seed and run:
-	- See [src/python_api/README.md](src/python_api/README.md) for setup, seeding, and run instructions.
+1. **Seed and run the database**:
+   ```powershell
+   cd src/python_api
+   .\run.ps1
+   ```
+   See [src/python_api/README.md](src/python_api/README.md) for detailed setup instructions.
+
+2. **Open the frontend**:
+   - Open `src/frontend/index.html` in your browser
+   - Status indicators show backend connectivity
+   - Test telemetry, oil tracking, and subscription features
+
+## Blockchain Deployment
+
+### Deploy Subscription Module
+
+```powershell
+cd blockchain/move/subscriptions
+.\scripts\publish.ps1
+```
+
+### Deploy Oil Tracker Module
+
+```powershell
+cd blockchain/move/oil_tracker
+.\scripts\publish.ps1
+```
+
+Both scripts support Devnet, Testnet, and Mainnet deployment.
+
+See module READMEs for usage examples:
+- [Subscription Module Guide](blockchain/move/subscriptions/README.md)
+- [Oil Tracker Module Guide](blockchain/move/oil_tracker/README.md)
 
 ## Testing the Subscription Reminder Feature
 
@@ -229,4 +292,22 @@ config.js (API Configuration)
 
 ## Repository
 
-- Remote: https://github.com/davelee001/SMART-Oil-Field.git
+- **GitHub**: https://github.com/davelee001/SMART-Oil-Field.git
+- **License**: Educational project - ICT Application in Oil and Gas
+
+## Technology Stack
+
+- **Backend**: Python (FastAPI), TypeScript (Express), SQLite
+- **Blockchain**: Aptos Move, APT cryptocurrency
+- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **DevOps**: PowerShell scripts, VS Code tasks, Git
+
+## Future Enhancements
+
+- [ ] Real-time WebSocket telemetry streaming
+- [ ] Machine learning predictions for equipment failure
+- [ ] Mobile app for field operators
+- [ ] Integration with actual IoT sensors (MQTT)
+- [ ] Advanced analytics dashboard with charts
+- [ ] Multi-user authentication and authorization
+- [ ] Blockchain explorer integration for audit trails
