@@ -414,6 +414,35 @@
                     View Features & Events
                 </button>
             </div>
+
+            <!-- Oil Movement Tracker Card -->
+            <div class="card">
+                <span class="badge python">Oil Tracker</span>
+                <h2>
+                    <span class="status" id="oilTrackerApiStatus"></span>
+                    Oil Movement Tracker
+                </h2>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    Track lifecycle from drilling to refining and distribution
+                </p>
+                <ul class="action-list">
+                    <li class="action-item" onclick="showModal('createBatch')">
+                        <strong>Create Oil Batch</strong>
+                        <span>Register a new batch from a well/site</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('addEvent')">
+                        <strong>Add Lifecycle Event</strong>
+                        <span>Drilling, extraction, transport, refining, delivery</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('viewTimeline')">
+                        <strong>View Batch Timeline</strong>
+                        <span>See ordered events and stage durations</span>
+                    </li>
+                </ul>
+                <button onclick="showModal('viewTimeline')">
+                    Open Tracker
+                </button>
+            </div>
         </div>
 
         <!-- Features Overview -->

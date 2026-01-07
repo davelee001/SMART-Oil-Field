@@ -137,6 +137,54 @@ const modalTemplates = {
             <li>Smart Stacking: Highest discount applied</li>
         </ul>
         <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
+    createBatch: `
+        <h3>Create Oil Batch</h3>
+        <label>Optional Batch ID</label>
+        <input type="text" id="batchId" placeholder="Auto-generated if empty">
+        <label>Origin (Well/Site)</label>
+        <input type="text" id="batchOrigin" placeholder="well-001">
+        <label>Volume</label>
+        <input type="number" id="batchVolume" placeholder="1000" value="1000">
+        <label>Unit</label>
+        <input type="text" id="batchUnit" placeholder="bbl" value="bbl">
+        <button onclick="createOilBatch()">Create Batch</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
+    addEvent: `
+        <h3>Add Lifecycle Event</h3>
+        <label>Batch ID</label>
+        <input type="text" id="eventBatchId" placeholder="BATCH-XXXX">
+        <label>Stage</label>
+        <select id="eventStage">
+            <option value="DRILLING">DRILLING</option>
+            <option value="EXTRACTION">EXTRACTION</option>
+            <option value="STORAGE">STORAGE</option>
+            <option value="TRANSPORT">TRANSPORT</option>
+            <option value="REFINING">REFINING</option>
+            <option value="DISTRIBUTION">DISTRIBUTION</option>
+            <option value="DELIVERED">DELIVERED</option>
+        </select>
+        <label>Status</label>
+        <input type="text" id="eventStatus" placeholder="IN_PROGRESS" value="IN_PROGRESS">
+        <label>Latitude (optional)</label>
+        <input type="number" id="eventLat" step="any">
+        <label>Longitude (optional)</label>
+        <input type="number" id="eventLon" step="any">
+        <label>Facility (optional)</label>
+        <input type="text" id="eventFacility" placeholder="Terminal A">
+        <label>Notes (optional)</label>
+        <input type="text" id="eventNotes" placeholder="Loaded onto tanker">
+        <button onclick="addOilEvent()">Add Event</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
+    viewTimeline: `
+        <h3>Batch Timeline</h3>
+        <label>Batch ID</label>
+        <input type="text" id="timelineBatchId" placeholder="BATCH-XXXX">
+        <button onclick="loadTimeline()">Load Timeline</button>
+        <div id="timelineResults" style="margin-top: 20px; max-height: 350px; overflow-y: auto;"></div>
+        <button class="close-btn" onclick="closeModal()">Close</button>
     `
 };
 
@@ -226,6 +274,79 @@ async function exportCSV() {
 function startService(type) {
     if (type === 'ts') {
         alert('To start TypeScript backend, run:\\n\\ncd src/ts_backend\\nnpm install\\nnpm run dev\\n\\nOr use the VS Code task: "Run TS Backend"');
+    }
+}
+
+// ------------------------------
+// Oil Tracker actions
+// ------------------------------
+async function createOilBatch() {
+    const body = {
+        batch_id: document.getElementById('batchId').value || undefined,
+        origin: document.getElementById('batchOrigin').value,
+        volume: parseFloat(document.getElementById('batchVolume').value),
+        unit: document.getElementById('batchUnit').value || 'bbl'
+    };
+    try {
+        const r = await fetch(API_CONFIG.getApiUrl('/api/oil/batches'), {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        const data = await r.json();
+        if (data.error) throw new Error(data.message || 'Failed to create');
+        alert(`Batch created: ${data.batch_id}`);
+    } catch (e) {
+        alert(`Error creating batch: ${e.message}`);
+    }
+}
+
+async function addOilEvent() {
+    const batchId = document.getElementById('eventBatchId').value;
+    const body = {
+        stage: document.getElementById('eventStage').value,
+        status: document.getElementById('eventStatus').value,
+        location_lat: document.getElementById('eventLat').value ? parseFloat(document.getElementById('eventLat').value) : null,
+        location_lon: document.getElementById('eventLon').value ? parseFloat(document.getElementById('eventLon').value) : null,
+        facility: document.getElementById('eventFacility').value || null,
+        notes: document.getElementById('eventNotes').value || null
+    };
+    try {
+        const r = await fetch(API_CONFIG.getApiUrl(`/api/oil/batches/${encodeURIComponent(batchId)}/events`), {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        const data = await r.json();
+        if (data.error) throw new Error(data.message || 'Failed to add event');
+        alert(`Event added: ${data.event_id}`);
+    } catch (e) {
+        alert(`Error adding event: ${e.message}`);
+    }
+}
+
+async function loadTimeline() {
+    const batchId = document.getElementById('timelineBatchId').value;
+    try {
+        const r = await fetch(API_CONFIG.getApiUrl(`/api/oil/track/${encodeURIComponent(batchId)}`));
+        const data = await r.json();
+        if (data.error) {
+            document.getElementById('timelineResults').innerHTML = `<p style="color:#dc3545;">Batch not found.</p>`;
+            return;
+        }
+        const events = data.events || [];
+        const durations = data.durations_sec || {};
+        const durationList = Object.entries(durations).map(([k, v]) => `${k}: ${(v / 3600).toFixed(2)} hrs`).join(' | ');
+        const eventItems = events.map(e => `
+            <div style="padding:8px; border-left:4px solid #1e3c72; margin-bottom:10px; background:#f8f9fa; border-radius:6px;">
+                <strong>${new Date(e.ts * 1000).toLocaleString()}</strong> - <strong>${e.stage}</strong> (${e.status})
+                <div style="color:#6c757d; font-size:0.9em;">${e.facility || ''} ${e.location_lat && e.location_lon ? `@ (${e.location_lat.toFixed(4)}, ${e.location_lon.toFixed(4)})` : ''}</div>
+                ${e.notes ? `<div style=\"color:#495057;\">${e.notes}</div>` : ''}
+            </div>
+        `).join('');
+        document.getElementById('timelineResults').innerHTML = `
+            <div style="margin-bottom:12px;"><strong>Batch:</strong> ${data.batch.batch_id} | <strong>Stage:</strong> ${data.batch.current_stage} | <strong>Status:</strong> ${data.batch.status}</div>
+            <div style="margin-bottom:12px;"><strong>Stage Durations:</strong> ${durationList || 'N/A'}</div>
+            <div>${eventItems || '<em>No events yet</em>'}</div>
+        `;
+    } catch (e) {
+        document.getElementById('timelineResults').innerHTML = `<p style="color:#dc3545;">Error: ${e.message}</p>`;
     }
 }
 
