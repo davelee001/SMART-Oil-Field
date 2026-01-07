@@ -3,8 +3,8 @@ A SMART oil field can be seen as a digitally connected environment where product
 
 ## Project Components
 
-- **Python API**: FastAPI service with CORS enabled for telemetry ingestion, querying, subscription management, and CSV export. See [src/python_api/README.md](src/python_api/README.md).
-- **TypeScript Backend**: Express + TypeScript API gateway with proxy endpoints for telemetry and subscriptions. See [src/ts_backend/README.md](src/ts_backend/README.md).
+- **Python API**: FastAPI service with CORS enabled for telemetry ingestion, querying, subscription management, oil tracking, and CSV export. See [src/python_api/README.md](src/python_api/README.md).
+- **TypeScript Backend**: Express + TypeScript API gateway with full proxy coverage for all Python API endpoints (telemetry, subscriptions, oil tracking). See [src/ts_backend/README.md](src/ts_backend/README.md).
 - **Move Subscriptions**: Aptos Move package for blockchain-based subscription management with payment processing, discount codes, and seasonal promotions. See [blockchain/move/subscriptions](blockchain/move/subscriptions).
 - **Frontend Dashboard**: Interactive web interface with configurable API routing, real-time backend status indicators, and subscription expiration reminders. See [src/frontend/index.html](src/frontend/index.html).
 
@@ -45,7 +45,27 @@ A SMART oil field can be seen as a digitally connected environment where product
 - Subscription renewal and cancellation
 - Event tracking (payment, discounts, cancellations)
 
-### 🔌 Backend
+### 🔌 Backend API Coverage
+
+**Python API** (FastAPI) - Full implementation:
+- ✅ Telemetry: Ingest, query, stats, export
+- ✅ Oil Tracking: Batch creation, events, timeline
+- ✅ Subscriptions: Create, query, status
+
+**TypeScript Gateway** (Express) - Complete proxy coverage:
+- ✅ `POST /api/telemetry` - Data ingestion
+- ✅ `GET /api/telemetry` - Query with filters
+- ✅ `GET /api/telemetry/stats` - Statistics
+- ✅ `GET /api/telemetry/export` - CSV export
+- ✅ `POST /api/oil/batches` - Create batch
+- ✅ `POST /api/oil/batches/:id/events` - Add event
+- ✅ `GET /api/oil/track/:id` - Timeline
+- ✅ `POST /api/subscription` - Create subscription
+- ✅ `GET /api/subscription/:userId` - Status
+
+**Sync Status**: ✅ **Fully synced** - All frontend endpoints supported by both backends
+
+### 🚀 Running the Application
 
 ### Option 1: Direct Python API (Default)
 
@@ -89,10 +109,41 @@ A SMART oil field can be seen as a digitally connected environment where product
 ### Running with VS Code Tasks
 
 Use the built-in tasks:
-- **Task**: "Run Python API"
-- **Task**: "Run TS Backend"
-  - `/api/subscription/:userId` - Proxy to subscription status
-  - `/api/status` - Combined health check for both services
+- **Task**: "Run Python API" - Start FastAPI backend on port 8000
+- **Task**: "Run TS Backend" - Start TypeScript gateway on port 3000
+
+## API Endpoints
+
+### Telemetry Endpoints
+- `POST /api/telemetry` - Ingest sensor data
+- `GET /api/telemetry?device_id=&limit=` - Query telemetry data
+- `GET /api/telemetry/stats?device_id=` - Get statistics
+- `GET /api/telemetry/export?device_id=&limit=` - Export to CSV
+
+### Oil Tracking Endpoints
+- `POST /api/oil/batches` - Create oil batch
+- `GET /api/oil/batches?stage=&status=` - List batches
+- `GET /api/oil/batches/:batch_id` - Get batch details
+- `POST /api/oil/batches/:batch_id/events` - Add lifecycle event
+- `GET /api/oil/batches/:batch_id/events` - List events
+- `GET /api/oil/track/:batch_id` - Get full timeline with durations
+
+### Subscription Endpoints
+- `POST /api/subscription` - Create subscription
+- `GET /api/subscription/:user_id` - Get subscription status
+- `DELETE /api/subscription/:user_id` - Cancel subscription
+
+### Health Check
+- `GET /health` - Service health status
+- `GET /api/status` - Combined backend status (TypeScript only)
+
+## TypeScript Gateway Features
+
+The TypeScript backend acts as a smart proxy layer:
+- Full endpoint coverage matching Python API
+- Error handling and response formatting
+- CORS configuration
+- Health monitoring for both services
 - **Configurable API routing** via `config.js`:
   - Toggle between direct Python API or TypeScript gateway
   - `USE_GATEWAY: false` (default) - Direct Python API calls
