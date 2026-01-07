@@ -6,6 +6,7 @@ A SMART oil field can be seen as a digitally connected environment where product
 - **Python API**: FastAPI service with CORS enabled for telemetry ingestion, querying, subscription management, oil tracking, and CSV export. See [src/python_api/README.md](src/python_api/README.md).
 - **TypeScript Backend**: Express + TypeScript API gateway with full proxy coverage for all Python API endpoints (telemetry, subscriptions, oil tracking). See [src/ts_backend/README.md](src/ts_backend/README.md).
 - **Move Subscriptions**: Aptos Move package for blockchain-based subscription management with payment processing, discount codes, and seasonal promotions. See [blockchain/move/subscriptions](blockchain/move/subscriptions).
+- **Move Oil Tracker**: Aptos Move module for immutable, blockchain-verified oil batch tracking with ownership transfer and lifecycle events. See [blockchain/move/oil_tracker](blockchain/move/oil_tracker).
 - **Frontend Dashboard**: Interactive web interface with configurable API routing, real-time backend status indicators, and subscription expiration reminders. See [src/frontend/index.html](src/frontend/index.html).
 
 ## Features
@@ -16,14 +17,17 @@ A SMART oil field can be seen as a digitally connected environment where product
 - Aggregated statistics and analytics
 - CSV export for data analysis
 
-### � Oil Movement Tracker
+### 🛢️ Oil Movement Tracker
+- **Dual-mode tracking**: Database (Python API) + Blockchain (Move module)
 - **Real-time tracking** of oil batches from production to delivery
 - **Full lifecycle management**: Production → Storage → Transit → Delivery
 - **Location-based tracking** with GPS coordinates
 - **Quality monitoring**: Temperature, viscosity, density, sulfur content
 - **Interactive UI**: Create batches, record events, view movement history
 - **RESTful API**: Full CRUD operations with filtering and statistics
-- See [docs/OIL_MOVEMENT_TRACKER.md](docs/OIL_MOVEMENT_TRACKER.md) for details
+- **Blockchain verification**: Immutable on-chain records via Aptos Move
+- **Ownership transfer**: Transfer batches between parties on-chain
+- See [docs/OIL_MOVEMENT_TRACKER.md](docs/OIL_MOVEMENT_TRACKER.md) and [blockchain/move/oil_tracker](blockchain/move/oil_tracker) for details
 
 ### �🔔 Subscription Expiration Reminders
 - **Visual notifications** with 3 severity levels (info, warning, critical)
@@ -37,13 +41,23 @@ A SMART oil field can be seen as a digitally connected environment where product
 - **Fallback support** with localStorage for offline mode
 - See [docs/SUBSCRIPTION_REMINDER_FEATURE.md](docs/SUBSCRIPTION_REMINDER_FEATURE.md) for details
 
-### ⛓️ Blockchain Subscriptions
+### ⛓️ Blockchain Features
+
+**Subscriptions** ([blockchain/move/subscriptions](blockchain/move/subscriptions)):
 - APT cryptocurrency payment processing
 - Seasonal discounts (30% off in March, August, October)
 - Custom promo codes with expiry and usage limits
 - Smart discount stacking (highest discount applies)
 - Subscription renewal and cancellation
 - Event tracking (payment, discounts, cancellations)
+
+**Oil Tracking** ([blockchain/move/oil_tracker](blockchain/move/oil_tracker)):
+- Immutable batch creation and lifecycle tracking
+- 7 lifecycle stages (Drilling → Delivered)
+- Ownership transfer between parties
+- On-chain event logging with timestamps
+- View functions for status queries
+- Event emissions for real-time monitoring
 
 ### 🔌 Backend API Coverage
 
