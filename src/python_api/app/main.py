@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
+import uuid
+import json
 
 DB = Path(__file__).resolve().parents[3] / 'data' / 'processed' / 'oilfield.db'
 
@@ -20,6 +22,30 @@ def init_db():
                      expires_at INTEGER, 
                      is_active BOOLEAN DEFAULT 1,
                      created_at INTEGER)''')
+    # Oil movement tracking tables
+    conn.execute('''CREATE TABLE IF NOT EXISTS oil_batches (
+                        batch_id TEXT PRIMARY KEY,
+                        origin TEXT,
+                        volume REAL,
+                        unit TEXT,
+                        created_at INTEGER,
+                        current_stage TEXT,
+                        status TEXT,
+                        metadata TEXT
+                    )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS oil_events (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        batch_id TEXT,
+                        ts INTEGER,
+                        stage TEXT,
+                        status TEXT,
+                        location_lat REAL,
+                        location_lon REAL,
+                        facility TEXT,
+                        notes TEXT,
+                        extra TEXT
+                    )''')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_oil_events_batch_ts ON oil_events(batch_id, ts)')
     conn.commit()
     conn.close()
 
@@ -40,6 +66,25 @@ class TelemetryIn(BaseModel):
     temperature: float
     pressure: float
     status: str = Field(min_length=1, max_length=32)
+
+# Oil Tracker models
+class BatchCreate(BaseModel):
+    batch_id: Optional[str] = Field(default=None, max_length=64)
+    origin: str = Field(min_length=1, max_length=128)
+    volume: float = Field(gt=0)
+    unit: str = Field(default='bbl', max_length=16)
+    status: str = Field(default='INITIATED', max_length=32)
+    metadata: Optional[dict] = None
+
+class EventCreate(BaseModel):
+    ts: Optional[int] = None
+    stage: str = Field(min_length=1, max_length=32)
+    status: str = Field(default='IN_PROGRESS', max_length=32)
+    location_lat: Optional[float] = None
+    location_lon: Optional[float] = None
+    facility: Optional[str] = Field(default=None, max_length=128)
+    notes: Optional[str] = Field(default=None, max_length=512)
+    extra: Optional[dict] = None
 
 @app.on_event('startup')
 def _startup():
@@ -176,6 +221,189 @@ def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to:
         'temperature': {'min': tmin, 'max': tmax, 'avg': tavg},
         'pressure': {'min': pmin, 'max': pmax, 'avg': pavg},
         'latest_status': latest_status,
+    }
+
+# -------------------------------
+# Oil Movement Tracker Endpoints
+# -------------------------------
+
+@app.post('/api/oil/batches')
+def create_batch(payload: BatchCreate):
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    batch_id = payload.batch_id or f"BATCH-{uuid.uuid4().hex[:8].upper()}"
+    created_at = int(time.time())
+    cur.execute(
+        'INSERT OR REPLACE INTO oil_batches (batch_id, origin, volume, unit, created_at, current_stage, status, metadata) VALUES (?,?,?,?,?,?,?,?)',
+        (
+            batch_id,
+            payload.origin,
+            payload.volume,
+            payload.unit,
+            created_at,
+            'DRILLING',
+            payload.status,
+            json.dumps(payload.metadata) if payload.metadata is not None else None,
+        )
+    )
+    conn.commit()
+    conn.close()
+    return {
+        'batch_id': batch_id,
+        'origin': payload.origin,
+        'volume': payload.volume,
+        'unit': payload.unit,
+        'created_at': created_at,
+        'current_stage': 'DRILLING',
+        'status': payload.status,
+        'metadata': payload.metadata or {},
+    }
+
+@app.get('/api/oil/batches')
+def list_batches(stage: Optional[str] = None, status: Optional[str] = None, limit: int = 50):
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    q = 'SELECT batch_id, origin, volume, unit, created_at, current_stage, status FROM oil_batches'
+    clauses = []
+    params = []
+    if stage:
+        clauses.append('current_stage = ?')
+        params.append(stage)
+    if status:
+        clauses.append('status = ?')
+        params.append(status)
+    if clauses:
+        q += ' WHERE ' + ' AND '.join(clauses)
+    q += ' ORDER BY created_at DESC LIMIT ?'
+    params.append(limit)
+    cur.execute(q, tuple(params))
+    rows = cur.fetchall()
+    conn.close()
+    return [
+        {
+            'batch_id': r[0],
+            'origin': r[1],
+            'volume': r[2],
+            'unit': r[3],
+            'created_at': r[4],
+            'current_stage': r[5],
+            'status': r[6],
+        }
+        for r in rows
+    ]
+
+@app.get('/api/oil/batches/{batch_id}')
+def get_batch(batch_id: str):
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    cur.execute('SELECT batch_id, origin, volume, unit, created_at, current_stage, status, metadata FROM oil_batches WHERE batch_id = ?', (batch_id,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return {'error': 'not_found'}
+    cur.execute('SELECT COUNT(1) FROM oil_events WHERE batch_id = ?', (batch_id,))
+    event_count = cur.fetchone()[0]
+    conn.close()
+    return {
+        'batch_id': row[0],
+        'origin': row[1],
+        'volume': row[2],
+        'unit': row[3],
+        'created_at': row[4],
+        'current_stage': row[5],
+        'status': row[6],
+        'metadata': json.loads(row[7]) if row[7] else {},
+        'event_count': event_count,
+    }
+
+@app.post('/api/oil/batches/{batch_id}/events')
+def add_event(batch_id: str, payload: EventCreate):
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    # Ensure batch exists
+    cur.execute('SELECT batch_id FROM oil_batches WHERE batch_id = ?', (batch_id,))
+    if not cur.fetchone():
+        conn.close()
+        return {'error': 'not_found', 'message': 'Batch does not exist'}
+    ts = payload.ts or int(time.time())
+    cur.execute(
+        'INSERT INTO oil_events (batch_id, ts, stage, status, location_lat, location_lon, facility, notes, extra) VALUES (?,?,?,?,?,?,?,?,?)',
+        (
+            batch_id,
+            ts,
+            payload.stage,
+            payload.status,
+            payload.location_lat,
+            payload.location_lon,
+            payload.facility,
+            payload.notes,
+            json.dumps(payload.extra) if payload.extra is not None else None,
+        )
+    )
+    # Update batch current stage/status
+    cur.execute('UPDATE oil_batches SET current_stage = ?, status = ? WHERE batch_id = ?', (payload.stage, payload.status, batch_id))
+    conn.commit()
+    event_id = cur.lastrowid
+    conn.close()
+    return {'event_id': event_id, 'batch_id': batch_id, 'ts': ts}
+
+@app.get('/api/oil/batches/{batch_id}/events')
+def list_events(batch_id: str, ascending: bool = True):
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    order = 'ASC' if ascending else 'DESC'
+    cur.execute(
+        f'SELECT id, ts, stage, status, location_lat, location_lon, facility, notes, extra FROM oil_events WHERE batch_id = ? ORDER BY ts {order}',
+        (batch_id,)
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return [
+        {
+            'id': r[0],
+            'ts': r[1],
+            'stage': r[2],
+            'status': r[3],
+            'location_lat': r[4],
+            'location_lon': r[5],
+            'facility': r[6],
+            'notes': r[7],
+            'extra': json.loads(r[8]) if r[8] else {},
+        }
+        for r in rows
+    ]
+
+@app.get('/api/oil/track/{batch_id}')
+def track_summary(batch_id: str):
+    """Return batch details, ordered events, and stage duration summary."""
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    cur.execute('SELECT batch_id, origin, volume, unit, created_at, current_stage, status FROM oil_batches WHERE batch_id = ?', (batch_id,))
+    batch = cur.fetchone()
+    if not batch:
+        conn.close()
+        return {'error': 'not_found'}
+    cur.execute('SELECT ts, stage FROM oil_events WHERE batch_id = ? ORDER BY ts ASC', (batch_id,))
+    rows = cur.fetchall()
+    # Compute stage durations
+    durations = {}
+    for i, (ts, stage) in enumerate(rows):
+        next_ts = rows[i + 1][0] if i + 1 < len(rows) else int(time.time())
+        durations[stage] = durations.get(stage, 0) + max(0, next_ts - ts)
+    # Fetch full events for timeline
+    cur.execute('SELECT id, ts, stage, status, location_lat, location_lon, facility, notes FROM oil_events WHERE batch_id = ? ORDER BY ts ASC', (batch_id,))
+    events = [
+        {
+            'id': r[0], 'ts': r[1], 'stage': r[2], 'status': r[3], 'location_lat': r[4], 'location_lon': r[5], 'facility': r[6], 'notes': r[7]
+        } for r in cur.fetchall()
+    ]
+    conn.close()
+    return {
+        'batch': {
+            'batch_id': batch[0], 'origin': batch[1], 'volume': batch[2], 'unit': batch[3], 'created_at': batch[4], 'current_stage': batch[5], 'status': batch[6]
+        },
+        'events': events,
+        'durations_sec': durations
     }
 
 # Subscription endpoints
