@@ -16,7 +16,16 @@ A SMART oil field can be seen as a digitally connected environment where product
 - Aggregated statistics and analytics
 - CSV export for data analysis
 
-### 🔔 Subscription Expiration Reminders
+### � Oil Movement Tracker
+- **Real-time tracking** of oil batches from production to delivery
+- **Full lifecycle management**: Production → Storage → Transit → Delivery
+- **Location-based tracking** with GPS coordinates
+- **Quality monitoring**: Temperature, viscosity, density, sulfur content
+- **Interactive UI**: Create batches, record events, view movement history
+- **RESTful API**: Full CRUD operations with filtering and statistics
+- See [docs/OIL_MOVEMENT_TRACKER.md](docs/OIL_MOVEMENT_TRACKER.md) for details
+
+### �🔔 Subscription Expiration Reminders
 - **Visual notifications** with 3 severity levels (info, warning, critical)
 - **Automatic checking** on page load and every 5 minutes
 - **Smart reminders**:
