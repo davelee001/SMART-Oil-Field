@@ -10,6 +10,17 @@ This project integrates multiple technologies:
 - **Blockchain**: Aptos Move smart contracts for immutable records
 - **Web Dashboard**: Interactive frontend with live status monitoring
 
+### Quick Feature Summary
+
+| Category | Features |
+|----------|----------|
+| 📊 **Telemetry** | Real-time sensor data ingestion, querying, statistics, CSV export |
+| 🛢️ **Oil Tracking** | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
+| 💳 **Subscriptions** | APT payments, seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%) |
+| ⛓️ **Blockchain** | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
+| 🔔 **Notifications** | Subscription expiration reminders with 3 severity levels |
+| 🎨 **Frontend** | Interactive dashboard, real-time status indicators, modal-based actions |
+
 ## Project Components
 
 - **Python API**: FastAPI service with CORS enabled for telemetry ingestion, querying, subscription management, oil tracking, and CSV export. See [src/python_api/README.md](src/python_api/README.md).
@@ -322,12 +333,41 @@ See module READMEs for usage examples:
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
 - **DevOps**: PowerShell scripts, VS Code tasks, Git
 
-## Future Enhancements
+## Key Metrics 📈
 
-- [ ] Real-time WebSocket telemetry streaming
-- [ ] Machine learning predictions for equipment failure
-- [ ] Mobile app for field operators
-- [ ] Integration with actual IoT sensors (MQTT)
-- [ ] Advanced analytics dashboard with charts
-- [ ] Multi-user authentication and authorization
-- [ ] Blockchain explorer integration for audit trails
+- **8 Event Types**: Comprehensive on-chain event tracking
+- **3 Discount Mechanisms**: Seasonal (30%), Promo codes (custom %), Loyalty (15%)
+- **7 Oil Lifecycle Stages**: Complete tracking from drilling to delivery
+- **10+ API Endpoints**: Full RESTful coverage for all operations
+- **3 Notification Levels**: Info, Warning, Critical subscription alerts
+- **100% Backend Sync**: All frontend features supported by both APIs
+
+## Completed Features ✅
+
+- ✅ **Promotional Discount System**: Custom codes with expiry and usage limits
+- ✅ **Referral Rewards**: 10% APT rewards for referrers with comprehensive tracking
+- ✅ **Loyalty Rewards**: 15% discount for returning subscribers
+- ✅ **Smart Discount Stacking**: Highest discount always applied
+- ✅ **Subscription Reminders**: Multi-level expiration notifications
+- ✅ **Oil Movement Tracking**: Dual-mode DB + Blockchain tracking
+- ✅ **Comprehensive API Coverage**: Full sync between Python API and TypeScript gateway
+
+## Future Enhancements 🚀
+
+### Blockchain Enhancements
+- [ ] **Grace Period System**: Allow subscribers to renew within grace period without data loss
+- [ ] **Multi-Tier Loyalty**: Progressive discounts (15% → 20% → 25%) based on subscription count
+- [ ] **NFT Badges**: Issue NFTs for milestones (10 referrals, 1-year subscriber, etc.)
+- [ ] **Staking Rewards**: Stake APT to reduce subscription costs
+- [ ] **Affiliate Tiers**: Multi-level referrals with different reward percentages
+
+### Platform Features
+- [ ] **Real-time WebSocket Streaming**: Live telemetry updates without polling
+- [ ] **ML Predictions**: Equipment failure forecasting based on sensor patterns
+- [ ] **Mobile App**: React Native app for field operators
+- [ ] **IoT Integration**: Direct MQTT connection to physical sensors
+- [ ] **Advanced Analytics**: Charts, graphs, predictive dashboards
+- [ ] **Multi-user Auth**: Role-based access control (Admin, Operator, Viewer)
+- [ ] **Blockchain Explorer**: Custom explorer for audit trails and transaction history
+- [ ] **Email Notifications**: Automated alerts for expiring subscriptions
+- [ ] **Payment Gateway**: Credit card integration alongside APT payments
