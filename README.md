@@ -14,7 +14,7 @@ This project integrates multiple technologies:
 
 - **Python API**: FastAPI service with CORS enabled for telemetry ingestion, querying, subscription management, oil tracking, and CSV export. See [src/python_api/README.md](src/python_api/README.md).
 - **TypeScript Backend**: Express + TypeScript API gateway with full proxy coverage for all Python API endpoints (telemetry, subscriptions, oil tracking). See [src/ts_backend/README.md](src/ts_backend/README.md).
-- **Move Subscriptions**: Aptos Move package for blockchain-based subscription management with payment processing, discount codes, and seasonal promotions. See [blockchain/move/subscriptions](blockchain/move/subscriptions).
+- **Move Subscriptions**: Aptos Move package for blockchain-based subscription management with payment processing, discount codes, seasonal promotions, and referral rewards. See [blockchain/move/subscriptions](blockchain/move/subscriptions).
 - **Move Oil Tracker**: Aptos Move module for immutable, blockchain-verified oil batch tracking with ownership transfer and lifecycle events. See [blockchain/move/oil_tracker](blockchain/move/oil_tracker).
 - **Frontend Dashboard**: Interactive web interface with configurable API routing, real-time backend status indicators, and subscription expiration reminders. See [src/frontend/index.html](src/frontend/index.html).
 
@@ -49,16 +49,26 @@ This project integrates multiple technologies:
 - **Backend API** for subscription status tracking
 - **Fallback support** with localStorage for offline mode
 - See [docs/SUBSCRIPTION_REMINDER_FEATURE.md](docs/SUBSCRIPTION_REMINDER_FEATURE.md) for details
-
+### 💰 Referral System
+- **10% APT rewards**: Referrers automatically earn 10% of subscription price
+- **Automatic distribution**: Rewards transferred instantly on subscription
+- **Comprehensive tracking**: Monitor total rewards, referral count, and active referrals
+- **Smart contract integration**: All logic handled on-chain for transparency
+- **Referral statistics**: Query referrer info, total earnings, and active subscriptions
+- **Cancel handling**: Active referral count decrements when users cancel
+- **Event emission**: ReferralRewardPaid events for audit and analytics
+- **Dashboard UI**: Subscribe with referral and view referral stats modals
 ### ⛓️ Blockchain Features
 
 **Subscriptions** ([blockchain/move/subscriptions](blockchain/move/subscriptions)):
 - APT cryptocurrency payment processing
 - Seasonal discounts (30% off in March, August, October)
 - Custom promo codes with expiry and usage limits
+- **Referral system (10% rewards for referrers)**
 - Smart discount stacking (highest discount applies)
 - Subscription renewal and cancellation
-- Event tracking (payment, discounts, cancellations)
+- Event tracking (payment, discounts, referrals, cancellations)
+- Referral stats tracking (total rewards, active referrals)
 
 **Oil Tracking** ([blockchain/move/oil_tracker](blockchain/move/oil_tracker)):
 - Immutable batch creation and lifecycle tracking
