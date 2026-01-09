@@ -288,7 +288,16 @@
     right: 20px;
     background: white;
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 10pxounting objects: 100% (51/51), done.
+    Delta compression using up to 4 threads
+    Compressing objects: 100% (36/36), done.
+    Writing objects: 100% (38/38), 11.75 KiB | 3.00 KiB/s, done.
+    Total 38 (delta 17), reused 0 (delta 0), pack-reused 0 (from 0)
+    remote: Resolving deltas: 100% (17/17), completed with 6 local objects.
+    To https://github.com/davelee001/SMART-Oil-Field.git
+    c2fc9ea..08b91dc main -> main
+    branch 'main' set up to track 'origin/main'.
+    PS D:\_SCHOOL\MASTERS\Sem1\ICT APPLICATION IN OIL AND GAS\Project>;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     font-size: 0.9em;
     z-index: 999;
@@ -401,6 +410,14 @@
                         <strong>Subscribe with Code</strong>
                         <span>Use promo code for additional discount</span>
                     </li>
+                    <li class="action-item" onclick="showModal('subscribeWithReferral')">
+                        <strong>Subscribe with Referral</strong>
+                        <span>Earn rewards by referring friends</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('viewReferralStats')">
+                        <strong>View Referral Stats</strong>
+                        <span>Check your referral earnings and count</span>
+                    </li>
                     <li class="action-item" onclick="showModal('renew')">
                         <strong>Renew</strong>
                         <span>Extend subscription with payment</span>
@@ -478,6 +495,15 @@
                     </ul>
                 </div>
                 <div>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Referral System</h3>
+                    <ul class="feature-list">
+                        <li>10% reward for referrers</li>
+                        <li>Automatic reward distribution</li>
+                        <li>Referral stats tracking</li>
+                        <li>Active referral monitoring</li>
+                    </ul>
+                </div>
+                <div>
                     <h3 style="color: #1e3c72; margin-bottom: 15px;">Error Handling</h3>
                     <ul class="feature-list">
                         <li>10 named error codes</li>
@@ -502,7 +528,7 @@
             <div class="discount-banner">
                 <h3>🎉 Special Offers!</h3>
                 <p>Subscribe in March, August, or October and get 30% OFF your first subscription! Use promo codes for
-                    additional discounts.</p>
+                    additional discounts. Earn 10% APT rewards by referring friends!</p>
             </div>
         </footer>
     </div>

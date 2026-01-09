@@ -25,8 +25,10 @@ Aptos Move module to manage subscription plans with APT payment integration and 
 - `create_plan(admin: &signer, plan_id: u64, duration_secs: u64, price_octas: u64)` — registers a plan with pricing (1 APT = 100,000,000 octas)
 - `subscribe(user: &signer, plan_admin: address, plan_id: u64)` — subscribes using on-chain time, validates balance, and transfers payment to admin
 - `subscribe_with_code(user: &signer, plan_admin: address, plan_id: u64, discount_code: vector<u8>)` — subscribes with optional promotional discount code
+- `subscribe_with_referral(user: &signer, plan_admin: address, plan_id: u64, discount_code: vector<u8>, referrer: address)` — subscribes with referral tracking (referrer earns 10% reward)
 - `create_discount_code(admin: &signer, code: vector<u8>, discount_percent: u64, expiry_timestamp: u64, max_uses: u64)` — creates a promotional discount code (admin only)
-- `cancel(user: &signer)` — cancels the caller's subscription (no refund)
+- `get_referral_stats(user: address)` — returns `(has_stats, referrer, referral_count, total_rewards, active_referrals)`
+- `cancel(user: &signer)` — cancels the caller's subscription (no refund, decrements referrer's active count)
 - `get_subscription(addr: address)` — returns `(exists, plan_admin, plan_id, expires_at)`
 - `is_active(addr: address, now_secs: u64)` — returns whether subscription is active
 - `time_remaining(addr: address, now_secs: u64)` — seconds until expiry (0 if none/expired)
@@ -45,6 +47,7 @@ A simple end-to-end unit test is included in the module (`#[test]`), covering `i
 - `PaymentFailed { from, plan_id, required_octas, reason }` — emitted when payment validation fails (e.g., insufficient balance).
 - `DiscountApplied { user, plan_id, original_price, discounted_price, month }` — emitted when seasonal discount is applied.
 - `DiscountCodeUsed { user, code, discount_percent, savings }` — emitted when a promotional code is successfully used.
+- `ReferralRewardPaid { referrer, referee, plan_id, reward_octas }` — emitted when referral reward is paid to referrer.
 
 You can query events via the Aptos CLI or SDKs by using the admin account's event handles. For quick inspection with CLI:
 
@@ -119,6 +122,26 @@ renew(user, timestamp::now_seconds());
   
   // User subscribes with code
   subscribe_with_code(user, admin_address, 1, b"HALFPRICE");
+  ```
+
+## Referral System
+- **Referral Rewards**: When a user subscribes with a referrer address, the referrer earns **10% of the subscription price** as APT
+- **Tracking**: The contract tracks who referred each user, total referrals, rewards earned, and active referral count
+- **Usage**: `subscribe_with_referral(user, admin, plan_id, b"", referrer_address)`
+- **Benefits for Referrers**:
+  - Earn passive income from referred users
+  - Track total rewards earned
+  - Monitor active referral subscriptions
+- **Cancellation Impact**: When a referred user cancels, the referrer's active referral count decrements
+- **Example**:
+  ```move
+  // Alice refers Bob to subscribe
+  subscribe_with_referral(bob, admin_address, 1, b"", alice_address);
+  // Alice receives 0.1 APT (10% of 1 APT plan price)
+  
+  // Check Alice's referral stats
+  let (exists, _, count, rewards, active) = get_referral_stats(alice_address);
+  // count = 1, rewards = 10000000 octas (0.1 APT), active = 1
   ```
 - **Event**: `DiscountApplied` event logs all discount applications
 - **Example**: 1 APT plan → 0.7 APT during discount months

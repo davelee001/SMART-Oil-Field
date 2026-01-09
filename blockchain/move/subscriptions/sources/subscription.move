@@ -34,6 +34,7 @@ module subscription {
     struct PaymentFailed has drop, store { from: address, plan_id: u64, required_octas: u64, reason: u64 }
     struct DiscountApplied has drop, store { user: address, plan_id: u64, original_price: u64, discounted_price: u64, month: u64 }
     struct DiscountCodeUsed has drop, store { user: address, code: vector<u8>, discount_percent: u64, savings: u64 }
+    struct ReferralRewardPaid has drop, store { referrer: address, referee: address, plan_id: u64, reward_octas: u64 }
 
     /// Capability + event handles stored under the admin account
     struct Admin has key {
@@ -44,6 +45,7 @@ module subscription {
         payment_failed_events: event::EventHandle<PaymentFailed>,
         discount_events: event::EventHandle<DiscountApplied>,
         discount_code_events: event::EventHandle<DiscountCodeUsed>,
+        referral_events: event::EventHandle<ReferralRewardPaid>,
     }
 
     /// Plans registry stored under the admin account
@@ -76,6 +78,14 @@ module subscription {
         referral_count: u64,                 // number of successful referrals
     }
 
+    /// Referral statistics stored under user account
+    struct ReferralStats has key {
+        referrer: address,                   // who referred this user (if any)
+        referred_users: vector<address>,     // users this person has referred
+        total_rewards_earned: u64,           // total APT earned from referrals
+        active_referrals: u64,               // number of currently active referred subscriptions
+    }
+
     /// Initialize the package for an admin account: grants Admin and creates empty Plans
     public entry fun init(admin: &signer) acquires Admin, Plans {
         let addr = signer::address_of(admin);
@@ -88,6 +98,7 @@ module subscription {
             payment_failed_events: event::new_event_handle<PaymentFailed>(admin),
             discount_events: event::new_event_handle<DiscountApplied>(admin),
             discount_code_events: event::new_event_handle<DiscountCodeUsed>(admin),
+            referral_events: event::new_event_handle<ReferralRewardPaid>(admin),
         });
         move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>(), prices: vector::empty<u64>() });
         move_to(admin, DiscountCodes{ 
@@ -119,12 +130,24 @@ module subscription {
     /// Subscribe the caller to a plan defined by `plan_admin` and `plan_id` using on-chain time.
     /// Transfers the plan price from user to plan_admin.
     /// Optional discount_code as vector<u8> (empty vector for no code)
-    public entry fun subscribe(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription, DiscountCodes, UserDiscountHistory {
-        subscribe_with_code(user, plan_admin, plan_id, vector::empty<u8>());
+    public entry fun subscribe(user: &signer, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription, DiscountCodes, UserDiscountHistory, ReferralStats {
+        subscribe_with_referral(user, plan_admin, plan_id, vector::empty<u8>(), @0x0);
     }
 
     /// Subscribe with optional discount code
-    public entry fun subscribe_with_code(user: &signer, plan_admin: address, plan_id: u64, discount_code: vector<u8>) acquires Admin, Plans, UserSubscription, DiscountCodes, UserDiscountHistory {
+    public entry fun subscribe_with_code(user: &signer, plan_admin: address, plan_id: u64, discount_code: vector<u8>) acquires Admin, Plans, UserSubscription, DiscountCodes, UserDiscountHistory, ReferralStats {
+        subscribe_with_referral(user, plan_admin, plan_id, discount_code, @0x0);
+    }
+
+    /// Subscribe with optional discount code and referrer address
+    /// Referrer earns REFERRAL_BONUS_PERCENT of the subscription price
+    public entry fun subscribe_with_referral(
+        user: &signer, 
+        plan_admin: address, 
+        plan_id: u64, 
+        discount_code: vector<u8>,
+        referrer: address
+    ) acquires Admin, Plans, UserSubscription, DiscountCodes, UserDiscountHistory, ReferralStats {
         let user_addr = signer::address_of(user);
         assert!(!exists<UserSubscription>(user_addr), E_ALREADY_SUBSCRIBED);
         let plans = borrow_global<Plans>(plan_admin);
@@ -228,15 +251,76 @@ module subscription {
             vector::push_back(&mut history.used_codes, discount_code);
         };
         
+        // Handle referral rewards
+        if (referrer != @0x0 && referrer != user_addr && final_price > 0) {
+            // Calculate referral reward (10% of final price)
+            let referral_reward = (final_price * REFERRAL_BONUS_PERCENT) / 100;
+            
+            // Validate referrer has AptosCoin registered
+            if (coin::is_account_registered<AptosCoin>(referrer)) {
+                // Transfer reward from plan admin to referrer
+                if (coin::balance<AptosCoin>(plan_admin) >= referral_reward) {
+                    coin::transfer<AptosCoin>(user, referrer, referral_reward);
+                    
+                    // Initialize or update referrer's stats
+                    if (!exists<ReferralStats>(referrer)) {
+                        move_to(user, ReferralStats{
+                            referrer: @0x0,
+                            referred_users: vector::empty<address>(),
+                            total_rewards_earned: 0,
+                            active_referrals: 0
+                        });
+                    };
+                    let ref_stats = borrow_global_mut<ReferralStats>(referrer);
+                    if (!vector_contains(&ref_stats.referred_users, &user_addr)) {
+                        vector::push_back(&mut ref_stats.referred_users, user_addr);
+                    };
+                    ref_stats.total_rewards_earned = ref_stats.total_rewards_earned + referral_reward;
+                    ref_stats.active_referrals = ref_stats.active_referrals + 1;
+                    
+                    // Initialize referee's stats (track who referred them)
+                    if (!exists<ReferralStats>(user_addr)) {
+                        move_to(user, ReferralStats{
+                            referrer: referrer,
+                            referred_users: vector::empty<address>(),
+                            total_rewards_earned: 0,
+                            active_referrals: 0
+                        });
+                    };
+                    
+                    // Emit referral reward event
+                    event::emit_event(&mut admin_cap.referral_events, ReferralRewardPaid{
+                        referrer: referrer,
+                        referee: user_addr,
+                        plan_id: plan_id,
+                        reward_octas: referral_reward
+                    });
+                };
+            };
+        };
+        
         if (final_price > 0) {
             event::emit_event(&mut admin_cap.payment_events, PaymentReceived{ from: user_addr, plan_id, amount_octas: final_price });
         };
     }
 
     /// Cancel the caller's current subscription (if any)
-    public entry fun cancel(user: &signer) acquires Admin, UserSubscription {
+    public entry fun cancel(user: &signer) acquires Admin, UserSubscription, ReferralStats {
         let addr = signer::address_of(user);
         assert!(exists<UserSubscription>(addr), E_NOT_SUBSCRIBED);
+        
+        // Decrement referrer's active referrals count if user was referred
+        if (exists<ReferralStats>(addr)) {
+            let user_stats = borrow_global<ReferralStats>(addr);
+            let referrer_addr = user_stats.referrer;
+            if (referrer_addr != @0x0 && exists<ReferralStats>(referrer_addr)) {
+                let ref_stats = borrow_global_mut<ReferralStats>(referrer_addr);
+                if (ref_stats.active_referrals > 0) {
+                    ref_stats.active_referrals = ref_stats.active_referrals - 1;
+                };
+            };
+        };
+        
         // read admin address, then emit event, then remove resource
         let admin_addr = {
             let s_ref = borrow_global<UserSubscription>(addr);
@@ -420,8 +504,31 @@ module subscription {
         (false, 0)
     }
 
+    /// Helper to check if address vector contains target
+    fun vector_contains(vec: &vector<address>, target: &address): bool {
+        let i = 0;
+        let len = vector::length(vec);
+        while (i < len) {
+            if (vector::borrow(vec, i) == target) {
+                return true
+            };
+            i = i + 1;
+        };
+        false
+    }
+
+    /// Get referral statistics for a user
+    /// Returns (has_stats, referrer, referral_count, total_rewards, active_referrals)
+    public fun get_referral_stats(user: address): (bool, address, u64, u64, u64) acquires ReferralStats {
+        if (!exists<ReferralStats>(user)) {
+            return (false, @0x0, 0, 0, 0)
+        };
+        let stats = borrow_global<ReferralStats>(user);
+        (true, stats.referrer, vector::length(&stats.referred_users), stats.total_rewards_earned, stats.active_referrals)
+    }
+
     #[test]
-    public entry fun test_end_to_end(admin: &signer, user: &signer) acquires Admin, Plans, UserSubscription {
+    public entry fun test_end_to_end(admin: &signer, user: &signer) acquires Admin, Plans, UserSubscription, ReferralStats {
         let admin_addr = signer::address_of(admin);
         let user_addr = signer::address_of(user);
 

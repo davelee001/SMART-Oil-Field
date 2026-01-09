@@ -97,6 +97,38 @@ const modalTemplates = {
         <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::subscribe_with_code --args address:[admin] u64:[plan_id] string:[code]')">Subscribe with Code</button>
         <button class="close-btn" onclick="closeModal()">Close</button>
     `,
+    subscribeWithReferral: `
+        <h3>Subscribe with Referral</h3>
+        <p style="color: #28a745; margin-bottom: 15px;">💰 Referrer earns 10% reward in APT!</p>
+        <p style="color: #6c757d; margin-bottom: 15px;">Share your address to earn passive income from referrals</p>
+        <label>Plan Admin Address</label>
+        <input type="text" id="adminAddrRef" placeholder="0xA11CE5">
+        <label>Plan ID</label>
+        <input type="number" id="subPlanIdRef" placeholder="1" value="1">
+        <label>Discount Code (optional)</label>
+        <input type="text" id="discountCodeRef" placeholder="Leave empty for none">
+        <label>Referrer Address</label>
+        <input type="text" id="referrerAddr" placeholder="0x... (who referred you)">
+        <p style="color: #6c757d; font-size: 0.9em;">The referrer will receive 10% of your payment as a reward</p>
+        <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::subscribe_with_referral --args address:[admin] u64:[plan_id] string:[code] address:[referrer]')">Subscribe with Referral</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
+    viewReferralStats: `
+        <h3>Referral Statistics</h3>
+        <label>User Address</label>
+        <input type="text" id="refStatsAddr" placeholder="0xYourAddress">
+        <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::get_referral_stats --args address:[user]\\n\\nReturns: (has_stats, referrer, referral_count, total_rewards_octas, active_referrals)')">Query Stats</button>
+        <div id="referralStatsResults" style="margin-top: 20px;">
+            <h4>Expected Output:</h4>
+            <ul class="feature-list">
+                <li><strong>Who referred you:</strong> Referrer address</li>
+                <li><strong>Users you referred:</strong> Total count</li>
+                <li><strong>Total rewards earned:</strong> APT earned from referrals</li>
+                <li><strong>Active referrals:</strong> Currently subscribed referred users</li>
+            </ul>
+        </div>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
     renew: `
         <h3>Renew Subscription</h3>
         <p style="color: #6c757d; margin-bottom: 15px;">Extends your subscription by the plan duration</p>
@@ -121,6 +153,7 @@ const modalTemplates = {
             <li>PaymentFailed - Payment validation failed</li>
             <li>DiscountApplied - Seasonal discount applied</li>
             <li>DiscountCodeUsed - Promo code redeemed</li>
+            <li>ReferralRewardPaid - Referrer earned reward</li>
             <li>Canceled - Subscription canceled</li>
         </ul>
         <h4 style="color: #1e3c72; margin-top: 20px;">Error Codes</h4>
@@ -130,10 +163,11 @@ const modalTemplates = {
             <li>E_ALREADY_SUBSCRIBED (4)</li>
             <li>E_PLAN_NOT_FOUND (5)</li>
         </ul>
-        <h4 style="color: #1e3c72; margin-top: 20px;">Discount Types</h4>
+        <h4 style="color: #1e3c72; margin-top: 20px;">Discount & Rewards</h4>
         <ul class="feature-list">
             <li>Seasonal: 30% off in March, August, October</li>
             <li>Promo Codes: Custom percentages with expiry</li>
+            <li>Referrals: 10% reward for referrers</li>
             <li>Smart Stacking: Highest discount applied</li>
         </ul>
         <button class="close-btn" onclick="closeModal()">Close</button>
