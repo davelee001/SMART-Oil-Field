@@ -16,7 +16,7 @@ This project integrates multiple technologies:
 |----------|----------|
 | 📊 **Telemetry** | Real-time sensor data ingestion, querying, statistics, CSV export |
 | 🛢️ **Oil Tracking** | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
-| 💳 **Subscriptions** | APT payments, seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days) |
+| 💳 **Subscriptions** | APT payments, seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds |
 | ⛓️ **Blockchain** | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
 | 🔔 **Notifications** | Subscription expiration reminders with 3 severity levels |
 | 🎨 **Frontend** | Interactive dashboard, real-time status indicators, modal-based actions |
@@ -87,6 +87,15 @@ This project integrates multiple technologies:
 - **Event monitoring**: GracePeriodStarted events for analytics
 - **Smart contract enforcement**: All grace period logic handled on-chain
 - **Example**: Cancel subscription → Get 5 days to change mind → Renew to restore OR wait for permanent removal
+
+### 💰 Partial Refunds
+- **Pro-rated refunds**: Get refund based on unused subscription days
+- **Automatic calculation**: (Unused Days / Total Days) × Payment Amount
+- **Admin-approved**: Plan admin must approve and process refund
+- **On-chain tracking**: RefundIssued events with refund amount and unused days
+- **Smart contract logic**: All refund calculations handled transparently on-chain
+- **Example**: 15 days unused of 30-day plan (1 APT) = 0.5 APT refund
+- **Protection**: Payment amount and subscription start tracked for accurate calculations
 ### ⛓️ Blockchain Features
 
 **Subscriptions** ([blockchain/move/subscriptions](blockchain/move/subscriptions)):
@@ -96,11 +105,32 @@ This project integrates multiple technologies:
 - **Loyalty rewards (15% off for returning subscribers)**
 - **Referral system (10% rewards for referrers)**
 - **Grace period (5 days to renew after cancellation)**
+   - Cancel enters a 5-day grace period; user can renew to restore access
+   - Hard cancel immediately removes subscription
+   - On-chain tracking: `in_grace_period`, `grace_ends_at` fields
+   - Event: `GracePeriodStarted { user, expired_at, grace_ends_at }`
+- **Partial refunds (pro-rated refunds on early cancellation)**
+   - Admin can issue refund based on unused days
+   - Refund formula: `(Unused Days / Total Days) × Payment Amount`
+   - On-chain tracking: `last_payment_amount`, `subscription_start` fields
+   - Event: `RefundIssued { user, plan_id, refund_amount, days_unused }`
 - Smart discount stacking (highest discount applies)
 - Subscription renewal and cancellation
-- Event tracking (payment, discounts, referrals, loyalty, grace period, cancellations)
-- Event tracking (payment, discounts, referrals, loyalty, cancellations)
+- Event tracking (payment, discounts, referrals, loyalty, grace period, refunds, cancellations)
 - Referral stats tracking (total rewards, active referrals)
+
+**Event Types:**
+- `PlanCreated { plan_id, duration_secs, price_octas }`
+- `Subscribed { user, plan_admin, plan_id, expires_at }`
+- `Canceled { user }`
+- `PaymentReceived { from, plan_id, amount_octas }`
+- `PaymentFailed { from, plan_id, required_octas, reason }`
+- `DiscountApplied { user, plan_id, original_price, discounted_price, month }`
+- `DiscountCodeUsed { user, code, discount_percent, savings }`
+- `ReferralRewardPaid { referrer, referee, plan_id, reward_octas }`
+- `LoyaltyRewardApplied { user, plan_id, subscription_count, discount_percent, savings }`
+- `GracePeriodStarted { user, expired_at, grace_ends_at }`
+- `RefundIssued { user, plan_id, refund_amount, days_unused }`
 
 **Oil Tracking** ([blockchain/move/oil_tracker](blockchain/move/oil_tracker)):
 - Immutable batch creation and lifecycle tracking
@@ -346,9 +376,10 @@ See module READMEs for usage examples:
 
 ## Key Metrics 📈
 
-- **9 Event Types**: Comprehensive on-chain event tracking
+- **10 Event Types**: Comprehensive on-chain event tracking
 - **3 Discount Mechanisms**: Seasonal (30%), Promo codes (custom %), Loyalty (15%)
 - **5-Day Grace Period**: Cancellation protection with renewal option
+- **Pro-Rated Refunds**: Automatic calculation based on unused days
 - **7 Oil Lifecycle Stages**: Complete tracking from drilling to delivery
 - **10+ API Endpoints**: Full RESTful coverage for all operations
 - **3 Notification Levels**: Info, Warning, Critical subscription alerts
@@ -360,6 +391,7 @@ See module READMEs for usage examples:
 - ✅ **Referral Rewards**: 10% APT rewards for referrers with comprehensive tracking
 - ✅ **Loyalty Rewards**: 15% discount for returning subscribers
 - ✅ **Grace Period System**: 5-day grace period on cancellation with renewal option
+- ✅ **Partial Refunds**: Pro-rated refunds based on unused subscription days
 - ✅ **Smart Discount Stacking**: Highest discount always applied
 - ✅ **Subscription Reminders**: Multi-level expiration notifications
 - ✅ **Oil Movement Tracking**: Dual-mode DB + Blockchain tracking
