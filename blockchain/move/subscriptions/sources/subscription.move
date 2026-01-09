@@ -35,6 +35,7 @@ module subscription {
     struct DiscountApplied has drop, store { user: address, plan_id: u64, original_price: u64, discounted_price: u64, month: u64 }
     struct DiscountCodeUsed has drop, store { user: address, code: vector<u8>, discount_percent: u64, savings: u64 }
     struct ReferralRewardPaid has drop, store { referrer: address, referee: address, plan_id: u64, reward_octas: u64 }
+    struct LoyaltyRewardApplied has drop, store { user: address, plan_id: u64, subscription_count: u64, discount_percent: u64, savings: u64 }
 
     /// Capability + event handles stored under the admin account
     struct Admin has key {
@@ -46,6 +47,7 @@ module subscription {
         discount_events: event::EventHandle<DiscountApplied>,
         discount_code_events: event::EventHandle<DiscountCodeUsed>,
         referral_events: event::EventHandle<ReferralRewardPaid>,
+        loyalty_events: event::EventHandle<LoyaltyRewardApplied>,
     }
 
     /// Plans registry stored under the admin account
@@ -76,6 +78,7 @@ module subscription {
         used_codes: vector<vector<u8>>,      // codes this user has used
         seasonal_discount_used: bool,        // has used seasonal discount before
         referral_count: u64,                 // number of successful referrals
+        subscription_count: u64,             // total number of subscriptions (for loyalty)
     }
 
     /// Referral statistics stored under user account
@@ -99,6 +102,7 @@ module subscription {
             discount_events: event::new_event_handle<DiscountApplied>(admin),
             discount_code_events: event::new_event_handle<DiscountCodeUsed>(admin),
             referral_events: event::new_event_handle<ReferralRewardPaid>(admin),
+            loyalty_events: event::new_event_handle<LoyaltyRewardApplied>(admin),
         });
         move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>(), prices: vector::empty<u64>() });
         move_to(admin, DiscountCodes{ 
@@ -183,10 +187,24 @@ module subscription {
             };
         };
         
-        // Calculate final discount (use higher of seasonal or code discount)
+        // Check for loyalty discount (returning subscribers)
+        let loyalty_discount_percent = 0u64;
+        let is_loyal_customer = false;
+        if (exists<UserDiscountHistory>(user_addr)) {
+            let history = borrow_global<UserDiscountHistory>(user_addr);
+            if (history.subscription_count > 0) {
+                loyalty_discount_percent = LOYALTY_DISCOUNT_PERCENT;
+                is_loyal_customer = true;
+            };
+        };
+        
+        // Calculate final discount (use higher of seasonal, code, or loyalty discount)
         let applied_discount = if (is_discount_month) { DISCOUNT_PERCENT } else { 0 };
         if (code_discount_percent > applied_discount) {
             applied_discount = code_discount_percent;
+        };
+        if (loyalty_discount_percent > applied_discount) {
+            applied_discount = loyalty_discount_percent;
         };
         
         let final_price = if (applied_discount > 0 && price > 0) {
@@ -244,11 +262,39 @@ module subscription {
                 move_to(user, UserDiscountHistory{ 
                     used_codes: vector::empty<vector<u8>>(), 
                     seasonal_discount_used: false,
-                    referral_count: 0
+                    referral_count: 0,
+                    subscription_count: 0
                 });
             };
             let history = borrow_global_mut<UserDiscountHistory>(user_addr);
             vector::push_back(&mut history.used_codes, discount_code);
+        };
+        
+        // Emit loyalty reward event if applicable
+        if (is_loyal_customer && price > 0 && final_price < price && !has_valid_code && !is_discount_month) {
+            let sub_count = if (exists<UserDiscountHistory>(user_addr)) {
+                borrow_global<UserDiscountHistory>(user_addr).subscription_count
+            } else { 0 };
+            event::emit_event(&mut admin_cap.loyalty_events, LoyaltyRewardApplied{
+                user: user_addr,
+                plan_id: plan_id,
+                subscription_count: sub_count,
+                discount_percent: loyalty_discount_percent,
+                savings: price - final_price
+            });
+        };
+        
+        // Update subscription count for loyalty tracking
+        if (!exists<UserDiscountHistory>(user_addr)) {
+            move_to(user, UserDiscountHistory{ 
+                used_codes: vector::empty<vector<u8>>(), 
+                seasonal_discount_used: false,
+                referral_count: 0,
+                subscription_count: 1
+            });
+        } else {
+            let history = borrow_global_mut<UserDiscountHistory>(user_addr);
+            history.subscription_count = history.subscription_count + 1;
         };
         
         // Handle referral rewards

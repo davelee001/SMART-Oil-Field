@@ -118,6 +118,23 @@ const modalTemplates = {
         <label>User Address</label>
         <input type="text" id="refStatsAddr" placeholder="0xYourAddress">
         <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::get_referral_stats --args address:[user]\\n\\nReturns: (has_stats, referrer, referral_count, total_rewards_octas, active_referrals)')">Query Stats</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
+    viewLoyaltyStatus: `
+        <h3>🎁 Loyalty Status</h3>
+        <label>User Address</label>
+        <input type="text" id="loyaltyAddr" placeholder="0xYourAddress">
+        <button onclick="alert('Blockchain integration required. Query UserDiscountHistory resource to see subscription_count.\\n\\nIf subscription_count > 0, you qualify for 15% loyalty discount on future subscriptions!')">Check Loyalty Status</button>
+        <div style="margin-top: 20px; padding: 15px; background: rgba(74, 158, 255, 0.1); border-left: 3px solid #4a9eff; border-radius: 5px;">
+            <h4 style="color: #4a9eff; margin-bottom: 10px;">How Loyalty Works</h4>
+            <ul style="text-align: left; line-height: 1.8; color: #e0e0e0;">
+                <li>✅ Subscribe once at full price</li>
+                <li>🎉 Get <strong>15% off</strong> all future subscriptions</li>
+                <li>📊 Your subscription count is tracked on-chain</li>
+                <li>🏆 Loyalty competes with seasonal (30%) and promo discounts</li>
+                <li>💎 You always get the <strong>highest discount</strong> available</li>
+            </ul>
+        </div>
         <div id="referralStatsResults" style="margin-top: 20px;">
             <h4>Expected Output:</h4>
             <ul class="feature-list">
@@ -154,6 +171,7 @@ const modalTemplates = {
             <li>DiscountApplied - Seasonal discount applied</li>
             <li>DiscountCodeUsed - Promo code redeemed</li>
             <li>ReferralRewardPaid - Referrer earned reward</li>
+            <li>LoyaltyRewardApplied - Loyalty discount applied</li>
             <li>Canceled - Subscription canceled</li>
         </ul>
         <h4 style="color: #1e3c72; margin-top: 20px;">Error Codes</h4>

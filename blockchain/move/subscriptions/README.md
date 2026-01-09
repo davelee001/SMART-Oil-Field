@@ -48,6 +48,7 @@ A simple end-to-end unit test is included in the module (`#[test]`), covering `i
 - `DiscountApplied { user, plan_id, original_price, discounted_price, month }` — emitted when seasonal discount is applied.
 - `DiscountCodeUsed { user, code, discount_percent, savings }` — emitted when a promotional code is successfully used.
 - `ReferralRewardPaid { referrer, referee, plan_id, reward_octas }` — emitted when referral reward is paid to referrer.
+- `LoyaltyRewardApplied { user, plan_id, subscription_count, discount_percent, savings }` — emitted when loyalty discount is applied to returning subscribers.
 
 You can query events via the Aptos CLI or SDKs by using the admin account's event handles. For quick inspection with CLI:
 
@@ -142,6 +143,27 @@ renew(user, timestamp::now_seconds());
   // Check Alice's referral stats
   let (exists, _, count, rewards, active) = get_referral_stats(alice_address);
   // count = 1, rewards = 10000000 octas (0.1 APT), active = 1
+  ```
+
+## Loyalty Rewards
+- **Loyalty Discount**: Returning subscribers automatically receive a **15% discount** on all future subscriptions
+- **Qualification**: Anyone who has subscribed at least once before qualifies for loyalty discount
+- **Automatic Application**: No code needed - system detects returning subscribers via `UserDiscountHistory`
+- **Subscription Tracking**: Contract maintains `subscription_count` for each user
+- **Smart Stacking**: Loyalty discount competes with seasonal (30%), promo codes, and referral discounts - **highest wins**
+- **Event Tracking**: `LoyaltyRewardApplied` event emitted with subscription count and savings
+- **Example**:
+  ```move
+  // Bob's first subscription - pays full price (1 APT)
+  subscribe(bob, admin_address, 1);
+  // subscription_count = 1
+  
+  // Bob's second subscription - gets 15% loyalty discount
+  subscribe(bob, admin_address, 1);
+  // Pays 0.85 APT (15% off), subscription_count = 2
+  
+  // If seasonal discount (30%) is active, Bob gets 30% instead of 15%
+  // Always receives the best available discount
   ```
 - **Event**: `DiscountApplied` event logs all discount applications
 - **Example**: 1 APT plan → 0.7 APT during discount months

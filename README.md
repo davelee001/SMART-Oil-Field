@@ -58,16 +58,26 @@ This project integrates multiple technologies:
 - **Cancel handling**: Active referral count decrements when users cancel
 - **Event emission**: ReferralRewardPaid events for audit and analytics
 - **Dashboard UI**: Subscribe with referral and view referral stats modals
+
+### 🎁 Loyalty Rewards
+- **15% discount for returning subscribers**: Automatic loyalty discount on repeat subscriptions
+- **Subscription count tracking**: System tracks total subscription history per user
+- **Smart discount stacking**: Loyalty discount competes with seasonal and promo discounts (highest wins)
+- **Event logging**: LoyaltyRewardApplied events track all loyalty discounts
+- **Transparent on-chain**: All loyalty logic in smart contract, no off-chain manipulation
+- **Immediate activation**: Loyalty discount available on 2nd and subsequent subscriptions
+- **Example**: Subscribe once at full price → All future subscriptions get 15% off (unless higher discount applies)
 ### ⛓️ Blockchain Features
 
 **Subscriptions** ([blockchain/move/subscriptions](blockchain/move/subscriptions)):
 - APT cryptocurrency payment processing
 - Seasonal discounts (30% off in March, August, October)
 - Custom promo codes with expiry and usage limits
+- **Loyalty rewards (15% off for returning subscribers)**
 - **Referral system (10% rewards for referrers)**
 - Smart discount stacking (highest discount applies)
 - Subscription renewal and cancellation
-- Event tracking (payment, discounts, referrals, cancellations)
+- Event tracking (payment, discounts, referrals, loyalty, cancellations)
 - Referral stats tracking (total rewards, active referrals)
 
 **Oil Tracking** ([blockchain/move/oil_tracker](blockchain/move/oil_tracker)):
