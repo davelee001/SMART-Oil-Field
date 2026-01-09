@@ -23,6 +23,7 @@ module subscription {
     const DISCOUNT_PERCENT: u64 = 30;  // 30% discount
     const REFERRAL_BONUS_PERCENT: u64 = 10;  // 10% referral discount
     const LOYALTY_DISCOUNT_PERCENT: u64 = 15;  // 15% loyalty discount for returning users
+    const GRACE_PERIOD_DAYS: u64 = 5;  // 5 days grace period after expiry
     const SECONDS_PER_DAY: u64 = 86400;
     const DAYS_PER_YEAR: u64 = 365;
 
@@ -36,6 +37,7 @@ module subscription {
     struct DiscountCodeUsed has drop, store { user: address, code: vector<u8>, discount_percent: u64, savings: u64 }
     struct ReferralRewardPaid has drop, store { referrer: address, referee: address, plan_id: u64, reward_octas: u64 }
     struct LoyaltyRewardApplied has drop, store { user: address, plan_id: u64, subscription_count: u64, discount_percent: u64, savings: u64 }
+    struct GracePeriodStarted has drop, store { user: address, expired_at: u64, grace_ends_at: u64 }
 
     /// Capability + event handles stored under the admin account
     struct Admin has key {
@@ -48,6 +50,7 @@ module subscription {
         discount_code_events: event::EventHandle<DiscountCodeUsed>,
         referral_events: event::EventHandle<ReferralRewardPaid>,
         loyalty_events: event::EventHandle<LoyaltyRewardApplied>,
+        grace_period_events: event::EventHandle<GracePeriodStarted>,
     }
 
     /// Plans registry stored under the admin account
@@ -62,6 +65,8 @@ module subscription {
         plan_admin: address,
         plan_id: u64,
         expires_at: u64,
+        in_grace_period: bool,
+        grace_ends_at: u64,
     }
 
     /// Discount codes registry stored under admin
@@ -103,6 +108,7 @@ module subscription {
             discount_code_events: event::new_event_handle<DiscountCodeUsed>(admin),
             referral_events: event::new_event_handle<ReferralRewardPaid>(admin),
             loyalty_events: event::new_event_handle<LoyaltyRewardApplied>(admin),
+            grace_period_events: event::new_event_handle<GracePeriodStarted>(admin),
         });
         move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>(), prices: vector::empty<u64>() });
         move_to(admin, DiscountCodes{ 
@@ -232,6 +238,12 @@ module subscription {
         };
         
         let expires = now_secs + dur;
+            plan_admin, 
+            plan_id, 
+            expires_at: expires,
+            in_grace_period: false,
+            grace_ends_at: 0
+       
         move_to(user, UserSubscription{ plan_admin, plan_id, expires_at: expires });
 
         // emit events under the plan admin
@@ -350,8 +362,32 @@ module subscription {
         };
     }
 
-    /// Cancel the caller's current subscription (if any)
-    public entry fun cancel(user: &signer) acquires Admin, UserSubscription, ReferralStats {
+    /// Cancel the caller's current subscription - enters grace period first
+    /// Users can renew during grace period to restore access
+    public entry fun cancel(user: &signer) acquires Admin, UserSubscription {
+        let addr = signer::address_of(user);
+        assert!(exists<UserSubscription>(addr), E_NOT_SUBSCRIBED);
+        
+        let sub = borrow_global_mut<UserSubscription>(addr);
+        let admin_addr = sub.plan_admin;
+        let current_time = timestamp::now_seconds();
+        
+        // Set grace period
+        sub.in_grace_period = true;
+        sub.grace_ends_at = current_time + (GRACE_PERIOD_DAYS * SECONDS_PER_DAY);
+        
+        // Emit grace period event
+        let admin_cap = borrow_global_mut<Admin>(admin_addr);
+        event::emit_event(&mut admin_cap.grace_period_events, GracePeriodStarted{ 
+            user: addr, 
+            expired_at: sub.expires_at,
+            grace_ends_at: sub.grace_ends_at
+        });
+    }
+
+    /// Hard cancel - removes subscription after grace period expires
+    /// Can only be called if grace period has ended or user explicitly requests immediate cancel
+    public entry fun hard_cancel(user: &signer) acquires Admin, UserSubscription, ReferralStats {
         let addr = signer::address_of(user);
         assert!(exists<UserSubscription>(addr), E_NOT_SUBSCRIBED);
         
@@ -455,6 +491,10 @@ module subscription {
         
         let base = if (s_mut.expires_at > now_secs) { s_mut.expires_at } else { now_secs };
         s_mut.expires_at = base + dur;
+        
+        // Clear grace period if renewing during grace period
+        s_mut.in_grace_period = false;
+        s_mut.grace_ends_at = 0;
 
         // emit events under the plan admin (reuse Subscribed for renewals)
         let admin_cap = borrow_global_mut<Admin>(plan_admin);
@@ -571,6 +611,17 @@ module subscription {
         };
         let stats = borrow_global<ReferralStats>(user);
         (true, stats.referrer, vector::length(&stats.referred_users), stats.total_rewards_earned, stats.active_referrals)
+    }
+
+    /// View function: get grace period status for a user
+    /// Returns: (in_grace_period, grace_ends_at)
+    #[view]
+    public fun get_grace_period_status(user: address): (bool, u64) acquires UserSubscription {
+        if (!exists<UserSubscription>(user)) {
+            return (false, 0)
+        };
+        let sub = borrow_global<UserSubscription>(user);
+        (sub.in_grace_period, sub.grace_ends_at)
     }
 
     #[test]

@@ -165,5 +165,32 @@ renew(user, timestamp::now_seconds());
   // If seasonal discount (30%) is active, Bob gets 30% instead of 15%
   // Always receives the best available discount
   ```
+
+## Grace Period System
+- **Grace Period Duration**: 5 days after cancellation before permanent removal
+- **Cancel Function**: Calling `cancel()` starts grace period instead of immediate deletion
+- **Grace Period Tracking**: `in_grace_period` flag and `grace_ends_at` timestamp stored in `UserSubscription`
+- **Renewal During Grace**: Users can call `renew()` during grace period to restore full access
+- **Hard Cancel**: Users can call `hard_cancel()` for immediate permanent removal
+- **Event Tracking**: `GracePeriodStarted` event emitted with expiry information
+- **View Function**: `get_grace_period_status(address)` returns grace period status
+- **Example**:
+  ```move
+  // User cancels subscription - enters grace period
+  cancel(user);
+  // in_grace_period = true, grace_ends_at = current_time + 5 days
+  
+  // Check grace period status
+  let (in_grace, ends_at) = get_grace_period_status(user_address);
+  // in_grace = true, ends_at = timestamp 5 days from now
+  
+  // Option 1: User changes mind and renews during grace period
+  renew(user, timestamp::now_seconds());
+  // Full access restored, grace period cleared
+  
+  // Option 2: User wants immediate removal
+  hard_cancel(user);
+  // Subscription permanently removed, no grace period
+  ```
 - **Event**: `DiscountApplied` event logs all discount applications
 - **Example**: 1 APT plan → 0.7 APT during discount months

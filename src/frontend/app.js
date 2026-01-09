@@ -156,8 +156,33 @@ const modalTemplates = {
     `,
     cancel: `
         <h3>Cancel Subscription</h3>
-        <p style="color: #dc3545; margin-bottom: 15px;">⚠️ Warning: Canceling does not refund payments</p>
-        <button onclick="alert('Blockchain integration required. Use Aptos CLI to cancel.')">Cancel Subscription</button>
+        <p style="color: #ffc107; margin-bottom: 15px;">⏰ Grace Period: You'll have 5 days to renew after canceling</p>
+        <p style="color: #6c757d; margin-bottom: 15px;">During grace period, you can renew to restore full access</p>
+        <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::cancel')">Start Grace Period</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
+    hardCancel: `
+        <h3>❌ Immediate Cancellation</h3>
+        <p style="color: #dc3545; margin-bottom: 15px;">⚠️ Warning: This permanently removes your subscription</p>
+        <p style="color: #dc3545; margin-bottom: 15px;">No grace period, no refunds</p>
+        <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::hard_cancel')">Permanently Cancel</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
+    checkGracePeriod: `
+        <h3>⏰ Grace Period Status</h3>
+        <label>User Address</label>
+        <input type="text" id="graceUserAddr" placeholder="0xYourAddress">
+        <button onclick="alert('Blockchain integration required. Query view function:\\n\\nget_grace_period_status(address)\\n\\nReturns: (in_grace_period: bool, grace_ends_at: u64)')">Check Status</button>
+        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; border-radius: 5px;">
+            <h4 style="color: #ffc107; margin-bottom: 10px;">About Grace Period</h4>
+            <ul style="text-align: left; line-height: 1.8; color: #e0e0e0;">
+                <li>⏰ <strong>5 days</strong> to renew after cancellation</li>
+                <li>✅ Full access restored upon renewal</li>
+                <li>📅 Grace period starts when you click cancel</li>
+                <li>❌ After grace period, subscription is permanently removed</li>
+                <li>💰 Renewing during grace period uses normal pricing</li>
+            </ul>
+        </div>
         <button class="close-btn" onclick="closeModal()">Close</button>
     `,
     blockchainInfo: `
@@ -172,6 +197,7 @@ const modalTemplates = {
             <li>DiscountCodeUsed - Promo code redeemed</li>
             <li>ReferralRewardPaid - Referrer earned reward</li>
             <li>LoyaltyRewardApplied - Loyalty discount applied</li>
+            <li>GracePeriodStarted - User entered grace period</li>
             <li>Canceled - Subscription canceled</li>
         </ul>
         <h4 style="color: #1e3c72; margin-top: 20px;">Error Codes</h4>
