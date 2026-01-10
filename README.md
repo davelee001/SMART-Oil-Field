@@ -17,6 +17,7 @@ This project integrates multiple technologies:
 | 📊 **Telemetry** | Real-time sensor data ingestion, querying, statistics, CSV export |
 | 🛢️ **Oil Tracking** | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
 | 💳 **Subscriptions** | APT payments, seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds |
+| 💰 **Payment Enhancements** | Multi-token support (APT/USDC/USDT), installment plans, stablecoin pricing, payment receipts, escrow system |
 | ⛓️ **Blockchain** | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
 | 🔔 **Notifications** | Subscription expiration reminders with 3 severity levels |
 | 🎨 **Frontend** | Interactive dashboard, real-time status indicators, modal-based actions |
@@ -96,6 +97,18 @@ This project integrates multiple technologies:
 - **Smart contract logic**: All refund calculations handled transparently on-chain
 - **Example**: 15 days unused of 30-day plan (1 APT) = 0.5 APT refund
 - **Protection**: Payment amount and subscription start tracked for accurate calculations
+
+### 💳 Payment Enhancements
+- **Multi-token support**: Accept payments in APT, USDC, or USDT
+- **Installment plans**: Create flexible payment plans (monthly, quarterly, annually)
+- **Stablecoin pricing**: Convert USD amounts to tokens to avoid volatility
+- **Payment receipts**: Automatic invoice generation for all payments
+- **Escrow system**: Hold disputed payments for resolution
+- **Price feed**: Real-time token-to-USD conversion (oracle-ready)
+- **Installment tracking**: Monitor payment progress, due dates, and completion status
+- **Dispute resolution**: Admin-controlled escrow release or refund mechanism
+- See [Payment Enhancements Guide](blockchain/move/subscriptions/README_PAYMENT_ENHANCEMENTS.md) for details
+
 ### ⛓️ Blockchain Features
 
 **Subscriptions** ([blockchain/move/subscriptions](blockchain/move/subscriptions)):
