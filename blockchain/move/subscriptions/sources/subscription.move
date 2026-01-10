@@ -1,4 +1,12 @@
-﻿            /// Gift a subscription to another user (payer pays for recipient)
+﻿                /// Transfer a subscription to another user (removes from sender, gives to recipient)
+                public entry fun transfer_subscription(sender: &signer, recipient: address) acquires UserSubscription {
+                    let sender_addr = signer::address_of(sender);
+                    assert!(exists<UserSubscription>(sender_addr), E_NOT_SUBSCRIBED);
+                    assert!(!exists<UserSubscription>(recipient), E_ALREADY_SUBSCRIBED);
+                    let sub = move_from<UserSubscription>(sender_addr);
+                    move_to(&signer::borrow_address(recipient), sub);
+                }
+            /// Gift a subscription to another user (payer pays for recipient)
             public entry fun gift_subscription(payer: &signer, recipient: address, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription {
                 let payer_addr = signer::address_of(payer);
                 assert!(!exists<UserSubscription>(recipient), E_ALREADY_SUBSCRIBED);
