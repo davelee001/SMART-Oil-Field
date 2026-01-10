@@ -1,4 +1,42 @@
-﻿        /// Toggle auto-renewal for a user's subscription
+﻿            /// Gift a subscription to another user (payer pays for recipient)
+            public entry fun gift_subscription(payer: &signer, recipient: address, plan_admin: address, plan_id: u64) acquires Admin, Plans, UserSubscription {
+                let payer_addr = signer::address_of(payer);
+                assert!(!exists<UserSubscription>(recipient), E_ALREADY_SUBSCRIBED);
+                let plans = borrow_global<Plans>(plan_admin);
+                let (found, idx) = find_index(&plans.ids, plan_id);
+                assert!(found, E_PLAN_NOT_FOUND);
+                let dur = *vector::borrow(&plans.durations, idx);
+                let price = *vector::borrow(&plans.prices, idx);
+                let now_secs = timestamp::now_seconds();
+                // Validate and transfer payment from payer to admin
+                if (price > 0) {
+                    assert!(coin::is_account_registered<AptosCoin>(payer_addr), E_COIN_NOT_REGISTERED);
+                    let balance = coin::balance<AptosCoin>(payer_addr);
+                    assert!(balance >= price, E_INSUFFICIENT_BALANCE);
+                    coin::transfer<AptosCoin>(payer, plan_admin, price);
+                };
+                // Create subscription for recipient
+                move_to(&signer::borrow_address(recipient), UserSubscription{
+                    plan_admin,
+                    plan_id,
+                    expires_at: now_secs + dur,
+                    in_grace_period: false,
+                    grace_ends_at: 0,
+                    last_payment_amount: price,
+                    subscription_start: now_secs,
+                    auto_renew: false,
+                    paused: false,
+                    pause_start: 0,
+                    total_paused_secs: 0
+                });
+                // Emit event under plan admin
+                let admin_cap = borrow_global_mut<Admin>(plan_admin);
+                event::emit_event(&mut admin_cap.subscribed_events, Subscribed{ user: recipient, plan_admin, plan_id, expires_at: now_secs + dur });
+                if (price > 0) {
+                    event::emit_event(&mut admin_cap.payment_events, PaymentReceived{ from: payer_addr, plan_id, amount_octas: price });
+                }
+            }
+        /// Toggle auto-renewal for a user's subscription
         public entry fun set_auto_renew(user: &signer, enable: bool) acquires UserSubscription {
             let user_addr = signer::address_of(user);
             assert!(exists<UserSubscription>(user_addr), E_NOT_SUBSCRIBED);
