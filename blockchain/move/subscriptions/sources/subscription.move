@@ -1,4 +1,120 @@
-﻿address subscriptions {
+﻿    /// Group (family) subscription resource stored under the group admin
+    struct GroupSubscription has key {
+        plan_admin: address,
+        plan_id: u64,
+        expires_at: u64,
+        members: vector<address>,
+        max_members: u64,
+    }
+
+    /// Create a new group subscription (admin only, for a plan)
+    public entry fun create_group_subscription(admin: &signer, plan_id: u64, max_members: u64) acquires Plans, GroupSubscription {
+        let admin_addr = signer::address_of(admin);
+        assert!(!exists<GroupSubscription>(admin_addr), E_ALREADY_INITIALIZED);
+        let plans = borrow_global<Plans>(admin_addr);
+        let (found, idx) = find_index(&plans.ids, plan_id);
+        assert!(found, E_PLAN_NOT_FOUND);
+        let dur = *vector::borrow(&plans.durations, idx);
+        let now_secs = timestamp::now_seconds();
+        move_to(admin, GroupSubscription{
+            plan_admin: admin_addr,
+            plan_id,
+            expires_at: now_secs + dur,
+            members: vector::empty<address>(),
+            max_members
+        });
+    }
+
+    /// Join a group subscription (user joins by group admin address)
+    public entry fun join_group_subscription(user: &signer, group_admin: address) acquires GroupSubscription, UserSubscription {
+        let user_addr = signer::address_of(user);
+        assert!(!exists<UserSubscription>(user_addr), E_ALREADY_SUBSCRIBED);
+        assert!(exists<GroupSubscription>(group_admin), E_PLAN_NOT_FOUND);
+        let group = borrow_global_mut<GroupSubscription>(group_admin);
+        let n = vector::length(&group.members);
+        assert!(n < group.max_members, E_PLAN_EXISTS); // reuse error for "group full"
+        vector::push_back(&mut group.members, user_addr);
+        // User gets a UserSubscription with same expiry as group
+        move_to(user, UserSubscription{
+            plan_admin: group.plan_admin,
+            plan_id: group.plan_id,
+            expires_at: group.expires_at,
+            in_grace_period: false,
+            grace_ends_at: 0,
+            last_payment_amount: 0,
+            subscription_start: timestamp::now_seconds(),
+            auto_renew: false
+        });
+    }
+
+    /// Leave a group subscription (user removes self)
+    public entry fun leave_group_subscription(user: &signer, group_admin: address) acquires GroupSubscription, UserSubscription {
+        let user_addr = signer::address_of(user);
+        assert!(exists<UserSubscription>(user_addr), E_NOT_SUBSCRIBED);
+        assert!(exists<GroupSubscription>(group_admin), E_PLAN_NOT_FOUND);
+        let group = borrow_global_mut<GroupSubscription>(group_admin);
+        let mut i = 0u64;
+        let n = vector::length(&group.members);
+        let mut found = false;
+        while (i < n) {
+            if (*vector::borrow(&group.members, i) == user_addr) {
+                found = true;
+                break;
+            };
+            i = i + 1;
+        };
+        assert!(found, E_NOT_SUBSCRIBED);
+        vector::swap_remove(&mut group.members, i);
+        let _ = move_from<UserSubscription>(user_addr);
+    }
+
+    /// Admin can remove a member from group
+    public entry fun remove_group_member(admin: &signer, member: address) acquires GroupSubscription, UserSubscription {
+        let admin_addr = signer::address_of(admin);
+        assert!(exists<GroupSubscription>(admin_addr), E_NOT_ADMIN);
+        let group = borrow_global_mut<GroupSubscription>(admin_addr);
+        let mut i = 0u64;
+        let n = vector::length(&group.members);
+        let mut found = false;
+        while (i < n) {
+            if (*vector::borrow(&group.members, i) == member) {
+                found = true;
+                break;
+            };
+            i = i + 1;
+        };
+        assert!(found, E_NOT_SUBSCRIBED);
+        vector::swap_remove(&mut group.members, i);
+        if (exists<UserSubscription>(member)) {
+            let _ = move_from<UserSubscription>(member);
+        }
+    }
+
+    /// Renew group subscription (admin only)
+    public entry fun renew_group_subscription(admin: &signer) acquires GroupSubscription, Plans, UserSubscription {
+        let admin_addr = signer::address_of(admin);
+        assert!(exists<GroupSubscription>(admin_addr), E_NOT_ADMIN);
+        let group = borrow_global_mut<GroupSubscription>(admin_addr);
+        let plans = borrow_global<Plans>(admin_addr);
+        let (found, idx) = find_index(&plans.ids, group.plan_id);
+        assert!(found, E_PLAN_NOT_FOUND);
+        let dur = *vector::borrow(&plans.durations, idx);
+        let now_secs = timestamp::now_seconds();
+        let new_expiry = if (group.expires_at > now_secs) { group.expires_at + dur } else { now_secs + dur };
+        group.expires_at = new_expiry;
+        // Update all members' expiry
+        let n = vector::length(&group.members);
+        let mut i = 0u64;
+        while (i < n) {
+            let member = *vector::borrow(&group.members, i);
+            if (exists<UserSubscription>(member)) {
+                let sub = borrow_global_mut<UserSubscription>(member);
+                sub.expires_at = new_expiry;
+            };
+            i = i + 1;
+        }
+    }
+address subscriptions {
 module subscription {
     use std::signer;
     use std::vector;
@@ -38,6 +154,7 @@ module subscription {
     struct ReferralRewardPaid has drop, store { referrer: address, referee: address, plan_id: u64, reward_octas: u64 }
     struct LoyaltyRewardApplied has drop, store { user: address, plan_id: u64, subscription_count: u64, discount_percent: u64, savings: u64 }
     struct GracePeriodStarted has drop, store { user: address, expired_at: u64, grace_ends_at: u64 }
+    struct RefundIssued has drop, store { user: address, plan_id: u64, refund_amount: u64, days_unused: u64 }
 
     /// Capability + event handles stored under the admin account
     struct Admin has key {
@@ -51,6 +168,7 @@ module subscription {
         referral_events: event::EventHandle<ReferralRewardPaid>,
         loyalty_events: event::EventHandle<LoyaltyRewardApplied>,
         grace_period_events: event::EventHandle<GracePeriodStarted>,
+        refund_events: event::EventHandle<RefundIssued>,
     }
 
     /// Plans registry stored under the admin account
@@ -67,6 +185,67 @@ module subscription {
         expires_at: u64,
         in_grace_period: bool,
         grace_ends_at: u64,
+        last_payment_amount: u64,  // For pro-rated refund calculation
+        subscription_start: u64,   // When current subscription started
+        auto_renew: bool,          // For future auto-renewal feature
+    }
+    /// Upgrade or downgrade the user's subscription to a different plan (same admin)
+    /// Handles pro-rated charge/refund for the remaining period
+    /// Transfers difference in price (if any) between old and new plan
+    /// Only allows upgrade/downgrade within the same plan_admin
+    public entry fun change_plan(user: &signer, new_plan_id: u64) acquires Admin, Plans, UserSubscription {
+        let user_addr = signer::address_of(user);
+        assert!(exists<UserSubscription>(user_addr), E_NOT_SUBSCRIBED);
+        let sub = borrow_global_mut<UserSubscription>(user_addr);
+        let plan_admin = sub.plan_admin;
+        let old_plan_id = sub.plan_id;
+        let old_expires = sub.expires_at;
+        let now_secs = timestamp::now_seconds();
+        let old_payment = sub.last_payment_amount;
+
+        // Get old and new plan info
+        let plans = borrow_global<Plans>(plan_admin);
+        let (found_old, idx_old) = find_index(&plans.ids, old_plan_id);
+        let (found_new, idx_new) = find_index(&plans.ids, new_plan_id);
+        assert!(found_old, E_PLAN_NOT_FOUND);
+        assert!(found_new, E_PLAN_NOT_FOUND);
+        let old_duration = *vector::borrow(&plans.durations, idx_old);
+        let new_duration = *vector::borrow(&plans.durations, idx_new);
+        let old_price = *vector::borrow(&plans.prices, idx_old);
+        let new_price = *vector::borrow(&plans.prices, idx_new);
+
+        // Calculate unused time and pro-rate value
+        let remaining_secs = if (old_expires > now_secs) { old_expires - now_secs } else { 0 };
+        let old_total_secs = old_duration;
+        let new_total_secs = new_duration;
+        let refund = if (old_total_secs > 0 && old_payment > 0 && remaining_secs > 0) {
+            (old_payment * remaining_secs) / old_total_secs
+        } else { 0 };
+
+        // Calculate new plan price for the same remaining period (pro-rated)
+        let new_charge = if (new_total_secs > 0 && new_price > 0 && remaining_secs > 0) {
+            (new_price * remaining_secs) / new_total_secs
+        } else { 0 };
+
+        // If new_charge > refund, user pays the difference; if refund > new_charge, user gets refund
+        if (new_charge > refund) {
+            let diff = new_charge - refund;
+            assert!(coin::is_account_registered<AptosCoin>(user_addr), E_COIN_NOT_REGISTERED);
+            let balance = coin::balance<AptosCoin>(user_addr);
+            assert!(balance >= diff, E_INSUFFICIENT_BALANCE);
+            coin::transfer<AptosCoin>(user, plan_admin, diff);
+        } else if (refund > new_charge && refund > 0) {
+            let diff = refund - new_charge;
+            // Only refund if admin has enough balance
+            if (coin::is_account_registered<AptosCoin>(plan_admin) && coin::balance<AptosCoin>(plan_admin) >= diff) {
+                coin::transfer<AptosCoin>(plan_admin, user_addr, diff);
+            }
+        }
+
+        // Update subscription to new plan, keep expiry the same
+        sub.plan_id = new_plan_id;
+        sub.last_payment_amount = new_charge;
+        // Optionally, could reset subscription_start to now_secs
     }
 
     /// Discount codes registry stored under admin
@@ -109,6 +288,7 @@ module subscription {
             referral_events: event::new_event_handle<ReferralRewardPaid>(admin),
             loyalty_events: event::new_event_handle<LoyaltyRewardApplied>(admin),
             grace_period_events: event::new_event_handle<GracePeriodStarted>(admin),
+            refund_events: event::new_event_handle<RefundIssued>(admin),
         });
         move_to(admin, Plans{ ids: vector::empty<u64>(), durations: vector::empty<u64>(), prices: vector::empty<u64>() });
         move_to(admin, DiscountCodes{ 
@@ -238,13 +418,15 @@ module subscription {
         };
         
         let expires = now_secs + dur;
+        move_to(user, UserSubscription{ 
             plan_admin, 
             plan_id, 
             expires_at: expires,
             in_grace_period: false,
-            grace_ends_at: 0
-       
-        move_to(user, UserSubscription{ plan_admin, plan_id, expires_at: expires });
+            grace_ends_at: 0,
+            last_payment_amount: final_price,
+            subscription_start: now_secs
+        });
 
         // emit events under the plan admin
         let admin_cap = borrow_global_mut<Admin>(plan_admin);
@@ -414,6 +596,81 @@ module subscription {
         // dropped
     }
 
+    /// Cancel with pro-rated refund based on unused days
+    /// Admin must call this function to approve and issue refund
+    /// Calculates refund amount and transfers APT back to user
+    public entry fun cancel_with_refund(admin: &signer, user_addr: address) acquires Admin, UserSubscription, ReferralStats, Plans {
+        let admin_addr = signer::address_of(admin);
+        assert!(exists<Admin>(admin_addr), E_NOT_ADMIN);
+        assert!(exists<UserSubscription>(user_addr), E_NOT_SUBSCRIBED);
+        
+        let sub = borrow_global<UserSubscription>(user_addr);
+        let plan_admin = sub.plan_admin;
+        assert!(plan_admin == admin_addr, E_NOT_ADMIN);  // Ensure admin owns the plan
+        
+        let plan_id = sub.plan_id;
+        let current_time = timestamp::now_seconds();
+        let expires_at = sub.expires_at;
+        let payment_amount = sub.last_payment_amount;
+        let subscription_start = sub.subscription_start;
+        
+        // Calculate refund amount based on unused time
+        let refund_amount = 0u64;
+        let days_unused = 0u64;
+        
+        if (current_time < expires_at && payment_amount > 0) {
+            let time_unused = expires_at - current_time;
+            days_unused = time_unused / SECONDS_PER_DAY;
+            
+            // Get plan duration to calculate pro-rated refund
+            let plans = borrow_global<Plans>(plan_admin);
+            let (found, idx) = find_index(&plans.ids, plan_id);
+            if (found) {
+                let total_duration = *vector::borrow(&plans.durations, idx);
+                let total_days = total_duration / SECONDS_PER_DAY;
+                
+                if (total_days > 0) {
+                    // Pro-rated refund: (unused_days / total_days) * payment_amount
+                    refund_amount = (days_unused * payment_amount) / total_days;
+                };
+            };
+        };
+        
+        // Decrement referrer's active referrals count if user was referred
+        if (exists<ReferralStats>(user_addr)) {
+            let user_stats = borrow_global<ReferralStats>(user_addr);
+            let referrer_addr = user_stats.referrer;
+            if (referrer_addr != @0x0 && exists<ReferralStats>(referrer_addr)) {
+                let ref_stats = borrow_global_mut<ReferralStats>(referrer_addr);
+                if (ref_stats.active_referrals > 0) {
+                    ref_stats.active_referrals = ref_stats.active_referrals - 1;
+                };
+            };
+        };
+        
+        // Issue refund if applicable
+        if (refund_amount > 0) {
+            assert!(coin::is_account_registered<AptosCoin>(user_addr), E_COIN_NOT_REGISTERED);
+            coin::transfer<AptosCoin>(admin, user_addr, refund_amount);
+        };
+        
+        // Emit events
+        let admin_cap = borrow_global_mut<Admin>(admin_addr);
+        if (refund_amount > 0) {
+            event::emit_event(&mut admin_cap.refund_events, RefundIssued{ 
+                user: user_addr, 
+                plan_id,
+                refund_amount,
+                days_unused
+            });
+        };
+        event::emit_event(&mut admin_cap.canceled_events, Canceled{ user: user_addr });
+        
+        // Remove subscription
+        let _sub = move_from<UserSubscription>(user_addr);
+        // dropped
+    }
+
     /// Read-only helper: return (exists, admin, plan_id, expires_at)
     public fun get_subscription(addr: address): (bool, address, u64, u64) acquires UserSubscription {
         if (exists<UserSubscription>(addr)) {
@@ -495,6 +752,10 @@ module subscription {
         // Clear grace period if renewing during grace period
         s_mut.in_grace_period = false;
         s_mut.grace_ends_at = 0;
+        
+        // Update payment tracking for refund calculation
+        s_mut.last_payment_amount = price;
+        s_mut.subscription_start = now_secs;
 
         // emit events under the plan admin (reuse Subscribed for renewals)
         let admin_cap = borrow_global_mut<Admin>(plan_admin);
