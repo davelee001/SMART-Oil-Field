@@ -20,21 +20,48 @@ Aptos Move module to manage subscription plans with APT payment integration and 
   - `E_INSUFFICIENT_BALANCE` (9) — user lacks sufficient APT balance
   - `E_COIN_NOT_REGISTERED` (10) — user account not registered for AptosCoin
 
+
 ## Functions
+
 - `init(admin: &signer)` — initializes admin + empty plans under the caller
-- `create_plan(admin: &signer, plan_id: u64, duration_secs: u64, price_octas: u64)` — registers a plan with pricing (1 APT = 100,000,000 octas)
+- `create_plan(admin: &signer, plan_id: u64, duration_secs: u64, price_octas: u64, trial_secs: u64)` — registers a plan with pricing and optional free trial (1 APT = 100,000,000 octas)
 - `subscribe(user: &signer, plan_admin: address, plan_id: u64)` — subscribes using on-chain time, validates balance, and transfers payment to admin
 - `subscribe_with_code(user: &signer, plan_admin: address, plan_id: u64, discount_code: vector<u8>)` — subscribes with optional promotional discount code
 - `subscribe_with_referral(user: &signer, plan_admin: address, plan_id: u64, discount_code: vector<u8>, referrer: address)` — subscribes with referral tracking (referrer earns 10% reward)
 - `create_discount_code(admin: &signer, code: vector<u8>, discount_percent: u64, expiry_timestamp: u64, max_uses: u64)` — creates a promotional discount code (admin only)
 - `get_referral_stats(user: address)` — returns `(has_stats, referrer, referral_count, total_rewards, active_referrals)`
 - `cancel(user: &signer)` — cancels the caller's subscription (no refund, decrements referrer's active count)
+- `cancel_with_refund(admin: &signer, user_addr: address)` — admin cancels a user's subscription and issues a pro-rated refund
 - `get_subscription(addr: address)` — returns `(exists, plan_admin, plan_id, expires_at)`
 - `is_active(addr: address, now_secs: u64)` — returns whether subscription is active
 - `time_remaining(addr: address, now_secs: u64)` — seconds until expiry (0 if none/expired)
 - `get_plan_duration(plan_admin: address, plan_id: u64)` — returns `(found, duration_secs)`
 - `get_plan_price(plan_admin: address, plan_id: u64)` — returns `(found, price_octas)`
 - `renew(user: &signer, now_secs: u64)` — extends expiry, validates balance, and transfers payment
+
+### New & Advanced Features
+
+- **Upgrade/Downgrade:**
+  - `change_plan(user: &signer, new_plan_id: u64)` — upgrade or downgrade between plans (same admin), with pro-rated charge/refund.
+- **Family/Group Subscriptions:**
+  - `create_group_subscription(admin: &signer, plan_id: u64, max_members: u64)` — admin creates a group plan.
+  - `join_group_subscription(user: &signer, group_admin: address)` — user joins a group plan.
+  - `leave_group_subscription(user: &signer, group_admin: address)` — user leaves a group plan.
+  - `remove_group_member(admin: &signer, member: address)` — admin removes a member from group.
+  - `renew_group_subscription(admin: &signer)` — admin renews group plan for all members.
+- **Auto-Renewal:**
+  - `set_auto_renew(user: &signer, enable: bool)` — enable or disable auto-renewal for a subscription.
+  - `get_auto_renew_status(user: address)` — view auto-renewal status.
+- **Pause/Resume:**
+  - `pause_subscription(user: &signer)` — pause a subscription (expiry is extended by pause duration).
+  - `resume_subscription(user: &signer)` — resume a paused subscription.
+  - `get_pause_status(user: address)` — view pause status and total paused time.
+- **Free Trial Periods:**
+  - Plans can have a free trial duration (set on creation). Users can only use a free trial for a plan once.
+- **Gift Subscriptions:**
+  - `gift_subscription(payer: &signer, recipient: address, plan_admin: address, plan_id: u64)` — purchase a subscription for another user.
+- **Subscription Transfers:**
+  - `transfer_subscription(sender: &signer, recipient: address)` — transfer a subscription to another user (removes from sender, gives to recipient).
 
 ## Unit Test
 A simple end-to-end unit test is included in the module (`#[test]`), covering `init`, `create_plan`, `subscribe`, `get_subscription`, and `cancel`, and asserting event counters for `PlanCreated`, `Subscribed`, and `Canceled`.
@@ -191,6 +218,26 @@ renew(user, timestamp::now_seconds());
   // Option 2: User wants immediate removal
   hard_cancel(user);
   // Subscription permanently removed, no grace period
+  ```
+
+## Partial Refunds
+- **Pro-Rated Refunds**: Users can get refunds based on unused subscription time
+- **Admin-Approved**: Plan admin must approve and execute the refund
+- **Automatic Calculation**: Refund = (Unused Days / Total Days) × Payment Amount
+- **Payment Tracking**: Contract stores `last_payment_amount` and `subscription_start` for accurate calculations
+- **Event Tracking**: `RefundIssued` event emitted with refund amount and days unused
+- **Example**:
+  ```move
+  // User has 30-day subscription, paid 1 APT, cancels after 15 days
+  // 15 days unused of 30 total = 50% refund
+  cancel_with_refund(admin, user_address);
+  // User receives 0.5 APT refund (15/30 * 1 APT)
+  // RefundIssued event: { user, plan_id, refund_amount: 50000000, days_unused: 15 }
+  
+  // User subscribed for 7 days, paid 0.1 APT, cancels after 2 days
+  // 5 days unused of 7 total = 71.4% refund
+  cancel_with_refund(admin, user_address);
+  // User receives ~0.071 APT refund (5/7 * 0.1 APT)
   ```
 - **Event**: `DiscountApplied` event logs all discount applications
 - **Example**: 1 APT plan → 0.7 APT during discount months
