@@ -76,6 +76,8 @@ A simple end-to-end unit test is included in the module (`#[test]`), covering `i
 - `DiscountCodeUsed { user, code, discount_percent, savings }` — emitted when a promotional code is successfully used.
 - `ReferralRewardPaid { referrer, referee, plan_id, reward_octas }` — emitted when referral reward is paid to referrer.
 - `LoyaltyRewardApplied { user, plan_id, subscription_count, discount_percent, savings }` — emitted when loyalty discount is applied to returning subscribers.
+  - `GracePeriodStarted { user, expired_at, grace_ends_at }` — emitted when a user enters grace period on cancel.
+  - `RefundIssued { user, plan_id, refund_amount, days_unused }` — emitted when a pro-rated refund is issued on early cancellation.
 
 You can query events via the Aptos CLI or SDKs by using the admin account's event handles. For quick inspection with CLI:
 
