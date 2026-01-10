@@ -1,4 +1,21 @@
-﻿    /// Group (family) subscription resource stored under the group admin
+﻿        /// Toggle auto-renewal for a user's subscription
+        public entry fun set_auto_renew(user: &signer, enable: bool) acquires UserSubscription {
+            let user_addr = signer::address_of(user);
+            assert!(exists<UserSubscription>(user_addr), E_NOT_SUBSCRIBED);
+            let sub = borrow_global_mut<UserSubscription>(user_addr);
+            sub.auto_renew = enable;
+        }
+
+        /// View function: get auto-renewal status for a user
+        #[view]
+        public fun get_auto_renew_status(user: address): bool acquires UserSubscription {
+            if (!exists<UserSubscription>(user)) {
+                return false
+            };
+            let sub = borrow_global<UserSubscription>(user);
+            sub.auto_renew
+        }
+    /// Group (family) subscription resource stored under the group admin
     struct GroupSubscription has key {
         plan_admin: address,
         plan_id: u64,
@@ -188,7 +205,43 @@ module subscription {
         last_payment_amount: u64,  // For pro-rated refund calculation
         subscription_start: u64,   // When current subscription started
         auto_renew: bool,          // For future auto-renewal feature
+        paused: bool,              // Is subscription paused
+        pause_start: u64,          // When pause started
+        total_paused_secs: u64,    // Total seconds paused (for expiry adjustment)
     }
+        /// Pause the user's subscription (can only pause if not already paused)
+        public entry fun pause_subscription(user: &signer) acquires UserSubscription {
+            let user_addr = signer::address_of(user);
+            assert!(exists<UserSubscription>(user_addr), E_NOT_SUBSCRIBED);
+            let sub = borrow_global_mut<UserSubscription>(user_addr);
+            assert!(!sub.paused, E_ALREADY_INITIALIZED); // reuse error for "already paused"
+            sub.paused = true;
+            sub.pause_start = timestamp::now_seconds();
+        }
+
+        /// Resume the user's subscription (can only resume if currently paused)
+        public entry fun resume_subscription(user: &signer) acquires UserSubscription {
+            let user_addr = signer::address_of(user);
+            assert!(exists<UserSubscription>(user_addr), E_NOT_SUBSCRIBED);
+            let sub = borrow_global_mut<UserSubscription>(user_addr);
+            assert!(sub.paused, E_NOT_INITIALIZED); // reuse error for "not paused"
+            let now_secs = timestamp::now_seconds();
+            let paused_secs = if (now_secs > sub.pause_start) { now_secs - sub.pause_start } else { 0 };
+            sub.total_paused_secs = sub.total_paused_secs + paused_secs;
+            sub.expires_at = sub.expires_at + paused_secs;
+            sub.paused = false;
+            sub.pause_start = 0;
+        }
+
+        /// View function: get pause status and total paused seconds
+        #[view]
+        public fun get_pause_status(user: address): (bool, u64) acquires UserSubscription {
+            if (!exists<UserSubscription>(user)) {
+                return (false, 0)
+            };
+            let sub = borrow_global<UserSubscription>(user);
+            (sub.paused, sub.total_paused_secs)
+        }
     /// Upgrade or downgrade the user's subscription to a different plan (same admin)
     /// Handles pro-rated charge/refund for the remaining period
     /// Transfers difference in price (if any) between old and new plan
