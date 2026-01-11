@@ -1,4 +1,90 @@
-﻿from pathlib import Path
+﻿import threading
+
+# Simple in-memory rate limiting (per user/endpoint)
+RATE_LIMITS = {}
+RATE_LIMIT_LOCK = threading.Lock()
+RATE_LIMIT_MAX = 10  # max requests per minute
+
+def rate_limit(user_id: str, endpoint: str):
+    now = int(time.time())
+    key = f"{user_id}:{endpoint}:{now // 60}"
+    with RATE_LIMIT_LOCK:
+        count = RATE_LIMITS.get(key, 0)
+        if count >= RATE_LIMIT_MAX:
+            raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        RATE_LIMITS[key] = count + 1
+# Role-based access control (RBAC)
+def require_role(role: str):
+    def checker(user=Depends(get_current_user)):
+        if user["role"] != role:
+            raise HTTPException(status_code=403, detail=f"Requires {role} role")
+        return user
+    return checker
+# API Key management (demo: in-memory, production: DB)
+API_KEYS = {"demo-key-123": "admin", "demo-key-456": "user"}
+
+from fastapi import Header
+
+def get_api_key(x_api_key: str = Header(...)):
+    if x_api_key not in API_KEYS:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return API_KEYS[x_api_key]
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+
+# JWT config
+SECRET_KEY = "supersecretkey123"  # Change in production
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+
+# Dummy user store (replace with DB in production)
+fake_users_db = {
+    "admin": {"username": "admin", "password": "adminpass", "role": "admin"},
+    "user": {"username": "user", "password": "userpass", "role": "user"}
+}
+
+def authenticate_user(username: str, password: str):
+    user = fake_users_db.get(username)
+    if not user or user["password"] != password:
+        return None
+    return user
+
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = fake_users_db.get(username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+# Login endpoint to get JWT
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    access_token = create_access_token(data={"sub": user["username"]})
+    return {"access_token": access_token, "token_type": "bearer"}
+from pathlib import Path
 import sqlite3
 import time
 from typing import Optional
@@ -94,15 +180,22 @@ def _startup():
 def health():
     return {'status': 'ok'}
 
+
+# Example: API key protected endpoint (telemetry ingest)
+
+# Example: admin-only endpoint (RBAC)
+
+# Example: admin-only endpoint (RBAC + rate limiting)
 @app.post('/api/telemetry')
-def ingest(payload: TelemetryIn):
+async def ingest(payload: TelemetryIn, user=Depends(require_role("admin")), api_user=Depends(get_api_key)):
+    rate_limit(user["username"], "/api/telemetry")
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
     cur.execute('INSERT INTO telemetry (device_id, ts, temperature, pressure, status) VALUES (?, ?, ?, ?, ?)', (payload.device_id, payload.ts, payload.temperature, payload.pressure, payload.status))
     conn.commit()
     id_ = cur.lastrowid
     conn.close()
-    return {'id': id_}
+    return {'id': id_, 'api_user': api_user}
 
 @app.get('/api/telemetry')
 def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 100):

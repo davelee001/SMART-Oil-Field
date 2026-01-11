@@ -25,23 +25,34 @@ python -m venv .venv
 & ".venv\Scripts\python.exe" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
+
+
+
 ## Endpoints
 - GET `/health` — service health
-- POST `/api/telemetry` — insert a telemetry record
+- POST `/token` — obtain JWT access token (login)
+- POST `/api/telemetry` — insert a telemetry record (**admin role, JWT Bearer token, and API key required**)
 - GET `/api/telemetry` — list telemetry with optional filters
   - Query params: `device_id`, `ts_from`, `ts_to`, `limit`
 - GET `/api/telemetry/{id}` — fetch one record by id
 - DELETE `/api/telemetry/{id}` — delete by id
 - GET `/api/telemetry/export` — CSV export (same filters as list)
 
+
+
 ## Examples
 ```powershell
 # Health
 Invoke-RestMethod -Uri "http://127.0.0.1:8000/health"
 
-# Insert sample
+# Get JWT token (login)
+$login = @{ username="admin"; password="adminpass" }
+$tokenResp = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/token" -ContentType "application/x-www-form-urlencoded" -Body $login
+$token = $tokenResp.access_token
+
+# Insert sample (JWT and API key required)
 $body = @{ device_id="well-004"; ts=[int][double]((Get-Date).ToFileTimeUtc()/10000000 - 11644473600); temperature=80.1; pressure=205.4; status="OK" } | ConvertTo-Json
-Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/telemetry" -ContentType "application/json" -Body $body
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/telemetry" -ContentType "application/json" -Body $body -Headers @{ Authorization = "Bearer $token"; "x-api-key" = "demo-key-123" }
 
 # List
 Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/telemetry?device_id=well-004&limit=5"
@@ -55,6 +66,19 @@ Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/telemetry/export?device_id=wel
 - Seed script: [src/python_api/app/seed.py](../python_api/app/seed.py)
 - Local tests (no server): [src/python_api/app/test_endpoints.py](../python_api/app/test_endpoints.py)
 
+
+
+
+
+## Security
+- JWT authentication is required for protected endpoints (e.g., POST `/api/telemetry`).
+- API key is also required for protected endpoints (header: `x-api-key`).
+- Role-based access control (RBAC) is enforced for sensitive endpoints (e.g., only `admin` can ingest telemetry).
+- Rate limiting is enforced per user/endpoint (default: 10 requests per minute).
+- Obtain a token via `/token` using username/password (see example above).
+- Default users: `admin`/`adminpass`, `user`/`userpass` (for demo; replace in production).
+- Demo API keys: `demo-key-123` (admin), `demo-key-456` (user). Replace with secure keys in production.
+
 ## Notes
 - The database file is stored at `data/processed/oilfield.db`.
-- For production, consider migrating to SQLAlchemy with Postgres.
+- For production, consider migrating to SQLAlchemy with Postgres and a proper user/auth system.
