@@ -280,7 +280,7 @@ async def ingest(
     return {'id': id_, 'api_user': api_user, 'oauth2_token': oauth2_token}
 
 @app.get('/api/telemetry')
-def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 100):
+def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 100, page: int = 1):
     conn = get_conn()
     cur = conn.cursor()
     q = 'SELECT id, device_id, ts, temperature, pressure, status FROM telemetry'
@@ -297,8 +297,14 @@ def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: 
         params.append(ts_to)
     if clauses:
         q += ' WHERE ' + ' AND '.join(clauses)
-    q += ' ORDER BY ts DESC LIMIT ?'
-    params.append(limit)
+    # Pagination: LIMIT + OFFSET
+    if page < 1:
+        page = 1
+    if limit < 1:
+        limit = 1
+    offset = (page - 1) * limit
+    q += ' ORDER BY ts DESC LIMIT ? OFFSET ?'
+    params.extend([limit, offset])
     cur.execute(q, tuple(params))
     rows = cur.fetchall()
     conn.close()
@@ -442,7 +448,7 @@ def create_batch(payload: BatchCreate):
     }
 
 @app.get('/api/oil/batches')
-def list_batches(stage: Optional[str] = None, status: Optional[str] = None, limit: int = 50):
+def list_batches(stage: Optional[str] = None, status: Optional[str] = None, limit: int = 50, page: int = 1):
     conn = get_conn()
     cur = conn.cursor()
     q = 'SELECT batch_id, origin, volume, unit, created_at, current_stage, status FROM oil_batches'
@@ -456,8 +462,14 @@ def list_batches(stage: Optional[str] = None, status: Optional[str] = None, limi
         params.append(status)
     if clauses:
         q += ' WHERE ' + ' AND '.join(clauses)
-    q += ' ORDER BY created_at DESC LIMIT ?'
-    params.append(limit)
+    # Pagination: LIMIT + OFFSET
+    if page < 1:
+        page = 1
+    if limit < 1:
+        limit = 1
+    offset = (page - 1) * limit
+    q += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    params.extend([limit, offset])
     cur.execute(q, tuple(params))
     rows = cur.fetchall()
     conn.close()
@@ -530,14 +542,21 @@ def add_event(batch_id: str, payload: EventCreate):
     return {'event_id': event_id, 'batch_id': batch_id, 'ts': ts}
 
 @app.get('/api/oil/batches/{batch_id}/events')
-def list_events(batch_id: str, ascending: bool = True):
+def list_events(batch_id: str, ascending: bool = True, limit: Optional[int] = None, page: int = 1):
     conn = get_conn()
     cur = conn.cursor()
     order = 'ASC' if ascending else 'DESC'
-    cur.execute(
-        f'SELECT id, ts, stage, status, location_lat, location_lon, facility, notes, extra FROM oil_events WHERE batch_id = ? ORDER BY ts {order}',
-        (batch_id,)
-    )
+    base = f'SELECT id, ts, stage, status, location_lat, location_lon, facility, notes, extra FROM oil_events WHERE batch_id = ? ORDER BY ts {order}'
+    if limit is not None:
+        if page < 1:
+            page = 1
+        if limit < 1:
+            limit = 1
+        offset = (page - 1) * limit
+        base += ' LIMIT ? OFFSET ?'
+        cur.execute(base, (batch_id, limit, offset))
+    else:
+        cur.execute(base, (batch_id,))
     rows = cur.fetchall()
     conn.close()
     return [

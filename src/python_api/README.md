@@ -50,7 +50,7 @@ python -m venv .venv
 - POST `/token` — obtain JWT access token (login)
 - POST `/api/telemetry` — insert a telemetry record (**admin role, JWT Bearer token, API key, and OAuth2 token required**)
 - GET `/api/telemetry` — list telemetry with optional filters
-  - Query params: `device_id`, `ts_from`, `ts_to`, `limit`
+  - Query params: `device_id`, `ts_from`, `ts_to`, `limit`, `page`
 - GET `/api/telemetry/{id}` — fetch one record by id
 - DELETE `/api/telemetry/{id}` — delete by id
 - GET `/api/telemetry/export` — CSV export (same filters as list)

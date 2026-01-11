@@ -9,11 +9,11 @@ This feature tracks oil movement from drilling through extraction, storage, tran
 ## API (Python FastAPI)
 - POST `/api/oil/batches` — Create new batch
   - body: `{ batch_id?, origin, volume, unit?, status?, metadata? }`
-- GET `/api/oil/batches` — List batches `?stage=&status=&limit=`
+- GET `/api/oil/batches` — List batches `?stage=&status=&limit=&page=`
 - GET `/api/oil/batches/{batch_id}` — Get batch
 - POST `/api/oil/batches/{batch_id}/events` — Add lifecycle event
   - body: `{ ts?, stage, status?, location_lat?, location_lon?, facility?, notes?, extra? }`
-- GET `/api/oil/batches/{batch_id}/events` — List events
+- GET `/api/oil/batches/{batch_id}/events` — List events `?ascending=&limit=&page=` (if `limit` omitted, returns all)
 - GET `/api/oil/track/{batch_id}` — Batch + ordered events + per-stage durations (seconds)
 
 ## Frontend
