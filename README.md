@@ -237,7 +237,12 @@ This project integrates multiple technologies:
       - Tableau: Connect to Parquet or DuckDB ODBC.
    - Upcoming scripts:
       - `scripts/etl_warehouse.py` — ETL from SQLite to DuckDB + Parquet.
-      - `scripts/etl.config.json` — ETL configuration.
+      - `scripts/etl.config.json` — ETL configuration (to be added).
+   - Run ETL:
+      ```powershell
+      # From repo root
+      python scripts/etl_warehouse.py
+      ```
 
 - **ML Predictions (planned)**
    - Model training pipeline and inference endpoints.
