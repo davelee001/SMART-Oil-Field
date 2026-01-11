@@ -238,6 +238,12 @@ This project integrates multiple technologies:
    - Upcoming scripts:
       - `scripts/etl_warehouse.py` — ETL from SQLite to DuckDB + Parquet.
       - `scripts/etl.config.json` — ETL configuration (to be added).
+   - Detailed guide: [docs/DATA_WAREHOUSE_BI.md](docs/DATA_WAREHOUSE_BI.md)
+   - Quick run:
+      ```powershell
+      # From repo root
+      python scripts/etl_warehouse.py
+      ```
    - Run ETL:
       ```powershell
       # From repo root
