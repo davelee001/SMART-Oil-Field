@@ -168,6 +168,20 @@ const modalTemplates = {
         <button onclick="alert('Blockchain integration required. Use Aptos CLI:\\n\\naptos move run --function-id [addr]::subscription::hard_cancel')">Permanently Cancel</button>
         <button class="close-btn" onclick="closeModal()">Close</button>
     `,
+    cancelWithRefund: `
+        <h3>💰 Cancel with Pro-Rated Refund</h3>
+        <p style="color: #28a745; margin-bottom: 15px;">Get refund for unused subscription days</p>
+        <label>User Address</label>
+        <input type="text" id="refundUserAddr" placeholder="0xUserAddress">
+        <div style="margin-top: 15px; padding: 15px; background: rgba(40, 167, 69, 0.1); border-left: 3px solid #28a745; border-radius: 5px;">
+            <h4 style="color: #28a745; margin-bottom: 10px;">📊 Refund Calculation</h4>
+            <p style="color: #e0e0e0; line-height: 1.6;">Refund = (Unused Days / Total Days) × Payment Amount</p>
+            <p style="color: #6c757d; font-size: 0.9em; margin-top: 10px;">Example: 15 days unused of 30-day plan with 1 APT payment = 0.5 APT refund</p>
+        </div>
+        <p style="color: #ffc107; margin-top: 15px; font-size: 0.9em;">⚠️ Admin must approve and execute refund</p>
+        <button onclick="alert('Blockchain integration required. Admin must run:\\n\\naptos move run --function-id [addr]::subscription::cancel_with_refund --args address:[user_addr]')">Request Refund</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    `,
     checkGracePeriod: `
         <h3>⏰ Grace Period Status</h3>
         <label>User Address</label>
@@ -198,6 +212,7 @@ const modalTemplates = {
             <li>ReferralRewardPaid - Referrer earned reward</li>
             <li>LoyaltyRewardApplied - Loyalty discount applied</li>
             <li>GracePeriodStarted - User entered grace period</li>
+            <li>RefundIssued - Pro-rated refund processed</li>
             <li>Canceled - Subscription canceled</li>
         </ul>
         <h4 style="color: #1e3c72; margin-top: 20px;">Error Codes</h4>

@@ -427,8 +427,20 @@
                         <span>Extend subscription with payment</span>
                     </li>
                     <li class="action-item" onclick="showModal('cancel')">
-                        <strong>Cancel</strong>
-                        <span>Cancel active subscription</span>
+                        <strong>Cancel (Grace Period)</strong>
+                        <span>Cancel with 5-day grace period to renew</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('cancelWithRefund')">
+                        <strong>Cancel with Refund</strong>
+                        <span>Get pro-rated refund for unused days</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('hardCancel')">
+                        <strong>Hard Cancel</strong>
+                        <span>Permanently remove subscription immediately</span>
+                    </li>
+                    <li class="action-item" onclick="showModal('checkGracePeriod')">
+                        <strong>Check Grace Period</strong>
+                        <span>View grace period status and expiry</span>
                     </li>
                 </ul>
                 <button onclick="showModal('blockchainInfo')">
@@ -523,6 +535,15 @@
                         <li>Renew during grace period</li>
                         <li>Full access restoration</li>
                         <li>Hard cancel option available</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Partial Refunds</h3>
+                    <ul class="feature-list">
+                        <li>Pro-rated refunds on cancellation</li>
+                        <li>Refund based on unused days</li>
+                        <li>Admin-approved refund process</li>
+                        <li>Automatic calculation on-chain</li>
                     </ul>
                 </div>
                 <div>
