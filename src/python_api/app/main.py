@@ -107,6 +107,7 @@ from pydantic import BaseModel, Field
 import uuid
 import json
 import hashlib
+from app.tasks import celery_app, export_telemetry_csv
 try:
     import redis as redis_lib
 except Exception:
@@ -357,6 +358,30 @@ def export_csv(device_id: Optional[str] = None, ts_from: Optional[int] = None, t
     header = 'id,device_id,ts,temperature,pressure,status'
     lines = [header] + [f"{r[0]},{r[1]},{r[2]},{r[3]},{r[4]},{r[5]}" for r in rows]
     return "\n".join(lines)
+
+@app.post('/api/telemetry/export/async')
+def export_csv_async(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 1000):
+    """Trigger async CSV export via Celery. Returns a task_id."""
+    task = export_telemetry_csv.delay(device_id=device_id, ts_from=ts_from, ts_to=ts_to, limit=limit)
+    return { 'task_id': task.id }
+
+@app.get('/api/tasks/{task_id}')
+def task_status(task_id: str):
+    """Fetch Celery task status and (if ready) result."""
+    res = celery_app.AsyncResult(task_id)
+    result = None
+    try:
+        if res.ready():
+            # JSON result from task; may be large
+            result = res.get(timeout=1)
+    except Exception:
+        result = None
+    return {
+        'task_id': task_id,
+        'state': res.state,
+        'ready': res.ready(),
+        'result': result,
+    }
 
 @app.get('/api/telemetry/stats')
 def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None):

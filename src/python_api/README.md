@@ -35,6 +35,17 @@ python -m venv .venv
   - `GET /api/oil/track/{batch_id}` (TTL 60s)
 
 ### Connection Pooling (SQLite via SQLAlchemy)
+### Background Tasks (Celery)
+- Broker: Redis by default (`CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`).
+- Start worker:
+  ```powershell
+  # From src/python_api
+  & ".venv\Scripts\celery.exe" -A app.tasks.celery_app worker -l info
+  ```
+- Endpoints:
+  - `POST /api/telemetry/export/async` → returns `{ task_id }`
+  - `GET /api/tasks/{task_id}` → returns status and result
+  - Result includes JSON with `meta` and `csv`.
 - The API uses a pooled SQLAlchemy engine for the local SQLite database to reduce connection overhead and improve concurrency.
 - Environment variables:
   - `DB_POOL_SIZE` (default `5`)
@@ -54,6 +65,8 @@ python -m venv .venv
 - GET `/api/telemetry/{id}` — fetch one record by id
 - DELETE `/api/telemetry/{id}` — delete by id
 - GET `/api/telemetry/export` — CSV export (same filters as list)
+- POST `/api/telemetry/export/async` — Async CSV export (returns task id)
+- GET `/api/tasks/{task_id}` — Task status/result
 
 
 
