@@ -9,17 +9,19 @@ This project integrates multiple technologies:
 - **RESTful APIs**: FastAPI (Python) and Express (TypeScript)
 - **Blockchain**: Aptos Move smart contracts for immutable records
 - **Web Dashboard**: Interactive frontend with live status monitoring
+- **Data Analytics**: Time-series DB, warehouse, ML predictions, and backup/DR
 
 ### Quick Feature Summary
 
 | Category | Features |
 |----------|----------|
-| 📊 **Telemetry** | Real-time sensor data ingestion, querying, statistics, CSV export |
+| 📊 **Telemetry** | Real-time sensor data ingestion, querying, statistics, CSV export, async tasks |
 | 🛢️ **Oil Tracking** | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
 | 💳 **Subscriptions** | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
 | ⛓️ **Blockchain** | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
 | 🔔 **Notifications** | Subscription expiration reminders with 3 severity levels |
 | 🎨 **Frontend** | Interactive dashboard, real-time status indicators, modal-based actions |
+| 📈 **Analytics** | InfluxDB time-series, DuckDB warehouse, ML anomaly detection, automated backups |
 
 ## Project Components
 
@@ -160,6 +162,29 @@ This project integrates multiple technologies:
 - ✅ `GET /api/subscription/:userId` - Status
 
 **Sync Status**: ✅ **Fully synced** - All frontend endpoints supported by both backends
+
+## Recent Updates (v0.5.0)
+
+- **Data & Analytics Stack**:
+  - InfluxDB integration for time-series telemetry storage and querying.
+  - DuckDB warehouse with ETL scripts for analytics and Parquet exports.
+  - BI guides for Power BI and Tableau connectivity.
+  - ML pipeline: RandomForest anomaly detection with training script and inference API.
+  - Automated backup and disaster recovery scripts.
+- **Performance Enhancements**:
+  - Redis caching for stats and track endpoints.
+  - SQLAlchemy connection pooling for SQLite.
+  - Pagination on list endpoints.
+  - Celery async CSV export.
+  - Database indexing optimizations.
+- **Security & Auth**:
+  - JWT authentication, OAuth2 support, API key validation.
+  - Role-based access control (RBAC).
+  - Rate limiting per user/endpoint.
+- **API Expansions**:
+  - ML prediction endpoint (`POST /api/ml/predict`).
+  - InfluxDB read endpoint (`GET /api/telemetry/influx`).
+  - Async task status for exports.
 
 ### 🚀 Running the Application
 

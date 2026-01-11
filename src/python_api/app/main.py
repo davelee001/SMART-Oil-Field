@@ -187,7 +187,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-app = FastAPI(title='SMART Oilfield API', version='0.4.0')
+app = FastAPI(title='SMART Oilfield API', version='0.5.0')
 
 # Enable CORS for frontend integration
 app.add_middleware(
