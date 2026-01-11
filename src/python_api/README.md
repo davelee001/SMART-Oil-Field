@@ -1,6 +1,6 @@
 # SMART Oilfield — Python API
 
-FastAPI service for telemetry ingestion, querying, and CSV export backed by local SQLite.
+FastAPI service for telemetry ingestion, querying, and CSV export backed by local SQLite with SQLAlchemy connection pooling.
 
 ## Prerequisites
 - Python 3.13
@@ -33,6 +33,13 @@ python -m venv .venv
 - Cached endpoints:
   - `GET /api/telemetry/stats` (TTL 60s)
   - `GET /api/oil/track/{batch_id}` (TTL 60s)
+
+### Connection Pooling (SQLite via SQLAlchemy)
+- The API uses a pooled SQLAlchemy engine for the local SQLite database to reduce connection overhead and improve concurrency.
+- Environment variables:
+  - `DB_POOL_SIZE` (default `5`)
+  - `DB_MAX_OVERFLOW` (default `10`)
+- Database path: `data/processed/oilfield.db` (created automatically on startup)
 
 
 

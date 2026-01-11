@@ -96,6 +96,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 from pathlib import Path
 import os
 import sqlite3
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
 import time
 from typing import Optional
 from fastapi import FastAPI
@@ -111,10 +113,30 @@ except Exception:
     redis_lib = None
 
 DB = Path(__file__).resolve().parents[3] / 'data' / 'processed' / 'oilfield.db'
+DB_URL = f"sqlite:///{DB.as_posix()}"
+
+# SQLAlchemy Engine with connection pooling for SQLite
+ENGINE = None
+
+def get_conn():
+    global ENGINE
+    if ENGINE is None:
+        # Pool configuration via environment, with sensible defaults
+        pool_size = int(os.environ.get('DB_POOL_SIZE', '5'))
+        max_overflow = int(os.environ.get('DB_MAX_OVERFLOW', '10'))
+        ENGINE = create_engine(
+            DB_URL,
+            poolclass=QueuePool,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
+            connect_args={"check_same_thread": False},
+        )
+    # Return a pooled DBAPI connection (sqlite3.Connection)
+    return ENGINE.raw_connection()
 
 def init_db():
     DB.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     conn.execute('CREATE TABLE IF NOT EXISTS telemetry (id INTEGER PRIMARY KEY AUTOINCREMENT, device_id TEXT, ts INTEGER, temperature REAL, pressure REAL, status TEXT)')
     # Table for subscription tracking (demo purposes - production would use blockchain)
     conn.execute('''CREATE TABLE IF NOT EXISTS subscriptions 
@@ -249,7 +271,7 @@ async def ingest(
 ):
     rate_limit(user["username"], "/api/telemetry")
     # In production, validate oauth2_token with provider
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute('INSERT INTO telemetry (device_id, ts, temperature, pressure, status) VALUES (?, ?, ?, ?, ?)', (payload.device_id, payload.ts, payload.temperature, payload.pressure, payload.status))
     conn.commit()
@@ -259,7 +281,7 @@ async def ingest(
 
 @app.get('/api/telemetry')
 def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 100):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     q = 'SELECT id, device_id, ts, temperature, pressure, status FROM telemetry'
     clauses = []
@@ -284,7 +306,7 @@ def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: 
 
 @app.get('/api/telemetry/{id}')
 def get_one(id: int):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute('SELECT id, device_id, ts, temperature, pressure, status FROM telemetry WHERE id = ?', (id,))
     row = cur.fetchone()
@@ -295,7 +317,7 @@ def get_one(id: int):
 
 @app.delete('/api/telemetry/{id}')
 def delete_one(id: int):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute('DELETE FROM telemetry WHERE id = ?', (id,))
     conn.commit()
@@ -305,7 +327,7 @@ def delete_one(id: int):
 
 @app.get('/api/telemetry/export', response_class=PlainTextResponse)
 def export_csv(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 1000):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     q = 'SELECT id, device_id, ts, temperature, pressure, status FROM telemetry'
     clauses = []
@@ -337,7 +359,7 @@ def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to:
     cached = cache_get(key)
     if cached is not None:
         return cached
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     base = 'FROM telemetry'
     clauses = []
@@ -389,7 +411,7 @@ def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to:
 
 @app.post('/api/oil/batches')
 def create_batch(payload: BatchCreate):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     batch_id = payload.batch_id or f"BATCH-{uuid.uuid4().hex[:8].upper()}"
     created_at = int(time.time())
@@ -421,7 +443,7 @@ def create_batch(payload: BatchCreate):
 
 @app.get('/api/oil/batches')
 def list_batches(stage: Optional[str] = None, status: Optional[str] = None, limit: int = 50):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     q = 'SELECT batch_id, origin, volume, unit, created_at, current_stage, status FROM oil_batches'
     clauses = []
@@ -454,7 +476,7 @@ def list_batches(stage: Optional[str] = None, status: Optional[str] = None, limi
 
 @app.get('/api/oil/batches/{batch_id}')
 def get_batch(batch_id: str):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute('SELECT batch_id, origin, volume, unit, created_at, current_stage, status, metadata FROM oil_batches WHERE batch_id = ?', (batch_id,))
     row = cur.fetchone()
@@ -478,7 +500,7 @@ def get_batch(batch_id: str):
 
 @app.post('/api/oil/batches/{batch_id}/events')
 def add_event(batch_id: str, payload: EventCreate):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     # Ensure batch exists
     cur.execute('SELECT batch_id FROM oil_batches WHERE batch_id = ?', (batch_id,))
@@ -509,7 +531,7 @@ def add_event(batch_id: str, payload: EventCreate):
 
 @app.get('/api/oil/batches/{batch_id}/events')
 def list_events(batch_id: str, ascending: bool = True):
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     order = 'ASC' if ascending else 'DESC'
     cur.execute(
@@ -541,7 +563,7 @@ def track_summary(batch_id: str):
     cached = cache_get(key)
     if cached is not None:
         return cached
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute('SELECT batch_id, origin, volume, unit, created_at, current_stage, status FROM oil_batches WHERE batch_id = ?', (batch_id,))
     batch = cur.fetchone()
@@ -582,7 +604,7 @@ class SubscriptionCreate(BaseModel):
 @app.post('/api/subscription')
 def create_subscription(payload: SubscriptionCreate):
     """Create or update a user subscription (demo endpoint - production uses blockchain)"""
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     now = int(time.time())
     expires_at = now + (payload.duration_days * 24 * 60 * 60)
@@ -604,7 +626,7 @@ def create_subscription(payload: SubscriptionCreate):
 @app.get('/api/subscription/{user_id}')
 def get_subscription(user_id: str):
     """Get subscription status for a user"""
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute('SELECT user_id, plan_id, expires_at, is_active, created_at FROM subscriptions WHERE user_id = ?', (user_id,))
     row = cur.fetchone()
@@ -634,7 +656,7 @@ def get_subscription(user_id: str):
 @app.delete('/api/subscription/{user_id}')
 def cancel_subscription(user_id: str):
     """Cancel a user subscription"""
-    conn = sqlite3.connect(DB)
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute('UPDATE subscriptions SET is_active = 0 WHERE user_id = ?', (user_id,))
     conn.commit()
