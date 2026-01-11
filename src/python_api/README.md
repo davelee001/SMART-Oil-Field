@@ -36,6 +36,11 @@ python -m venv .venv
 
 ### Connection Pooling (SQLite via SQLAlchemy)
 ### Background Tasks (Celery)
+-### Indexing Optimizations
+- SQLite indexes are created automatically on startup to speed up common queries:
+- `telemetry(device_id, ts)` and `telemetry(ts)` — accelerates filtered lists, stats, and exports
+- `oil_batches(current_stage, status)` and `oil_batches(created_at)` — speeds up filtered lists and recent batches
+- `oil_events(batch_id, ts)` — optimizes per-batch timeline queries
 - Broker: Redis by default (`CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`).
 - Start worker:
   ```powershell

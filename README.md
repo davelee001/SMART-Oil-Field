@@ -212,9 +212,16 @@ This project integrates multiple technologies:
    - Tunables: `DB_POOL_SIZE` (default 5), `DB_MAX_OVERFLOW` (default 10).
    - Details in [src/python_api/README.md](src/python_api/README.md).
 - **Pagination (added)**: List endpoints support `limit` and `page` for efficient browsing.
-- **Planned next steps**:
-   - Background task queue (Celery)
-   - Database indexing optimization
+- **Celery Background Queue (added)**: Offload heavy tasks to a worker using Redis.
+   - Broker/backend: `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` (default `redis://127.0.0.1:6379/0`).
+   - Worker start (Windows): `src/python_api/.venv/Scripts/celery.exe -A app.tasks.celery_app worker -l info`
+   - Async export endpoints: `POST /api/telemetry/export/async` and `GET /api/tasks/{task_id}`.
+ - **Indexing Optimizations (added)**: Automatic SQLite indexes to speed up common queries.
+   - `telemetry(device_id, ts)`, `telemetry(ts)`
+   - `oil_batches(current_stage, status)`, `oil_batches(created_at)`
+   - `oil_events(batch_id, ts)`
+ - **Planned next steps**:
+   - (none)
 
 ### Running with VS Code Tasks
 
@@ -229,6 +236,8 @@ Use the built-in tasks:
 - `GET /api/telemetry?device_id=&limit=&page=` - Query telemetry data (pagination)
 - `GET /api/telemetry/stats?device_id=` - Get statistics
 - `GET /api/telemetry/export?device_id=&limit=` - Export to CSV
+ - `POST /api/telemetry/export/async?device_id=&limit=` - Enqueue CSV export (returns task id)
+ - `GET /api/tasks/:task_id` - Check task status and retrieve result
 
 ### Oil Tracking Endpoints
 - `POST /api/oil/batches` - Create oil batch

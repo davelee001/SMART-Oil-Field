@@ -169,7 +169,12 @@ def init_db():
                         notes TEXT,
                         extra TEXT
                     )''')
+    # Indexes for query performance
     conn.execute('CREATE INDEX IF NOT EXISTS idx_oil_events_batch_ts ON oil_events(batch_id, ts)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_tel_device_ts ON telemetry(device_id, ts)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_tel_ts ON telemetry(ts)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_batches_stage_status ON oil_batches(current_stage, status)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_batches_created_at ON oil_batches(created_at)')
     conn.commit()
     conn.close()
 
