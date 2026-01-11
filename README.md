@@ -254,8 +254,11 @@ This project integrates multiple technologies:
    - RandomForest training script: `scripts/train_ml.py` (saves `src/python_api/app/models/telemetry_anomaly.pkl`).
    - Inference endpoint: `POST /api/ml/predict` — returns anomaly flag and score using model or rule-based fallback.
 
-- **Backup & DR (planned)**
-   - Automated backups and restore playbooks for DBs and configs.
+- **Backup & DR (added)**
+   - Automated backup scripts for SQLite DB, DuckDB warehouse, Parquet files, and configs.
+   - Restore playbooks for disaster recovery.
+   - Scheduled backups via PowerShell tasks.
+   - See `scripts/backup.ps1`, `scripts/restore.ps1`, and [docs/BACKUP_DR.md](docs/BACKUP_DR.md).
 
 ### Running with VS Code Tasks
 
