@@ -202,6 +202,18 @@ This project integrates multiple technologies:
    Open src/frontend/index.html in a browser
    ```
 
+## ⚡ Performance Enhancements
+
+- **Redis Caching (added)**: Python API caches responses for heavy read endpoints.
+   - Cached endpoints: telemetry stats and oil track summary (TTL 60s).
+   - Configure via environment: `REDIS_HOST` (default 127.0.0.1), `REDIS_PORT` (default 6379).
+   - See details in [src/python_api/README.md](src/python_api/README.md).
+- **Planned next steps**:
+   - Database connection pooling
+   - Pagination for large datasets
+   - Background task queue (Celery)
+   - Database indexing optimization
+
 ### Running with VS Code Tasks
 
 Use the built-in tasks:
