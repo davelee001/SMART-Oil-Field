@@ -208,9 +208,11 @@ This project integrates multiple technologies:
    - Cached endpoints: telemetry stats and oil track summary (TTL 60s).
    - Configure via environment: `REDIS_HOST` (default 127.0.0.1), `REDIS_PORT` (default 6379).
    - See details in [src/python_api/README.md](src/python_api/README.md).
+- **SQLite Connection Pooling (added)**: SQLAlchemy `QueuePool` reduces connection overhead and improves concurrency.
+   - Tunables: `DB_POOL_SIZE` (default 5), `DB_MAX_OVERFLOW` (default 10).
+   - Details in [src/python_api/README.md](src/python_api/README.md).
+- **Pagination (added)**: List endpoints support `limit` and `page` for efficient browsing.
 - **Planned next steps**:
-   - Database connection pooling
-   - Pagination for large datasets
    - Background task queue (Celery)
    - Database indexing optimization
 
@@ -224,16 +226,16 @@ Use the built-in tasks:
 
 ### Telemetry Endpoints
 - `POST /api/telemetry` - Ingest sensor data
-- `GET /api/telemetry?device_id=&limit=` - Query telemetry data
+- `GET /api/telemetry?device_id=&limit=&page=` - Query telemetry data (pagination)
 - `GET /api/telemetry/stats?device_id=` - Get statistics
 - `GET /api/telemetry/export?device_id=&limit=` - Export to CSV
 
 ### Oil Tracking Endpoints
 - `POST /api/oil/batches` - Create oil batch
-- `GET /api/oil/batches?stage=&status=` - List batches
+- `GET /api/oil/batches?stage=&status=&limit=&page=` - List batches (pagination)
 - `GET /api/oil/batches/:batch_id` - Get batch details
 - `POST /api/oil/batches/:batch_id/events` - Add lifecycle event
-- `GET /api/oil/batches/:batch_id/events` - List events
+- `GET /api/oil/batches/:batch_id/events?ascending=&limit=&page=` - List events (optional pagination)
 - `GET /api/oil/track/:batch_id` - Get full timeline with durations
 
 ### Subscription Endpoints
