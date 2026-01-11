@@ -25,6 +25,15 @@ python -m venv .venv
 & ".venv\Scripts\python.exe" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
+### Optional: Redis Caching
+- Install and run Redis (default at 127.0.0.1:6379). On Windows, use Docker or WSL.
+- Environment variables:
+  - `REDIS_HOST` (default `127.0.0.1`)
+  - `REDIS_PORT` (default `6379`)
+- Cached endpoints:
+  - `GET /api/telemetry/stats` (TTL 60s)
+  - `GET /api/oil/track/{batch_id}` (TTL 60s)
+
 
 
 
@@ -84,4 +93,5 @@ Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/telemetry/export?device_id=wel
 
 ## Notes
 - The database file is stored at `data/processed/oilfield.db`.
+- Redis caching is opportunistic: if Redis is unavailable, the API still works without caching.
 - For production, consider migrating to SQLAlchemy with Postgres and a proper user/auth system.

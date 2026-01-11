@@ -94,6 +94,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
 from pathlib import Path
+import os
 import sqlite3
 import time
 from typing import Optional
@@ -103,6 +104,11 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 import uuid
 import json
+import hashlib
+try:
+    import redis as redis_lib
+except Exception:
+    redis_lib = None
 
 DB = Path(__file__).resolve().parents[3] / 'data' / 'processed' / 'oilfield.db'
 
@@ -184,6 +190,42 @@ class EventCreate(BaseModel):
 @app.on_event('startup')
 def _startup():
     init_db()
+    # Initialize Redis client if available
+    global REDIS
+    REDIS = None
+    if redis_lib is not None:
+        host = os.environ.get('REDIS_HOST', '127.0.0.1')
+        port = int(os.environ.get('REDIS_PORT', '6379'))
+        try:
+            client = redis_lib.Redis(host=host, port=port, db=0)
+            client.ping()
+            REDIS = client
+        except Exception:
+            REDIS = None
+
+# Cache helpers
+def cache_key(prefix: str, params: dict) -> str:
+    raw = prefix + '|' + json.dumps(params, sort_keys=True)
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+def cache_get(key: str):
+    if REDIS is None:
+        return None
+    try:
+        val = REDIS.get(key)
+        if val is None:
+            return None
+        return json.loads(val)
+    except Exception:
+        return None
+
+def cache_set(key: str, value, ttl: int = 60):
+    if REDIS is None:
+        return
+    try:
+        REDIS.setex(key, ttl, json.dumps(value))
+    except Exception:
+        pass
 
 @app.get('/health')
 def health():
@@ -290,6 +332,11 @@ def export_csv(device_id: Optional[str] = None, ts_from: Optional[int] = None, t
 
 @app.get('/api/telemetry/stats')
 def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None):
+    # Try cache
+    key = cache_key('telemetry_stats', {'device_id': device_id, 'ts_from': ts_from, 'ts_to': ts_to})
+    cached = cache_get(key)
+    if cached is not None:
+        return cached
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
     base = 'FROM telemetry'
@@ -327,12 +374,14 @@ def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to:
     row2 = cur.fetchone()
     latest_status = row2[0] if row2 else None
     conn.close()
-    return {
+    result = {
         'count': count,
         'temperature': {'min': tmin, 'max': tmax, 'avg': tavg},
         'pressure': {'min': pmin, 'max': pmax, 'avg': pavg},
         'latest_status': latest_status,
     }
+    cache_set(key, result, ttl=60)
+    return result
 
 # -------------------------------
 # Oil Movement Tracker Endpoints
@@ -487,6 +536,11 @@ def list_events(batch_id: str, ascending: bool = True):
 @app.get('/api/oil/track/{batch_id}')
 def track_summary(batch_id: str):
     """Return batch details, ordered events, and stage duration summary."""
+    # Try cache
+    key = cache_key('track_summary', {'batch_id': batch_id})
+    cached = cache_get(key)
+    if cached is not None:
+        return cached
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
     cur.execute('SELECT batch_id, origin, volume, unit, created_at, current_stage, status FROM oil_batches WHERE batch_id = ?', (batch_id,))
@@ -509,13 +563,15 @@ def track_summary(batch_id: str):
         } for r in cur.fetchall()
     ]
     conn.close()
-    return {
+    result = {
         'batch': {
             'batch_id': batch[0], 'origin': batch[1], 'volume': batch[2], 'unit': batch[3], 'created_at': batch[4], 'current_stage': batch[5], 'status': batch[6]
         },
         'events': events,
         'durations_sec': durations
     }
+    cache_set(key, result, ttl=60)
+    return result
 
 # Subscription endpoints
 class SubscriptionCreate(BaseModel):

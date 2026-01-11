@@ -6,3 +6,5 @@ pydantic==2.9.2
 sqlalchemy==2.0.36
 python-jose==3.3.0
 PyJWT==2.8.0
+redis==5.0.1
+celery==5.3.6
