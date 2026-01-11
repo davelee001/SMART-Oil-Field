@@ -1,12 +1,4 @@
 
-Performance:
-
-Redis caching layer
-Database connection pooling
-Pagination for large datasets
-Background task queue (Celery)
-Database indexing optimization
-
 Features:
 
 Real-time websocket connections
