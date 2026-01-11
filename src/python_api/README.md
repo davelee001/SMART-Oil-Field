@@ -36,6 +36,16 @@ python -m venv .venv
 
 ### Connection Pooling (SQLite via SQLAlchemy)
 ### Background Tasks (Celery)
+### Time-Series (InfluxDB)
+- Optional InfluxDB integration for telemetry write/read.
+- Environment variables:
+  - `INFLUX_URL` — e.g., `http://127.0.0.1:8086`
+  - `INFLUX_TOKEN` — your InfluxDB API token
+  - `INFLUX_ORG` — organization name
+  - `INFLUX_BUCKET` — bucket name
+- Behavior:
+  - `POST /api/telemetry` writes to SQLite and, if configured, to InfluxDB (`telemetry` measurement) with fields `temperature`, `pressure`, `status` and tag `device_id`.
+  - `GET /api/telemetry/influx?device_id=&limit=` queries recent points from InfluxDB (30d window) and falls back to SQLite if not configured.
 -### Indexing Optimizations
 - SQLite indexes are created automatically on startup to speed up common queries:
 - `telemetry(device_id, ts)` and `telemetry(ts)` — accelerates filtered lists, stats, and exports

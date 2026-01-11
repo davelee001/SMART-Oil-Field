@@ -112,6 +112,11 @@ try:
     import redis as redis_lib
 except Exception:
     redis_lib = None
+try:
+    import influxdb_client
+    from influxdb_client.client.write_api import SYNCHRONOUS as INFLUX_SYNC
+except Exception:
+    influxdb_client = None
 
 DB = Path(__file__).resolve().parents[3] / 'data' / 'processed' / 'oilfield.db'
 DB_URL = f"sqlite:///{DB.as_posix()}"
@@ -230,6 +235,26 @@ def _startup():
             REDIS = client
         except Exception:
             REDIS = None
+    # Initialize InfluxDB (optional)
+    global INFLUX_WRITE, INFLUX_BUCKET, INFLUX_ORG
+    INFLUX_WRITE = None
+    INFLUX_BUCKET = None
+    INFLUX_ORG = None
+    if influxdb_client is not None:
+        url = os.environ.get('INFLUX_URL')
+        token = os.environ.get('INFLUX_TOKEN')
+        org = os.environ.get('INFLUX_ORG')
+        bucket = os.environ.get('INFLUX_BUCKET')
+        if url and token and org and bucket:
+            try:
+                client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
+                INFLUX_WRITE = client.write_api(write_options=INFLUX_SYNC)
+                INFLUX_BUCKET = bucket
+                INFLUX_ORG = org
+            except Exception:
+                INFLUX_WRITE = None
+                INFLUX_BUCKET = None
+                INFLUX_ORG = None
 
 # Cache helpers
 def cache_key(prefix: str, params: dict) -> str:
@@ -283,6 +308,18 @@ async def ingest(
     conn.commit()
     id_ = cur.lastrowid
     conn.close()
+    # Write to InfluxDB (optional)
+    try:
+        if INFLUX_WRITE and INFLUX_BUCKET:
+            point = influxdb_client.Point("telemetry") 
+            point = point.tag("device_id", payload.device_id) 
+            point = point.field("temperature", float(payload.temperature)) 
+            point = point.field("pressure", float(payload.pressure)) 
+            point = point.field("status", str(payload.status)) 
+            point = point.time(datetime.utcfromtimestamp(int(payload.ts)))
+            INFLUX_WRITE.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
+    except Exception:
+        pass
     return {'id': id_, 'api_user': api_user, 'oauth2_token': oauth2_token}
 
 @app.get('/api/telemetry')
@@ -318,22 +355,35 @@ def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: 
 
 @app.get('/api/telemetry/{id}')
 def get_one(id: int):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute('SELECT id, device_id, ts, temperature, pressure, status FROM telemetry WHERE id = ?', (id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
-        return {'error': 'not_found'}
-    return {'id': row[0], 'device_id': row[1], 'ts': row[2], 'temperature': row[3], 'pressure': row[4], 'status': row[5]}
-
-@app.delete('/api/telemetry/{id}')
-def delete_one(id: int):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute('DELETE FROM telemetry WHERE id = ?', (id,))
-    conn.commit()
-    count = cur.rowcount
+    # Basic read from InfluxDB if configured; otherwise fallback to SQLite
+    if INFLUX_WRITE and influxdb_client is not None and INFLUX_BUCKET and INFLUX_ORG:
+        try:
+            client = influxdb_client.InfluxDBClient(url=os.environ.get('INFLUX_URL'), token=os.environ.get('INFLUX_TOKEN'), org=INFLUX_ORG)
+            q = f'from(bucket: "{INFLUX_BUCKET}") |> range(start: -30d) |> filter(fn: (r) => r._measurement == "telemetry")'
+            if device_id:
+                q += f' |> filter(fn: (r) => r.device_id == "{device_id}")'
+            q += ' |> sort(columns: ["_time"], desc: true)'
+            q += f' |> limit(n: {int(limit)})'
+            res = client.query_api().query(org=INFLUX_ORG, query=q)
+            out = []
+            # Collect rows; Flux returns tables with records across fields
+            # We'll aggregate temperature/pressure/status per _time
+            tmp = {}
+            for table in res:
+                for record in table.records:
+                    t = int(datetime.strptime(record.get_time().strftime('%Y-%m-%dT%H:%M:%S%z'), '%Y-%m-%dT%H:%M:%S%z').timestamp())
+                    key = (record.values.get('device_id'), t)
+                    row = tmp.get(key, {'device_id': record.values.get('device_id'), 'ts': t})
+                    field = record.get_field()
+                    row[field] = record.get_value()
+                    tmp[key] = row
+            # Convert to list ordered by ts desc
+            out = sorted(tmp.values(), key=lambda r: r['ts'], reverse=True)
+            return out
+        except Exception:
+            pass
+    # Fallback to SQLite
+    return list(device_id=device_id, limit=limit)
     conn.close()
     return {'deleted': count}
 

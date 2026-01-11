@@ -217,6 +217,22 @@ This project integrates multiple technologies:
    - Worker start (Windows): `src/python_api/.venv/Scripts/celery.exe -A app.tasks.celery_app worker -l info`
    - Async export endpoints: `POST /api/telemetry/export/async` and `GET /api/tasks/{task_id}`.
  - **Indexing Optimizations (added)**: Automatic SQLite indexes to speed up common queries.
+   -## 📈 Data & Analytics
+   -
+   -**Time-Series DB (InfluxDB)**
+   - - Optional integration to store telemetry as time-series for scalable reads/writes.
+   - - Configure via env: `INFLUX_URL`, `INFLUX_TOKEN`, `INFLUX_ORG`, `INFLUX_BUCKET`.
+   - - Endpoints: `POST /api/telemetry` writes to both SQLite and InfluxDB; `GET /api/telemetry/influx` reads recent data.
+   -
+   -**Data Warehouse & BI (planned)**
+   - - ETL from operational DB to analytics store (docs and scripts forthcoming).
+   - - Dashboards in Power BI / Tableau.
+   -
+   -**ML Predictions (planned)**
+   - - Model training pipeline and inference endpoints.
+   -
+   -**Backup & DR (planned)**
+   - - Automated backups and restore playbooks for DBs and configs.
    - `telemetry(device_id, ts)`, `telemetry(ts)`
    - `oil_batches(current_stage, status)`, `oil_batches(created_at)`
    - `oil_events(batch_id, ts)`

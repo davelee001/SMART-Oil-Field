@@ -77,9 +77,3 @@ Application logs aggregation
 Performance monitoring (APM)
 Uptime monitoring
 
-📊 Data & Analytics
-Time-series database (InfluxDB) for telemetry
-Data warehouse for analytics
-BI dashboards (Power BI, Tableau)
-Machine learning pipeline for predictions
-Data backup and disaster recovery
