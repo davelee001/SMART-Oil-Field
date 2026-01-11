@@ -34,11 +34,20 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-# JWT config
-SECRET_KEY = "supersecretkey123"  # Change in production
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+# OAuth2 integration (using FastAPI's OAuth2PasswordBearer)
+from fastapi.security import OAuth2AuthorizationCodeBearer
+
+OAUTH2_CLIENT_ID = "demo-client-id"
+OAUTH2_CLIENT_SECRET = "demo-client-secret"
+OAUTH2_AUTH_URL = "https://demo-oauth-provider.com/auth"
+OAUTH2_TOKEN_URL = "https://demo-oauth-provider.com/token"
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+oauth2_auth_code_scheme = OAuth2AuthorizationCodeBearer(
+    authorizationUrl=OAUTH2_AUTH_URL,
+    tokenUrl=OAUTH2_TOKEN_URL
+)
 
 # Dummy user store (replace with DB in production)
 fake_users_db = {
@@ -186,16 +195,25 @@ def health():
 # Example: admin-only endpoint (RBAC)
 
 # Example: admin-only endpoint (RBAC + rate limiting)
+# Example: admin-only endpoint (RBAC + rate limiting)
+
+# Example: OAuth2-protected endpoint (admin-only, rate limiting, API key)
 @app.post('/api/telemetry')
-async def ingest(payload: TelemetryIn, user=Depends(require_role("admin")), api_user=Depends(get_api_key)):
+async def ingest(
+    payload: TelemetryIn,
+    user=Depends(require_role("admin")),
+    api_user=Depends(get_api_key),
+    oauth2_token: str = Depends(oauth2_auth_code_scheme)
+):
     rate_limit(user["username"], "/api/telemetry")
+    # In production, validate oauth2_token with provider
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
     cur.execute('INSERT INTO telemetry (device_id, ts, temperature, pressure, status) VALUES (?, ?, ?, ?, ?)', (payload.device_id, payload.ts, payload.temperature, payload.pressure, payload.status))
     conn.commit()
     id_ = cur.lastrowid
     conn.close()
-    return {'id': id_, 'api_user': api_user}
+    return {'id': id_, 'api_user': api_user, 'oauth2_token': oauth2_token}
 
 @app.get('/api/telemetry')
 def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 100):

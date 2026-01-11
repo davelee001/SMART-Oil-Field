@@ -28,10 +28,11 @@ python -m venv .venv
 
 
 
+
 ## Endpoints
 - GET `/health` — service health
 - POST `/token` — obtain JWT access token (login)
-- POST `/api/telemetry` — insert a telemetry record (**admin role, JWT Bearer token, and API key required**)
+- POST `/api/telemetry` — insert a telemetry record (**admin role, JWT Bearer token, API key, and OAuth2 token required**)
 - GET `/api/telemetry` — list telemetry with optional filters
   - Query params: `device_id`, `ts_from`, `ts_to`, `limit`
 - GET `/api/telemetry/{id}` — fetch one record by id
@@ -70,9 +71,11 @@ Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/telemetry/export?device_id=wel
 
 
 
+
 ## Security
 - JWT authentication is required for protected endpoints (e.g., POST `/api/telemetry`).
 - API key is also required for protected endpoints (header: `x-api-key`).
+- OAuth2 authentication is supported for advanced integrations (see code for demo provider URLs).
 - Role-based access control (RBAC) is enforced for sensitive endpoints (e.g., only `admin` can ingest telemetry).
 - Rate limiting is enforced per user/endpoint (default: 10 requests per minute).
 - Obtain a token via `/token` using username/password (see example above).
