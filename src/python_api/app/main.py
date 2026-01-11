@@ -117,6 +117,10 @@ try:
     from influxdb_client.client.write_api import SYNCHRONOUS as INFLUX_SYNC
 except Exception:
     influxdb_client = None
+try:
+    import joblib
+except Exception:
+    joblib = None
 
 DB = Path(__file__).resolve().parents[3] / 'data' / 'processed' / 'oilfield.db'
 DB_URL = f"sqlite:///{DB.as_posix()}"
@@ -255,6 +259,16 @@ def _startup():
                 INFLUX_WRITE = None
                 INFLUX_BUCKET = None
                 INFLUX_ORG = None
+    # Load ML model if available
+    global ML_MODEL, MODEL_PATH
+    ML_MODEL = None
+    MODEL_PATH = (Path(__file__).resolve().parent / 'models' / 'telemetry_anomaly.pkl')
+    if joblib is not None:
+        try:
+            if MODEL_PATH.exists():
+                ML_MODEL = joblib.load(MODEL_PATH)
+        except Exception:
+            ML_MODEL = None
 
 # Cache helpers
 def cache_key(prefix: str, params: dict) -> str:
@@ -355,8 +369,18 @@ def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: 
 
 @app.get('/api/telemetry/{id}')
 def get_one(id: int):
-    # Basic read from InfluxDB if configured; otherwise fallback to SQLite
-    if INFLUX_WRITE and influxdb_client is not None and INFLUX_BUCKET and INFLUX_ORG:
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute('SELECT id, device_id, ts, temperature, pressure, status FROM telemetry WHERE id = ?', (id,))
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return {'error': 'not_found'}
+    return {'id': row[0], 'device_id': row[1], 'ts': row[2], 'temperature': row[3], 'pressure': row[4], 'status': row[5]}
+
+@app.get('/api/telemetry/influx')
+def telemetry_influx(device_id: Optional[str] = None, limit: int = 100):
+    if influxdb_client is not None and INFLUX_BUCKET and INFLUX_ORG:
         try:
             client = influxdb_client.InfluxDBClient(url=os.environ.get('INFLUX_URL'), token=os.environ.get('INFLUX_TOKEN'), org=INFLUX_ORG)
             q = f'from(bucket: "{INFLUX_BUCKET}") |> range(start: -30d) |> filter(fn: (r) => r._measurement == "telemetry")'
@@ -365,27 +389,21 @@ def get_one(id: int):
             q += ' |> sort(columns: ["_time"], desc: true)'
             q += f' |> limit(n: {int(limit)})'
             res = client.query_api().query(org=INFLUX_ORG, query=q)
-            out = []
-            # Collect rows; Flux returns tables with records across fields
-            # We'll aggregate temperature/pressure/status per _time
             tmp = {}
             for table in res:
                 for record in table.records:
-                    t = int(datetime.strptime(record.get_time().strftime('%Y-%m-%dT%H:%M:%S%z'), '%Y-%m-%dT%H:%M:%S%z').timestamp())
+                    t = int(record.get_time().timestamp())
                     key = (record.values.get('device_id'), t)
                     row = tmp.get(key, {'device_id': record.values.get('device_id'), 'ts': t})
                     field = record.get_field()
                     row[field] = record.get_value()
                     tmp[key] = row
-            # Convert to list ordered by ts desc
             out = sorted(tmp.values(), key=lambda r: r['ts'], reverse=True)
             return out
         except Exception:
             pass
-    # Fallback to SQLite
-    return list(device_id=device_id, limit=limit)
-    conn.close()
-    return {'deleted': count}
+    rows = list(device_id=device_id, limit=limit)
+    return rows
 
 @app.get('/api/telemetry/export', response_class=PlainTextResponse)
 def export_csv(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 1000):
@@ -490,6 +508,44 @@ def stats(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to:
     }
     cache_set(key, result, ttl=60)
     return result
+
+# -------------------------
+# ML Inference (Anomalies)
+# -------------------------
+
+class MLPredictIn(BaseModel):
+    temperature: float
+    pressure: float
+    device_id: Optional[str] = None
+    ts: Optional[int] = None
+
+@app.post('/api/ml/predict')
+def ml_predict(payload: MLPredictIn):
+    score = None
+    pred = None
+    used = 'rule'
+    if ML_MODEL is not None:
+        try:
+            used = 'rf'
+            proba = ML_MODEL.predict_proba([[float(payload.temperature), float(payload.pressure)]])
+            score = float(proba[0][1])
+            pred = bool(score >= 0.5)
+        except Exception:
+            ML_MODEL = None
+    if score is None:
+        t = float(payload.temperature)
+        p = float(payload.pressure)
+        score = float(min(1.0, max(0.0, ((t - 85.0)/20.0) + ((p - 220.0)/80.0))))
+        pred = bool((t > 95.0) or (p > 260.0) or score > 0.6)
+    return {
+        'anomaly': pred,
+        'score': score,
+        'model': used,
+        'meta': {
+            'device_id': payload.device_id,
+            'ts': payload.ts
+        }
+    }
 
 # -------------------------------
 # Oil Movement Tracker Endpoints

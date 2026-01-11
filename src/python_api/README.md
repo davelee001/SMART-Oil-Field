@@ -83,6 +83,17 @@ python -m venv .venv
 - POST `/api/telemetry/export/async` — Async CSV export (returns task id)
 - GET `/api/tasks/{task_id}` — Task status/result
 
+### Machine Learning
+- Train model:
+  ```powershell
+  # From repo root
+  python scripts/train_ml.py
+  ```
+- Inference endpoint:
+  - `POST /api/ml/predict` — body `{ temperature, pressure, device_id?, ts? }`
+  - Returns: `{ anomaly: bool, score: float, model: "rf"|"rule", meta }`
+  - Uses a trained RandomForest if available; falls back to rule-based scoring.
+
 
 
 ## Examples
@@ -104,6 +115,10 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/telemetry?device_id=well-004&l
 
 # CSV export
 Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/telemetry/export?device_id=well-004&limit=100" | Select-Object -ExpandProperty Content
+
+# ML inference
+$mlBody = @{ temperature=92.3; pressure=270.0; device_id="well-004" } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/ml/predict" -ContentType "application/json" -Body $mlBody
 ```
 
 ## Code References

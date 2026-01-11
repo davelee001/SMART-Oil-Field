@@ -250,8 +250,9 @@ This project integrates multiple technologies:
       python scripts/etl_warehouse.py
       ```
 
-- **ML Predictions (planned)**
-   - Model training pipeline and inference endpoints.
+- **ML Predictions (added)**
+   - RandomForest training script: `scripts/train_ml.py` (saves `src/python_api/app/models/telemetry_anomaly.pkl`).
+   - Inference endpoint: `POST /api/ml/predict` — returns anomaly flag and score using model or rule-based fallback.
 
 - **Backup & DR (planned)**
    - Automated backups and restore playbooks for DBs and configs.
