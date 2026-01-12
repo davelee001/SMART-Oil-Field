@@ -400,5 +400,39 @@ app.get('/api/aggregation/anomalies', async (req, res) => {
   }
 });
 
+// Historical trend analysis gateway endpoints
+app.get('/api/trends/analysis', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/trends/analysis?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to analyze trends' });
+  }
+});
+
+app.get('/api/trends/compare', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/trends/compare?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to compare trends' });
+  }
+});
+
+app.get('/api/trends/anomaly-trends', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/trends/anomaly-trends?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to analyze anomaly trends' });
+  }
+});
+
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 server.listen(port, () => console.log(`TS backend with WebSocket support listening on ${port}`));

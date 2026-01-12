@@ -1572,6 +1572,329 @@ def aggregate_anomalies(
     cache_set(key, result, ttl=600)
     return result
 
+# -------------------------------
+# Historical Trend Analysis
+# -------------------------------
+
+class TrendAnalysisRequest(BaseModel):
+    device_id: Optional[str] = None
+    metric: str = Field(default='temperature', regex='^(temperature|pressure)$')
+    ts_from: Optional[int] = None
+    ts_to: Optional[int] = None
+    analysis_type: str = Field(default='linear', regex='^(linear|seasonal|moving_average)$')
+    window_size: int = Field(default=24, ge=2, le=168)  # hours
+
+def calculate_linear_trend(values: list, timestamps: list) -> dict:
+    """Calculate linear trend statistics"""
+    if len(values) < 2:
+        return {'slope': 0, 'intercept': 0, 'r_squared': 0, 'trend': 'insufficient_data'}
+
+    # Convert timestamps to hours since start
+    start_time = min(timestamps)
+    x = [(t - start_time) / 3600 for t in timestamps]  # hours
+    y = values
+
+    # Calculate linear regression
+    n = len(x)
+    sum_x = sum(x)
+    sum_y = sum(y)
+    sum_xy = sum(xi * yi for xi, yi in zip(x, y))
+    sum_x2 = sum(xi * xi for xi in x)
+
+    slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x)
+    intercept = (sum_y - slope * sum_x) / n
+
+    # Calculate R-squared
+    y_mean = sum_y / n
+    ss_tot = sum((yi - y_mean) ** 2 for yi in y)
+    ss_res = sum((yi - (slope * xi + intercept)) ** 2 for xi, yi in zip(x, y))
+    r_squared = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
+
+    # Determine trend direction
+    if abs(slope) < 0.01:
+        trend = 'stable'
+    elif slope > 0:
+        trend = 'increasing'
+    else:
+        trend = 'decreasing'
+
+    return {
+        'slope': slope,
+        'intercept': intercept,
+        'r_squared': r_squared,
+        'trend': trend,
+        'confidence': 'high' if r_squared > 0.7 else 'medium' if r_squared > 0.3 else 'low'
+    }
+
+def detect_seasonal_patterns(values: list, timestamps: list, period_hours: int = 24) -> dict:
+    """Detect seasonal patterns in the data"""
+    if len(values) < period_hours * 2:
+        return {'seasonal': False, 'period_hours': period_hours, 'message': 'insufficient_data'}
+
+    # Simple autocorrelation approach
+    autocorr = []
+    max_lag = min(len(values) // 4, period_hours * 2)
+
+    for lag in range(1, max_lag + 1):
+        corr = 0
+        count = 0
+        for i in range(len(values) - lag):
+            corr += (values[i] - sum(values)/len(values)) * (values[i + lag] - sum(values)/len(values))
+            count += 1
+        autocorr.append(corr / count if count > 0 else 0)
+
+    # Find peaks in autocorrelation
+    peaks = []
+    for i in range(1, len(autocorr) - 1):
+        if autocorr[i] > autocorr[i-1] and autocorr[i] > autocorr[i+1] and autocorr[i] > 0.3:
+            peaks.append((i, autocorr[i]))
+
+    seasonal = len(peaks) > 0
+    dominant_period = peaks[0][0] if peaks else None
+
+    return {
+        'seasonal': seasonal,
+        'dominant_period_hours': dominant_period,
+        'autocorrelation_peaks': peaks[:3],  # Top 3 peaks
+        'period_hours': period_hours
+    }
+
+def calculate_moving_averages(values: list, timestamps: list, window_size: int) -> dict:
+    """Calculate moving averages and identify trends"""
+    if len(values) < window_size:
+        return {'moving_averages': [], 'message': 'insufficient_data'}
+
+    moving_avgs = []
+    for i in range(len(values) - window_size + 1):
+        window_values = values[i:i + window_size]
+        avg = sum(window_values) / len(window_values)
+        moving_avgs.append({
+            'timestamp': timestamps[i + window_size - 1],
+            'value': avg,
+            'window_start': timestamps[i],
+            'window_end': timestamps[i + window_size - 1]
+        })
+
+    # Calculate trend in moving averages
+    if len(moving_avgs) >= 2:
+        recent_avg = sum(ma['value'] for ma in moving_avgs[-min(5, len(moving_avgs)):]) / min(5, len(moving_avgs))
+        earlier_avg = sum(ma['value'] for ma in moving_avgs[:min(5, len(moving_avgs))]) / min(5, len(moving_avgs))
+        trend_direction = 'increasing' if recent_avg > earlier_avg * 1.05 else 'decreasing' if recent_avg < earlier_avg * 0.95 else 'stable'
+    else:
+        trend_direction = 'unknown'
+
+    return {
+        'moving_averages': moving_avgs,
+        'window_size': window_size,
+        'trend_direction': trend_direction,
+        'volatility': calculate_volatility(values)
+    }
+
+def calculate_volatility(values: list) -> float:
+    """Calculate volatility (coefficient of variation)"""
+    if len(values) < 2:
+        return 0
+
+    mean = sum(values) / len(values)
+    variance = sum((x - mean) ** 2 for x in values) / len(values)
+    std_dev = variance ** 0.5
+
+    return std_dev / mean if mean != 0 else 0
+
+@app.get('/api/trends/analysis')
+def analyze_trends(
+    device_id: Optional[str] = None,
+    metric: str = 'temperature',
+    ts_from: Optional[int] = None,
+    ts_to: Optional[int] = None,
+    analysis_type: str = 'linear',
+    window_size: int = 24
+):
+    """Perform trend analysis on telemetry data"""
+    # Try cache
+    cache_key_val = f"trend_{device_id or 'all'}_{metric}_{analysis_type}_{ts_from}_{ts_to}_{window_size}"
+    key = cache_key('trend_analysis', {'key': cache_key_val})
+    cached = cache_get(key)
+    if cached:
+        return cached
+
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # Get data for analysis
+    q = f'SELECT ts, {metric} FROM telemetry WHERE {metric} IS NOT NULL'
+    params = []
+
+    if device_id:
+        q += ' AND device_id = ?'
+        params.append(device_id)
+
+    if ts_from:
+        q += ' AND ts >= ?'
+        params.append(ts_from)
+
+    if ts_to:
+        q += ' AND ts <= ?'
+        params.append(ts_to)
+
+    q += ' ORDER BY ts ASC'
+
+    cur.execute(q, tuple(params))
+    rows = cur.fetchall()
+    conn.close()
+
+    if len(rows) < 3:
+        return {
+            'error': 'insufficient_data',
+            'message': f'Need at least 3 data points for trend analysis, got {len(rows)}',
+            'device_id': device_id,
+            'metric': metric
+        }
+
+    timestamps = [row[0] for row in rows]
+    values = [row[1] for row in rows]
+
+    result = {
+        'device_id': device_id,
+        'metric': metric,
+        'data_points': len(values),
+        'time_range': {
+            'from': min(timestamps),
+            'to': max(timestamps),
+            'duration_hours': (max(timestamps) - min(timestamps)) / 3600
+        },
+        'analysis_type': analysis_type,
+        'analysis': {}
+    }
+
+    # Perform requested analysis
+    if analysis_type == 'linear':
+        result['analysis'] = calculate_linear_trend(values, timestamps)
+    elif analysis_type == 'seasonal':
+        result['analysis'] = detect_seasonal_patterns(values, timestamps, window_size)
+    elif analysis_type == 'moving_average':
+        result['analysis'] = calculate_moving_averages(values, timestamps, window_size)
+
+    # Add summary statistics
+    result['summary_stats'] = {
+        'mean': sum(values) / len(values),
+        'median': sorted(values)[len(values) // 2],
+        'min': min(values),
+        'max': max(values),
+        'volatility': calculate_volatility(values),
+        'data_completeness': len([v for v in values if v is not None]) / len(values)
+    }
+
+    cache_set(key, result, ttl=1800)  # Cache for 30 minutes
+    return result
+
+@app.get('/api/trends/compare')
+def compare_trends(
+    device_ids: str,
+    metric: str = 'temperature',
+    ts_from: Optional[int] = None,
+    ts_to: Optional[int] = None,
+    bucket: str = 'day'
+):
+    """Compare trends across multiple devices"""
+    device_list = [d.strip() for d in device_ids.split(',') if d.strip()]
+    if len(device_list) < 2 or len(device_list) > 10:
+        return {'error': 'invalid_device_count', 'message': 'Provide 2-10 device IDs separated by commas'}
+
+    results = {}
+    for device_id in device_list:
+        try:
+            analysis = analyze_trends(
+                device_id=device_id,
+                metric=metric,
+                ts_from=ts_from,
+                ts_to=ts_to,
+                analysis_type='linear'
+            )
+            if 'error' not in analysis:
+                results[device_id] = analysis
+        except Exception:
+            continue
+
+    if not results:
+        return {'error': 'no_valid_data', 'message': 'No valid trend data found for any devices'}
+
+    # Compare trends
+    comparison = {
+        'devices_compared': list(results.keys()),
+        'metric': metric,
+        'time_range': ts_from and ts_to and {'from': ts_from, 'to': ts_to},
+        'trend_summary': {}
+    }
+
+    for device_id, analysis in results.items():
+        trend_info = analysis.get('analysis', {})
+        comparison['trend_summary'][device_id] = {
+            'trend': trend_info.get('trend', 'unknown'),
+            'slope': trend_info.get('slope', 0),
+            'confidence': trend_info.get('confidence', 'unknown'),
+            'data_points': analysis.get('data_points', 0)
+        }
+
+    # Find best and worst performing devices
+    if all('slope' in info for info in comparison['trend_summary'].values()):
+        slopes = {d: info['slope'] for d, info in comparison['trend_summary'].items()}
+        comparison['best_performer'] = max(slopes, key=slopes.get)
+        comparison['worst_performer'] = min(slopes, key=slopes.get)
+
+    return comparison
+
+@app.get('/api/trends/anomaly-trends')
+def analyze_anomaly_trends(
+    device_id: Optional[str] = None,
+    bucket: str = 'day',
+    ts_from: Optional[int] = None,
+    ts_to: Optional[int] = None
+):
+    """Analyze trends in anomaly occurrences"""
+    # Get anomaly aggregations
+    anomaly_data = aggregate_anomalies(
+        device_id=device_id,
+        bucket=bucket,
+        ts_from=ts_from,
+        ts_to=ts_to
+    )
+
+    if not anomaly_data.get('anomaly_aggregations'):
+        return {'error': 'no_anomaly_data', 'message': 'No anomaly data available for trend analysis'}
+
+    aggregations = anomaly_data['anomaly_aggregations']
+
+    # Extract anomaly rates over time
+    timestamps = [agg['bucket_start'] for agg in aggregations]
+    anomaly_rates = [agg['anomaly_rate'] for agg in aggregations]
+
+    # Calculate trend in anomaly rates
+    trend_analysis = calculate_linear_trend(anomaly_rates, timestamps)
+
+    # Calculate moving average of anomaly rates
+    if len(anomaly_rates) >= 3:
+        ma_window = min(7, len(anomaly_rates))  # 7-day moving average
+        moving_avg = calculate_moving_averages(anomaly_rates, timestamps, ma_window)
+    else:
+        moving_avg = {'moving_averages': []}
+
+    return {
+        'device_id': device_id,
+        'bucket': bucket,
+        'time_range': {'from': ts_from, 'to': ts_to},
+        'total_buckets': len(aggregations),
+        'anomaly_trend': trend_analysis,
+        'anomaly_moving_average': moving_avg,
+        'anomaly_summary': {
+            'avg_anomaly_rate': sum(anomaly_rates) / len(anomaly_rates),
+            'max_anomaly_rate': max(anomaly_rates),
+            'min_anomaly_rate': min(anomaly_rates),
+            'total_anomalies': sum(agg['anomalies'] for agg in aggregations),
+            'total_readings': sum(agg['total_readings'] for agg in aggregations)
+        }
+    }
+
 @app.post('/api/oil/batches')
 def create_batch(payload: BatchCreate):
     conn = get_conn()
