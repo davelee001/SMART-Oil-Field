@@ -17,4 +17,4 @@ joblib==1.4.2
 prophet==1.1.5
 statsmodels==0.14.2
 smtplib3==0.1.0
-twilio==9.3.2
+twilio==9.3.2python-multipart==0.0.9

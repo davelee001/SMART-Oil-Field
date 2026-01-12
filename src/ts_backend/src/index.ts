@@ -434,5 +434,43 @@ app.get('/api/trends/anomaly-trends', async (req, res) => {
   }
 });
 
+// Batch data upload gateway endpoints
+app.post('/api/upload/validate-csv', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/upload/validate-csv`, {
+      method: 'POST',
+      body: req.body // Forward the multipart data
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to validate CSV' });
+  }
+});
+
+app.post('/api/upload/telemetry-csv', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/upload/telemetry-csv`, {
+      method: 'POST',
+      body: req.body // Forward the multipart data
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to upload CSV' });
+  }
+});
+
+app.get('/api/upload/history', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/upload/history?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get upload history' });
+  }
+});
+
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 server.listen(port, () => console.log(`TS backend with WebSocket support listening on ${port}`));

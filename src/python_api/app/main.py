@@ -134,7 +134,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import QueuePool
 import time
 from typing import Optional
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import UploadFile, File
+import csv
+import io
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
@@ -1892,7 +1894,309 @@ def analyze_anomaly_trends(
             'min_anomaly_rate': min(anomaly_rates),
             'total_anomalies': sum(agg['anomalies'] for agg in aggregations),
             'total_readings': sum(agg['total_readings'] for agg in aggregations)
+    return {
+        'device_id': device_id,
+        'bucket': bucket,
+        'time_range': {'from': ts_from, 'to': ts_to},
+        'total_buckets': len(aggregations),
+        'anomaly_trend': trend_analysis,
+        'anomaly_moving_average': moving_avg,
+        'anomaly_summary': {
+            'avg_anomaly_rate': sum(anomaly_rates) / len(anomaly_rates),
+            'max_anomaly_rate': max(anomaly_rates),
+            'min_anomaly_rate': min(anomaly_rates),
+            'total_anomalies': sum(agg['anomalies'] for agg in aggregations),
+            'total_readings': sum(agg['total_readings'] for agg in aggregations)
         }
+    }
+
+# -------------------------------
+# Batch Data Upload (CSV Import)
+# -------------------------------
+
+class CSVUploadResponse(BaseModel):
+    filename: str
+    records_processed: int
+    records_inserted: int
+    records_failed: int
+    errors: list[str]
+    processing_time_seconds: float
+    upload_id: str
+
+class CSVValidationResult(BaseModel):
+    is_valid: bool
+    errors: list[str]
+    preview_rows: list[dict]
+    expected_columns: list[str]
+    detected_columns: list[str]
+
+def validate_csv_content(csv_content: str, delimiter: str = ',') -> CSVValidationResult:
+    """Validate CSV content and return preview"""
+    try:
+        # Parse CSV
+        csv_reader = csv.DictReader(io.StringIO(csv_content), delimiter=delimiter)
+
+        # Check for required columns (flexible - we can map different names)
+        fieldnames = csv_reader.fieldnames or []
+        detected_columns = [col.lower().strip() for col in fieldnames]
+
+        # Expected column patterns
+        expected_patterns = {
+            'device_id': ['device_id', 'device', 'sensor_id', 'sensor', 'id'],
+            'timestamp': ['timestamp', 'ts', 'time', 'datetime', 'date'],
+            'temperature': ['temperature', 'temp', 't'],
+            'pressure': ['pressure', 'p', 'psi'],
+            'status': ['status', 'state', 'condition']
+        }
+
+        # Map detected columns to expected ones
+        column_mapping = {}
+        for expected, patterns in expected_patterns.items():
+            for detected in detected_columns:
+                if any(pattern in detected for pattern in patterns):
+                    column_mapping[expected] = next(col for col in fieldnames if col.lower().strip() == detected)
+                    break
+
+        # Check if we have minimum required columns
+        required_columns = ['device_id', 'timestamp']
+        missing_required = [col for col in required_columns if col not in column_mapping]
+
+        if missing_required:
+            return CSVValidationResult(
+                is_valid=False,
+                errors=[f"Missing required columns: {', '.join(missing_required)}"],
+                preview_rows=[],
+                expected_columns=list(expected_patterns.keys()),
+                detected_columns=fieldnames
+            )
+
+        # Get preview rows
+        preview_rows = []
+        for i, row in enumerate(csv_reader):
+            if i >= 5:  # Preview first 5 rows
+                break
+            mapped_row = {}
+            for expected, original in column_mapping.items():
+                mapped_row[expected] = row.get(original, '')
+            preview_rows.append(mapped_row)
+
+        return CSVValidationResult(
+            is_valid=True,
+            errors=[],
+            preview_rows=preview_rows,
+            expected_columns=list(expected_patterns.keys()),
+            detected_columns=fieldnames
+        )
+
+    except Exception as e:
+        return CSVValidationResult(
+            is_valid=False,
+            errors=[f"CSV parsing error: {str(e)}"],
+            preview_rows=[],
+            expected_columns=[],
+            detected_columns=[]
+        )
+
+def parse_timestamp(ts_str: str) -> Optional[int]:
+    """Parse various timestamp formats"""
+    try:
+        # Try Unix timestamp (numeric)
+        if ts_str.isdigit():
+            return int(ts_str)
+
+        # Try ISO format
+        dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+        return int(dt.timestamp())
+
+    except Exception:
+        return None
+
+@app.post('/api/upload/validate-csv')
+async def validate_csv_upload(file: UploadFile = File(...)):
+    """Validate CSV file before upload"""
+    if not file.filename.lower().endswith('.csv'):
+        return {'error': 'Invalid file type. Only CSV files are allowed.'}
+
+    try:
+        content = await file.read()
+        csv_text = content.decode('utf-8')
+
+        # Try different delimiters
+        delimiters = [',', ';', '\t']
+        best_result = None
+
+        for delimiter in delimiters:
+            result = validate_csv_content(csv_text, delimiter)
+            if result.is_valid:
+                best_result = result
+                break
+            elif not best_result or len(result.errors) < len(best_result.errors):
+                best_result = result
+
+        return {
+            'filename': file.filename,
+            'validation': best_result.dict() if best_result else None
+        }
+
+    except Exception as e:
+        return {'error': f'File processing error: {str(e)}'}
+
+@app.post('/api/upload/telemetry-csv')
+async def upload_telemetry_csv(
+    file: UploadFile = File(...),
+    skip_validation: bool = False,
+    batch_size: int = 1000
+):
+    """Upload telemetry data from CSV file"""
+    import time
+    start_time = time.time()
+    upload_id = f"upload_{int(start_time)}_{uuid.uuid4().hex[:8]}"
+
+    if not file.filename.lower().endswith('.csv'):
+        return {'error': 'Invalid file type. Only CSV files are allowed.'}
+
+    try:
+        content = await file.read()
+        csv_text = content.decode('utf-8')
+
+        # Validate CSV first
+        validation = validate_csv_content(csv_text)
+        if not validation.is_valid and not skip_validation:
+            return {
+                'error': 'CSV validation failed',
+                'validation_errors': validation.errors,
+                'upload_id': upload_id
+            }
+
+        # Parse and insert data
+        csv_reader = csv.DictReader(io.StringIO(csv_text))
+        column_mapping = {}
+
+        # Build column mapping
+        fieldnames = csv_reader.fieldnames or []
+        detected_columns = [col.lower().strip() for col in fieldnames]
+
+        expected_patterns = {
+            'device_id': ['device_id', 'device', 'sensor_id', 'sensor', 'id'],
+            'timestamp': ['timestamp', 'ts', 'time', 'datetime', 'date'],
+            'temperature': ['temperature', 'temp', 't'],
+            'pressure': ['pressure', 'p', 'psi'],
+            'status': ['status', 'state', 'condition']
+        }
+
+        for expected, patterns in expected_patterns.items():
+            for detected in detected_columns:
+                if any(pattern in detected for pattern in patterns):
+                    column_mapping[expected] = next(col for col in fieldnames if col.lower().strip() == detected)
+                    break
+
+        # Process in batches
+        conn = get_conn()
+        cur = conn.cursor()
+
+        records_processed = 0
+        records_inserted = 0
+        records_failed = 0
+        errors = []
+
+        batch_data = []
+
+        for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (header is 1)
+            records_processed += 1
+
+            try:
+                # Map columns
+                device_id = row.get(column_mapping.get('device_id', ''), '').strip()
+                ts_str = row.get(column_mapping.get('timestamp', ''), '').strip()
+                temp_str = row.get(column_mapping.get('temperature', ''), '').strip()
+                pressure_str = row.get(column_mapping.get('pressure', ''), '').strip()
+                status = row.get(column_mapping.get('status', ''), 'NORMAL').strip()
+
+                # Validate required fields
+                if not device_id:
+                    raise ValueError("Missing device_id")
+
+                if not ts_str:
+                    raise ValueError("Missing timestamp")
+
+                # Parse timestamp
+                ts = parse_timestamp(ts_str)
+                if ts is None:
+                    raise ValueError(f"Invalid timestamp format: {ts_str}")
+
+                # Parse numeric fields
+                temperature = float(temp_str) if temp_str else None
+                pressure = float(pressure_str) if pressure_str else None
+
+                if temperature is None and pressure is None:
+                    raise ValueError("At least one of temperature or pressure must be provided")
+
+                batch_data.append((
+                    device_id,
+                    ts,
+                    temperature,
+                    pressure,
+                    status
+                ))
+
+                # Insert in batches
+                if len(batch_data) >= batch_size:
+                    try:
+                        cur.executemany('''
+                            INSERT OR IGNORE INTO telemetry
+                            (device_id, ts, temperature, pressure, status)
+                            VALUES (?, ?, ?, ?, ?)
+                        ''', batch_data)
+                        records_inserted += len(batch_data)
+                        batch_data = []
+                    except Exception as e:
+                        records_failed += len(batch_data)
+                        errors.append(f"Batch insert error at row {row_num}: {str(e)}")
+                        batch_data = []
+
+            except Exception as e:
+                records_failed += 1
+                errors.append(f"Row {row_num}: {str(e)}")
+
+        # Insert remaining batch
+        if batch_data:
+            try:
+                cur.executemany('''
+                    INSERT OR IGNORE INTO telemetry
+                    (device_id, ts, temperature, pressure, status)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', batch_data)
+                records_inserted += len(batch_data)
+            except Exception as e:
+                records_failed += len(batch_data)
+                errors.append(f"Final batch insert error: {str(e)}")
+
+        conn.commit()
+        conn.close()
+
+        processing_time = time.time() - start_time
+
+        return CSVUploadResponse(
+            filename=file.filename,
+            records_processed=records_processed,
+            records_inserted=records_inserted,
+            records_failed=records_failed,
+            errors=errors[:10],  # Limit error messages
+            processing_time_seconds=round(processing_time, 2),
+            upload_id=upload_id
+        ).dict()
+
+    except Exception as e:
+        return {'error': f'Upload processing error: {str(e)}', 'upload_id': upload_id}
+
+@app.get('/api/upload/history')
+def get_upload_history(limit: int = 50):
+    """Get history of CSV uploads (simulated - would need a proper audit table)"""
+    # In a real implementation, you'd store upload metadata in a database table
+    return {
+        'uploads': [],
+        'message': 'Upload history tracking not yet implemented. Consider adding an uploads audit table.',
+        'limit': limit
     }
 
 @app.post('/api/oil/batches')
