@@ -152,9 +152,17 @@ try:
 except Exception:
     influxdb_client = None
 try:
-    import joblib
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
 except Exception:
-    joblib = None
+    smtplib = None
+
+try:
+    import twilio
+    from twilio.rest import Client as TwilioClient
+except Exception:
+    twilio = None
 try:
     from prophet import Prophet
     import pandas as pd
@@ -391,6 +399,16 @@ async def ingest(
         ts=payload.ts
     ))
 
+    # Automatic threshold breach alerts
+    if ALERT_CONFIG.alert_on_threshold_breach:
+        alerts_sent = alert_manager.check_thresholds_and_alert(
+            payload.device_id,
+            payload.temperature,
+            payload.pressure
+        )
+    else:
+        alerts_sent = []
+
     # Broadcast to WebSocket clients
     telemetry_data = {
         'id': id_,
@@ -401,7 +419,8 @@ async def ingest(
         'status': payload.status,
         'anomaly_detected': anomaly_result['anomaly'],
         'anomaly_score': anomaly_result['score'],
-        'anomaly_reason': anomaly_result['reason']
+        'anomaly_reason': anomaly_result['reason'],
+        'alerts_triggered': len(alerts_sent)
     }
     await manager.broadcast_telemetry(telemetry_data)
 
@@ -798,6 +817,475 @@ def get_anomaly_stats(device_id: Optional[str] = None, ts_from: Optional[int] = 
 
     cache_set(key, result, ttl=300)  # Cache for 5 minutes
     return result
+
+# -------------------------------
+# Predictive Analytics (ML Models)
+# -------------------------------
+
+class ForecastRequest(BaseModel):
+    device_id: str
+    metric: str = Field(default='temperature', regex='^(temperature|pressure)$')
+    hours_ahead: int = Field(default=24, ge=1, le=168)  # Max 1 week
+    model: str = Field(default='prophet', regex='^(prophet|arima|linear)$')
+
+class PredictiveModel:
+    def __init__(self):
+        self.models = {}
+        self.scalers = {}
+
+    def train_temperature_model(self, device_id: str):
+        """Train predictive model for temperature forecasting"""
+        if pd is None:
+            return None
+
+        conn = get_conn()
+        cur = conn.cursor()
+        # Get last 30 days of data
+        thirty_days_ago = int(time.time()) - (30 * 24 * 60 * 60)
+        cur.execute('''
+            SELECT ts, temperature FROM telemetry
+            WHERE device_id = ? AND ts >= ?
+            ORDER BY ts ASC
+        ''', (device_id, thirty_days_ago))
+
+        rows = cur.fetchall()
+        conn.close()
+
+        if len(rows) < 24:  # Need at least 24 hours of data
+            return None
+
+        # Prepare data for Prophet
+        df = pd.DataFrame(rows, columns=['ds', 'y'])
+        df['ds'] = pd.to_datetime(df['ds'], unit='s')
+
+        # Train Prophet model
+        model = Prophet(
+            yearly_seasonality=False,
+            weekly_seasonality=True,
+            daily_seasonality=True,
+            changepoint_prior_scale=0.05
+        )
+        model.fit(df)
+
+        model_key = f"{device_id}_temperature_prophet"
+        self.models[model_key] = model
+        return model
+
+    def train_pressure_model(self, device_id: str):
+        """Train predictive model for pressure forecasting"""
+        if pd is None:
+            return None
+
+        conn = get_conn()
+        cur = conn.cursor()
+        thirty_days_ago = int(time.time()) - (30 * 24 * 60 * 60)
+        cur.execute('''
+            SELECT ts, pressure FROM telemetry
+            WHERE device_id = ? AND ts >= ?
+            ORDER BY ts ASC
+        ''', (device_id, thirty_days_ago))
+
+        rows = cur.fetchall()
+        conn.close()
+
+        if len(rows) < 24:
+            return None
+
+        df = pd.DataFrame(rows, columns=['ds', 'y'])
+        df['ds'] = pd.to_datetime(df['ds'], unit='s')
+
+        model = Prophet(
+            yearly_seasonality=False,
+            weekly_seasonality=True,
+            daily_seasonality=True,
+            changepoint_prior_scale=0.05
+        )
+        model.fit(df)
+
+        model_key = f"{device_id}_pressure_prophet"
+        self.models[model_key] = model
+        return model
+
+    def forecast(self, device_id: str, metric: str, hours_ahead: int, model_type: str = 'prophet'):
+        """Generate forecast for specified metric"""
+        model_key = f"{device_id}_{metric}_{model_type}"
+
+        # Train model if not exists
+        if model_key not in self.models:
+            if metric == 'temperature':
+                self.train_temperature_model(device_id)
+            elif metric == 'pressure':
+                self.train_pressure_model(device_id)
+
+        if model_key not in self.models:
+            return None
+
+        model = self.models[model_key]
+
+        # Create future dataframe
+        future = model.make_future_dataframe(periods=hours_ahead, freq='H')
+        forecast = model.predict(future)
+
+        # Return last N hours of forecast
+        result = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(hours_ahead)
+        return result.to_dict('records')
+
+# Global predictive model instance
+predictive_model = PredictiveModel()
+
+@app.post('/api/predict/forecast')
+def forecast_telemetry(request: ForecastRequest):
+    """Generate predictive forecast for telemetry metrics"""
+    try:
+        forecast_data = predictive_model.forecast(
+            request.device_id,
+            request.metric,
+            request.hours_ahead,
+            request.model
+        )
+
+        if forecast_data is None:
+            return {
+                'error': 'Insufficient data for forecasting',
+                'message': f'Need at least 24 hours of {request.metric} data for device {request.device_id}'
+            }
+
+        return {
+            'device_id': request.device_id,
+            'metric': request.metric,
+            'hours_ahead': request.hours_ahead,
+            'model': request.model,
+            'forecast': forecast_data,
+            'generated_at': int(time.time())
+        }
+    except Exception as e:
+        return {'error': 'Forecast generation failed', 'message': str(e)}
+
+@app.get('/api/predict/models')
+def list_predictive_models():
+    """List available predictive models"""
+    return {
+        'available_models': ['prophet', 'arima', 'linear'],
+        'supported_metrics': ['temperature', 'pressure'],
+        'trained_models': list(predictive_model.models.keys())
+    }
+
+@app.post('/api/predict/train/{device_id}')
+def train_device_models(device_id: str):
+    """Train predictive models for a specific device"""
+    results = {}
+
+    # Train temperature model
+    temp_model = predictive_model.train_temperature_model(device_id)
+    results['temperature'] = 'trained' if temp_model else 'insufficient_data'
+
+    # Train pressure model
+    pressure_model = predictive_model.train_pressure_model(device_id)
+    results['pressure'] = 'trained' if pressure_model else 'insufficient_data'
+
+    return {
+        'device_id': device_id,
+        'training_results': results,
+        'timestamp': int(time.time())
+    }
+
+class ProductionForecastRequest(BaseModel):
+    batch_id: str
+    days_ahead: int = Field(default=30, ge=1, le=365)
+
+@app.post('/api/predict/production')
+def forecast_production(request: ProductionForecastRequest):
+    """Forecast oil production based on batch tracking data"""
+    if pd is None:
+        return {'error': 'Pandas not available for forecasting'}
+
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+
+        # Get batch events over time
+        cur.execute('''
+            SELECT ts, stage FROM oil_events
+            WHERE batch_id = ?
+            ORDER BY ts ASC
+        ''', (request.batch_id,))
+
+        events = cur.fetchall()
+        conn.close()
+
+        if len(events) < 5:
+            return {'error': 'Insufficient event data for production forecasting'}
+
+        # Simple linear regression based on stage progression
+        df = pd.DataFrame(events, columns=['ts', 'stage'])
+        df['ts'] = pd.to_datetime(df['ts'], unit='s')
+        df['days_since_start'] = (df['ts'] - df['ts'].min()).dt.days
+
+        # Stage progression scoring (simplified)
+        stage_scores = {
+            'DRILLING': 0.1,
+            'EXTRACTION': 0.5,
+            'REFINING': 0.8,
+            'STORAGE': 0.9,
+            'SHIPPING': 1.0
+        }
+        df['progress_score'] = df['stage'].map(stage_scores).fillna(0)
+
+        # Fit linear model
+        X = df[['days_since_start']]
+        y = df['progress_score']
+
+        model = LinearRegression()
+        model.fit(X, y)
+
+        # Forecast future progress
+        future_days = pd.DataFrame({'days_since_start': range(df['days_since_start'].max() + 1, df['days_since_start'].max() + request.days_ahead + 1)})
+        predictions = model.predict(future_days)
+
+        forecast = []
+        base_ts = df['ts'].max().timestamp()
+        for i, pred in enumerate(predictions):
+            forecast.append({
+                'date': base_ts + (i + 1) * 24 * 60 * 60,
+                'progress_score': min(max(pred, 0), 1),
+                'estimated_completion': pred >= 0.95
+            })
+
+        return {
+            'batch_id': request.batch_id,
+            'days_ahead': request.days_ahead,
+            'forecast': forecast,
+            'model_accuracy': model.score(X, y),
+            'generated_at': int(time.time())
+        }
+    except Exception as e:
+        return {'error': 'Production forecast failed', 'message': str(e)}
+
+# -------------------------------
+# Alerting System (Email/SMS)
+# -------------------------------
+
+class AlertConfig(BaseModel):
+    email_enabled: bool = Field(default=False)
+    sms_enabled: bool = Field(default=False)
+    email_smtp_server: str = Field(default="smtp.gmail.com")
+    email_smtp_port: int = Field(default=587)
+    email_username: str = Field(default="")
+    email_password: str = Field(default="")
+    email_from: str = Field(default="")
+    email_recipients: list[str] = Field(default_factory=list)
+    sms_twilio_sid: str = Field(default="")
+    sms_twilio_token: str = Field(default="")
+    sms_from_number: str = Field(default="")
+    sms_recipients: list[str] = Field(default_factory=list)
+    alert_on_anomaly: bool = Field(default=True)
+    alert_on_threshold_breach: bool = Field(default=True)
+    temperature_threshold_high: float = Field(default=95.0)
+    temperature_threshold_low: float = Field(default=60.0)
+    pressure_threshold_high: float = Field(default=260.0)
+    pressure_threshold_low: float = Field(default=180.0)
+
+class AlertRequest(BaseModel):
+    type: str = Field(regex='^(anomaly|threshold|custom)$')
+    title: str
+    message: str
+    device_id: Optional[str] = None
+    severity: str = Field(default='medium', regex='^(low|medium|high|critical)$')
+    metadata: Optional[dict] = None
+
+# Global alert configuration
+ALERT_CONFIG = AlertConfig()
+
+class AlertManager:
+    def __init__(self):
+        self.email_client = None
+        self.sms_client = None
+        self._init_clients()
+
+    def _init_clients(self):
+        # Initialize email client
+        if ALERT_CONFIG.email_enabled and smtplib:
+            try:
+                self.email_client = smtplib.SMTP(ALERT_CONFIG.email_smtp_server, ALERT_CONFIG.email_smtp_port)
+                self.email_client.starttls()
+                self.email_client.login(ALERT_CONFIG.email_username, ALERT_CONFIG.email_password)
+            except Exception:
+                self.email_client = None
+
+        # Initialize SMS client
+        if ALERT_CONFIG.sms_enabled and twilio:
+            try:
+                self.sms_client = TwilioClient(ALERT_CONFIG.sms_twilio_sid, ALERT_CONFIG.sms_twilio_token)
+            except Exception:
+                self.sms_client = None
+
+    def send_email(self, subject: str, body: str, recipients: list[str] = None):
+        """Send email alert"""
+        if not self.email_client or not ALERT_CONFIG.email_enabled:
+            return False
+
+        recipients = recipients or ALERT_CONFIG.email_recipients
+        if not recipients:
+            return False
+
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = ALERT_CONFIG.email_from
+            msg['To'] = ', '.join(recipients)
+            msg['Subject'] = subject
+
+            msg.attach(MIMEText(body, 'html'))
+
+            self.email_client.sendmail(ALERT_CONFIG.email_from, recipients, msg.as_string())
+            return True
+        except Exception:
+            return False
+
+    def send_sms(self, message: str, recipients: list[str] = None):
+        """Send SMS alert"""
+        if not self.sms_client or not ALERT_CONFIG.sms_enabled:
+            return False
+
+        recipients = recipients or ALERT_CONFIG.sms_recipients
+        if not recipients:
+            return False
+
+        try:
+            for recipient in recipients:
+                self.sms_client.messages.create(
+                    body=message,
+                    from_=ALERT_CONFIG.sms_from_number,
+                    to=recipient
+                )
+            return True
+        except Exception:
+            return False
+
+    def send_alert(self, alert: AlertRequest):
+        """Send alert via configured channels"""
+        subject = f"SMART Oilfield Alert: {alert.title}"
+        body = f"""
+        <h2>{alert.title}</h2>
+        <p><strong>Type:</strong> {alert.type}</p>
+        <p><strong>Severity:</strong> {alert.severity.upper()}</p>
+        <p><strong>Device:</strong> {alert.device_id or 'N/A'}</p>
+        <p><strong>Time:</strong> {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}</p>
+        <p><strong>Message:</strong></p>
+        <p>{alert.message}</p>
+        """
+
+        if alert.metadata:
+            body += "<h3>Additional Details:</h3><ul>"
+            for key, value in alert.metadata.items():
+                body += f"<li><strong>{key}:</strong> {value}</li>"
+            body += "</ul>"
+
+        sms_message = f"ALERT: {alert.title} - {alert.message[:100]}{'...' if len(alert.message) > 100 else ''}"
+
+        email_sent = self.send_email(subject, body)
+        sms_sent = self.send_sms(sms_message)
+
+        return {
+            'email_sent': email_sent,
+            'sms_sent': sms_sent,
+            'alert': alert.dict()
+        }
+
+    def check_thresholds_and_alert(self, device_id: str, temperature: float, pressure: float):
+        """Check thresholds and send alerts if breached"""
+        alerts_sent = []
+
+        # Temperature checks
+        if temperature > ALERT_CONFIG.temperature_threshold_high:
+            alert = AlertRequest(
+                type='threshold',
+                title='High Temperature Alert',
+                message=f'Temperature {temperature}°C exceeds threshold {ALERT_CONFIG.temperature_threshold_high}°C',
+                device_id=device_id,
+                severity='high',
+                metadata={'temperature': temperature, 'threshold': ALERT_CONFIG.temperature_threshold_high}
+            )
+            result = self.send_alert(alert)
+            alerts_sent.append(result)
+
+        elif temperature < ALERT_CONFIG.temperature_threshold_low:
+            alert = AlertRequest(
+                type='threshold',
+                title='Low Temperature Alert',
+                message=f'Temperature {temperature}°C below threshold {ALERT_CONFIG.temperature_threshold_low}°C',
+                device_id=device_id,
+                severity='medium',
+                metadata={'temperature': temperature, 'threshold': ALERT_CONFIG.temperature_threshold_low}
+            )
+            result = self.send_alert(alert)
+            alerts_sent.append(result)
+
+        # Pressure checks
+        if pressure > ALERT_CONFIG.pressure_threshold_high:
+            alert = AlertRequest(
+                type='threshold',
+                title='High Pressure Alert',
+                message=f'Pressure {pressure} PSI exceeds threshold {ALERT_CONFIG.pressure_threshold_high} PSI',
+                device_id=device_id,
+                severity='high',
+                metadata={'pressure': pressure, 'threshold': ALERT_CONFIG.pressure_threshold_high}
+            )
+            result = self.send_alert(alert)
+            alerts_sent.append(result)
+
+        elif pressure < ALERT_CONFIG.pressure_threshold_low:
+            alert = AlertRequest(
+                type='threshold',
+                title='Low Pressure Alert',
+                message=f'Pressure {pressure} PSI below threshold {ALERT_CONFIG.pressure_threshold_low} PSI',
+                device_id=device_id,
+                severity='medium',
+                metadata={'pressure': pressure, 'threshold': ALERT_CONFIG.pressure_threshold_low}
+            )
+            result = self.send_alert(alert)
+            alerts_sent.append(result)
+
+        return alerts_sent
+
+# Global alert manager instance
+alert_manager = AlertManager()
+
+@app.post('/api/alerts/config')
+def update_alert_config(config: AlertConfig):
+    """Update alerting system configuration"""
+    global ALERT_CONFIG, alert_manager
+    ALERT_CONFIG = config
+    alert_manager._init_clients()  # Reinitialize clients with new config
+    return {"message": "Alert configuration updated", "config": config.dict()}
+
+@app.get('/api/alerts/config')
+def get_alert_config():
+    """Get current alerting configuration"""
+    return ALERT_CONFIG.dict()
+
+@app.post('/api/alerts/send')
+def send_custom_alert(alert: AlertRequest):
+    """Send a custom alert"""
+    result = alert_manager.send_alert(alert)
+    return result
+
+@app.get('/api/alerts/test')
+def test_alert_system():
+    """Test the alerting system configuration"""
+    test_alert = AlertRequest(
+        type='custom',
+        title='Test Alert',
+        message='This is a test alert to verify the alerting system is working correctly.',
+        severity='low',
+        metadata={'test_time': int(time.time())}
+    )
+
+    result = alert_manager.send_alert(test_alert)
+    return {
+        'test_result': result,
+        'email_configured': ALERT_CONFIG.email_enabled and bool(alert_manager.email_client),
+        'sms_configured': ALERT_CONFIG.sms_enabled and bool(alert_manager.sms_client)
+    }
 
 @app.post('/api/oil/batches')
 def create_batch(payload: BatchCreate):

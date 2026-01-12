@@ -284,5 +284,98 @@ app.get('/api/ml/anomaly-stats', async (req, res) => {
   }
 });
 
+// Predictive analytics gateway endpoints
+app.post('/api/predict/forecast', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/predict/forecast`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate forecast' });
+  }
+});
+
+app.get('/api/predict/models', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/predict/models`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch predictive models' });
+  }
+});
+
+app.post('/api/predict/train/:deviceId', async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const response = await fetch(`${PYTHON_API}/api/predict/train/${deviceId}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to train predictive models' });
+  }
+});
+
+app.post('/api/predict/production', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/predict/production`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to forecast production' });
+  }
+});
+
+// Alerting system gateway endpoints
+app.post('/api/alerts/config', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/alerts/config`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update alert config' });
+  }
+});
+
+app.get('/api/alerts/config', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/alerts/config`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get alert config' });
+  }
+});
+
+app.post('/api/alerts/send', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/alerts/send`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to send alert' });
+  }
+});
+
+app.get('/api/alerts/test', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/alerts/test`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to test alert system' });
+  }
+});
+
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 server.listen(port, () => console.log(`TS backend with WebSocket support listening on ${port}`));
