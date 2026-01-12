@@ -36,13 +36,13 @@ This project integrates multiple technologies:
 
 ## Features
 
-### 🛢️ Telemetry Management
+### Telemetry Management
 - Real-time oilfield sensor data ingestion (temperature, pressure, status)
 - Query telemetry with filters (device ID, time range)
 - Aggregated statistics and analytics
 - CSV export for data analysis
 
-### 🛢️ Oil Movement Tracker
+### Oil Movement Tracker
 - **Dual-mode tracking**: Database (Python API) + Blockchain (Move module)
 - **Real-time tracking** of oil batches from production to delivery
 - **Full lifecycle management**: Production → Storage → Transit → Delivery
@@ -54,7 +54,7 @@ This project integrates multiple technologies:
 - **Ownership transfer**: Transfer batches between parties on-chain
 - See [docs/OIL_MOVEMENT_TRACKER.md](docs/OIL_MOVEMENT_TRACKER.md) and [blockchain/move/oil_tracker](blockchain/move/oil_tracker) for details
 
-### �🔔 Subscription Expiration Reminders
+### Subscription Expiration Reminders
 - **Visual notifications** with 3 severity levels (info, warning, critical)
 - **Automatic checking** on page load and every 5 minutes
 - **Smart reminders**:
@@ -101,7 +101,7 @@ This project integrates multiple technologies:
 - **Smart contract logic**: All refund calculations handled transparently on-chain
 - **Example**: 15 days unused of 30-day plan (1 APT) = 0.5 APT refund
 - **Protection**: Payment amount and subscription start tracked for accurate calculations
-### ⛓️ Blockchain Features
+### Blockchain Features
 
 **Subscriptions** ([blockchain/move/subscriptions](blockchain/move/subscriptions)):
 - APT cryptocurrency payment processing
@@ -149,26 +149,26 @@ This project integrates multiple technologies:
 ### 🔌 Backend API Coverage
 
 **Python API** (FastAPI) - Full implementation:
-- ✅ Telemetry: Ingest, query, stats, export
-- ✅ Oil Tracking: Batch creation, events, timeline
-- ✅ Subscriptions: Create, query, status
+- Telemetry: Ingest, query, stats, export
+- Oil Tracking: Batch creation, events, timeline
+- Subscriptions: Create, query, status
 
 **TypeScript Gateway** (Express) - Complete proxy coverage:
-- ✅ `POST /api/telemetry` - Data ingestion
-- ✅ `GET /api/telemetry` - Query with filters
-- ✅ `GET /api/telemetry/stats` - Statistics
-- ✅ `GET /api/telemetry/export` - CSV export
-- ✅ `POST /api/oil/batches` - Create batch
-- ✅ `POST /api/oil/batches/:id/events` - Add event
-- ✅ `GET /api/oil/track/:id` - Timeline
-- ✅ `POST /api/subscription` - Create subscription
-- ✅ `GET /api/subscription/:userId` - Status
+- `POST /api/telemetry` - Data ingestion
+- `GET /api/telemetry` - Query with filters
+- `GET /api/telemetry/stats` - Statistics
+- `GET /api/telemetry/export` - CSV export
+- `POST /api/oil/batches` - Create batch
+- `POST /api/oil/batches/:id/events` - Add event
+- `GET /api/oil/track/:id` - Timeline
+- `POST /api/subscription` - Create subscription
+- `GET /api/subscription/:userId` - Status
 
-**Sync Status**: ✅ **Fully synced** - All frontend endpoints supported by both backends
+**Sync Status**: **Fully synced** - All frontend endpoints supported by both backends
 
 ## Recent Updates (v0.6.0)
 
-### 🚀 **Major Feature Enhancements**
+### Major Feature Enhancements
 
 **Real-Time Monitoring & WebSocket Integration**:
 - WebSocket server for real-time telemetry streaming (`/ws/telemetry`)
@@ -207,20 +207,20 @@ This project integrates multiple technologies:
 - ML pipeline: RandomForest anomaly detection with training script and inference API
 - Automated backup and disaster recovery scripts
 
-### ⚡ **Performance Enhancements**:
+### Performance Enhancements:
 - Redis caching for stats and track endpoints
 - SQLAlchemy connection pooling for SQLite
 - Pagination on list endpoints
 - Celery async CSV export
 - Database indexing optimizations
 
-### 🔒 **Security & Auth**:
+### Security & Auth:
 - JWT authentication, OAuth2 support, API key validation
 - Role-based access control (RBAC)
 - Rate limiting per user/endpoint
 - Audit logging middleware
 
-### 📡 **API Expansions**:
+### API Expansions:
 - WebSocket endpoints for real-time data streaming
 - ML prediction and anomaly detection endpoints
 - Alert management endpoints
@@ -229,7 +229,7 @@ This project integrates multiple technologies:
 - InfluxDB read endpoints
 - Async task status for exports
 
-### 🚀 Running the Application
+### Running the Application
 
 ### Option 1: Direct Python API (Default)
 
@@ -270,7 +270,7 @@ This project integrates multiple technologies:
    Open src/frontend/index.html in a browser
    ```
 
-## ⚡ Performance Enhancements
+## Performance Enhancements
 
 - **Redis Caching (added)**: Python API caches responses for heavy read endpoints.
    - Cached endpoints: telemetry stats and oil track summary (TTL 60s).
@@ -289,7 +289,7 @@ This project integrates multiple technologies:
     - `oil_batches(current_stage, status)`, `oil_batches(created_at)`
     - `oil_events(batch_id, ts)`
 
-## 📈 Data & Analytics
+## Data & Analytics
 
 - **Time-Series DB (InfluxDB)**
    - Optional integration to store telemetry as time-series for scalable reads/writes.
@@ -663,7 +663,7 @@ See module READMEs for usage examples:
 - **Security**: JWT, OAuth2, RBAC, rate limiting, audit logging
 - **Monitoring**: Real-time streaming, alerting, anomaly detection
 
-## Key Metrics 📈
+## Key Metrics
 
 - **15 Event Types**: Comprehensive on-chain event tracking (subscriptions, oil tracking, payments)
 - **3 Discount Mechanisms**: Seasonal (30%), Promo codes (custom %), Loyalty (15%)
@@ -680,7 +680,7 @@ See module READMEs for usage examples:
 - **Advanced Validation**: Comprehensive Pydantic schemas with custom business rules
 - **Batch Processing**: CSV upload with flexible mapping and validation
 
-## Completed Features ✅
+## Completed Features
 
 ### Core Platform Features
 - ✅ **Promotional Discount System**: Custom codes with expiry and usage limits
@@ -717,7 +717,7 @@ See module READMEs for usage examples:
 - ✅ **Role-Based Access Control**: Admin, operator, and viewer roles
 - ✅ **Async Task Processing**: Celery-based background job processing
 
-## Future Enhancements 🚀
+## Future Enhancements
 
 ### Platform Enhancements
 - [ ] **Mobile App**: React Native app for field operators with offline capabilities
