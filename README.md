@@ -16,15 +16,15 @@ This project integrates multiple technologies:
 
 | Category | Features |
 |----------|----------|
-| 📊 **Telemetry** | Real-time sensor data ingestion, WebSocket streaming, querying, statistics, CSV export, async tasks |
-| 🛢️ **Oil Tracking** | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
-| 💳 **Subscriptions** | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
-| ⛓️ **Blockchain** | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
-| 🔔 **Notifications** | Subscription expiration reminders with 3 severity levels, email/SMS alerts |
-| 🎨 **Frontend** | Interactive dashboard, real-time status indicators, modal-based actions |
-| 📈 **Analytics** | InfluxDB time-series, DuckDB warehouse, ML anomaly detection, predictive analytics, trend analysis |
-| 🔍 **Monitoring** | Real-time WebSocket connections, anomaly detection, alerting system, audit logging |
-| 📥 **Data Management** | Batch CSV upload, data validation schemas, aggregation by time buckets, historical trends |
+| Telemetry | Real-time sensor data ingestion, WebSocket streaming, querying, statistics, CSV export, async tasks |
+| Oil Tracking | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
+| Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
+| Blockchain | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
+| Notifications | Subscription expiration reminders with 3 severity levels, email/SMS alerts |
+| Frontend | Interactive dashboard, real-time status indicators, modal-based actions |
+| Analytics | InfluxDB time-series, DuckDB warehouse, ML anomaly detection, predictive analytics, trend analysis |
+| Monitoring | Real-time WebSocket connections, anomaly detection, alerting system, audit logging |
+| Data Management | Batch CSV upload, data validation schemas, aggregation by time buckets, historical trends |
 
 ## Project Components
 
@@ -200,7 +200,7 @@ This project integrates multiple technologies:
 - **Compliance Ready**: Detailed activity tracking for regulatory requirements
 - **Performance Monitoring**: Response time tracking and error rate analysis
 
-### 📊 **Data & Analytics Stack**:
+### Data & Analytics Stack:
 - InfluxDB integration for time-series telemetry storage and querying
 - DuckDB warehouse with ETL scripts for analytics and Parquet exports
 - BI guides for Power BI and Tableau connectivity
@@ -683,39 +683,39 @@ See module READMEs for usage examples:
 ## Completed Features
 
 ### Core Platform Features
-- ✅ **Promotional Discount System**: Custom codes with expiry and usage limits
-- ✅ **Referral Rewards**: 10% APT rewards for referrers with comprehensive tracking
-- ✅ **Loyalty Rewards**: 15% discount for returning subscribers
-- ✅ **Grace Period System**: 5-day grace period on cancellation with renewal option
-- ✅ **Partial Refunds**: Pro-rated refunds based on unused subscription days
-- ✅ **Smart Discount Stacking**: Highest discount always applied
-- ✅ **Subscription Reminders**: Multi-level expiration notifications
-- ✅ **Oil Movement Tracking**: Dual-mode DB + Blockchain tracking
-- ✅ **Comprehensive API Coverage**: Full sync between Python API and TypeScript gateway
+- Promotional Discount System: Custom codes with expiry and usage limits
+- Referral Rewards: 10% APT rewards for referrers with comprehensive tracking
+- Loyalty Rewards: 15% discount for returning subscribers
+- Grace Period System: 5-day grace period on cancellation with renewal option
+- Partial Refunds: Pro-rated refunds based on unused subscription days
+- Smart Discount Stacking: Highest discount always applied
+- Subscription Reminders: Multi-level expiration notifications
+- Oil Movement Tracking: Dual-mode DB + Blockchain tracking
+- Comprehensive API Coverage: Full sync between Python API and TypeScript gateway
 
 ### Advanced Analytics & Monitoring
-- ✅ **Real-Time WebSocket Streaming**: Live telemetry updates without polling
-- ✅ **ML Anomaly Detection**: RandomForest and rule-based anomaly detection with confidence scores
-- ✅ **Predictive Analytics**: Prophet-based forecasting for sensor data and production metrics
-- ✅ **Historical Trend Analysis**: Linear trends, seasonal patterns, and moving averages
-- ✅ **Data Aggregation**: Time-bucket aggregation with anomaly rate analysis
-- ✅ **Alerting System**: Multi-channel email/SMS alerts with configurable rules
-- ✅ **Audit Logging**: Complete API activity tracking with analytics and compliance features
+- Real-Time WebSocket Streaming: Live telemetry updates without polling
+- ML Anomaly Detection: RandomForest and rule-based anomaly detection with confidence scores
+- Predictive Analytics: Prophet-based forecasting for sensor data and production metrics
+- Historical Trend Analysis: Linear trends, seasonal patterns, and moving averages
+- Data Aggregation: Time-bucket aggregation with anomaly rate analysis
+- Alerting System: Multi-channel email/SMS alerts with configurable rules
+- Audit Logging: Complete API activity tracking with analytics and compliance features
 
 ### Data Management & Validation
-- ✅ **Batch CSV Upload**: Flexible column mapping with validation and error reporting
-- ✅ **Enhanced Data Validation**: Comprehensive Pydantic schemas with custom validators
-- ✅ **Upload History Tracking**: Monitor and manage data import operations
-- ✅ **Data Integrity Checks**: Advanced validation for device IDs, coordinates, and sensor ranges
+- Batch CSV Upload: Flexible column mapping with validation and error reporting
+- Enhanced Data Validation: Comprehensive Pydantic schemas with custom validators
+- Upload History Tracking: Monitor and manage data import operations
+- Data Integrity Checks: Advanced validation for device IDs, coordinates, and sensor ranges
 
 ### Performance & Security
-- ✅ **Redis Caching**: Optimized response times for heavy read operations
-- ✅ **Database Indexing**: Optimized queries for telemetry, batches, and events
-- ✅ **Connection Pooling**: SQLAlchemy QueuePool for improved concurrency
-- ✅ **Rate Limiting**: Per-user and per-endpoint rate limiting
-- ✅ **JWT Authentication**: Secure API access with token-based auth
-- ✅ **Role-Based Access Control**: Admin, operator, and viewer roles
-- ✅ **Async Task Processing**: Celery-based background job processing
+- Redis Caching: Optimized response times for heavy read operations
+- Database Indexing: Optimized queries for telemetry, batches, and events
+- Connection Pooling: SQLAlchemy QueuePool for improved concurrency
+- Rate Limiting: Per-user and per-endpoint rate limiting
+- JWT Authentication: Secure API access with token-based auth
+- Role-Based Access Control: Admin, operator, and viewer roles
+- Async Task Processing: Celery-based background job processing
 
 ## Future Enhancements
 
