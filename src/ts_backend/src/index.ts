@@ -1,12 +1,73 @@
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
 
 const app = express();
+const server = createServer(app);
+const wss = new WebSocketServer({ server });
+
 app.use(cors());
 app.use(express.json());
 
-// Python API proxy configuration
-const PYTHON_API = process.env.PYTHON_API_URL || 'http://127.0.0.1:8000';
+// WebSocket proxy for real-time telemetry
+wss.on('connection', (ws: WebSocket, req) => {
+  if (req.url === '/ws/telemetry') {
+    // Proxy WebSocket connection to Python API
+    const pythonWsUrl = `ws://${PYTHON_API.replace('http://', '')}/ws/telemetry`;
+
+    try {
+      const pythonWs = new WebSocket(pythonWsUrl);
+
+      pythonWs.on('open', () => {
+        console.log('Connected to Python API WebSocket');
+      });
+
+      pythonWs.on('message', (data) => {
+        // Forward messages from Python API to client
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(data.toString());
+        }
+      });
+
+      pythonWs.on('close', () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      });
+
+      pythonWs.on('error', (error) => {
+        console.error('Python API WebSocket error:', error);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      });
+
+      ws.on('message', (data) => {
+        // Forward messages from client to Python API
+        if (pythonWs.readyState === WebSocket.OPEN) {
+          pythonWs.send(data.toString());
+        }
+      });
+
+      ws.on('close', () => {
+        pythonWs.close();
+      });
+
+      ws.on('error', (error) => {
+        console.error('Client WebSocket error:', error);
+        pythonWs.close();
+      });
+
+    } catch (error) {
+      console.error('Failed to connect to Python API WebSocket:', error);
+      ws.close();
+    }
+  } else {
+    // Unknown WebSocket endpoint
+    ws.close(1008, 'Unknown endpoint');
+  }
+});
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'typescript-backend' });
@@ -176,4 +237,4 @@ app.get('/api/oil/track/:batchId', async (req, res) => {
 });
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-app.listen(port, () => console.log(`TS backend listening on ${port}`));
+server.listen(port, () => console.log(`TS backend with WebSocket support listening on ${port}`));
