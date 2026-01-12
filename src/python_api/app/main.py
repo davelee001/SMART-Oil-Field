@@ -63,7 +63,7 @@ def get_api_key(x_api_key: str = Header(...)):
     if x_api_key not in API_KEYS:
         raise HTTPException(status_code=401, detail="Invalid API key")
     return API_KEYS[x_api_key]
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -139,7 +139,10 @@ import csv
 import io
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator, root_validator
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+import re
 import uuid
 import json
 import hashlib
@@ -231,12 +234,33 @@ def init_db():
                         notes TEXT,
                         extra TEXT
                     )''')
+    # Audit logging table
+    conn.execute('''CREATE TABLE IF NOT EXISTS audit_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        timestamp INTEGER,
+                        user_id TEXT,
+                        action TEXT,
+                        resource TEXT,
+                        resource_id TEXT,
+                        method TEXT,
+                        endpoint TEXT,
+                        ip_address TEXT,
+                        user_agent TEXT,
+                        status_code INTEGER,
+                        response_time REAL,
+                        details TEXT,
+                        changes TEXT
+                    )''')
     # Indexes for query performance
     conn.execute('CREATE INDEX IF NOT EXISTS idx_oil_events_batch_ts ON oil_events(batch_id, ts)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_tel_device_ts ON telemetry(device_id, ts)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_tel_ts ON telemetry(ts)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_batches_stage_status ON oil_batches(current_stage, status)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_batches_created_at ON oil_batches(created_at)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_audit_user_action ON audit_logs(user_id, action)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_logs(resource)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_audit_status ON audit_logs(status_code)')
     conn.commit()
     conn.close()
 
@@ -252,30 +276,137 @@ app.add_middleware(
 )
 
 class TelemetryIn(BaseModel):
-    device_id: str = Field(min_length=1, max_length=64)
-    ts: int = Field(ge=0)
-    temperature: float
-    pressure: float
-    status: str = Field(min_length=1, max_length=32)
+    device_id: str = Field(min_length=1, max_length=64, description="Unique identifier for the device/sensor")
+    ts: int = Field(ge=0, le=2147483647, description="Unix timestamp in seconds")
+    temperature: float = Field(ge=-273.15, le=1000, description="Temperature in Celsius")
+    pressure: float = Field(ge=0, le=10000, description="Pressure in PSI")
+    status: str = Field(min_length=1, max_length=32, description="Device status")
+
+    @validator('device_id')
+    def validate_device_id(cls, v):
+        if not re.match(r'^[a-zA-Z0-9_-]+$', v):
+            raise ValueError('device_id must contain only alphanumeric characters, underscores, and hyphens')
+        return v
+
+    @validator('status')
+    def validate_status(cls, v):
+        valid_statuses = ['NORMAL', 'WARNING', 'ERROR', 'MAINTENANCE', 'OFFLINE']
+        if v.upper() not in valid_statuses:
+            raise ValueError(f'status must be one of: {", ".join(valid_statuses)}')
+        return v.upper()
+
+    @root_validator
+    def validate_temperature_pressure_combination(cls, values):
+        temp = values.get('temperature')
+        pressure = values.get('pressure')
+
+        if temp is not None and pressure is not None:
+            # Check for physically implausible combinations
+            if temp > 200 and pressure < 50:
+                raise ValueError('High temperature with low pressure may indicate sensor malfunction')
+
+        return values
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "device_id": "sensor_001",
+                "ts": 1640995200,
+                "temperature": 75.5,
+                "pressure": 245.8,
+                "status": "NORMAL"
+            }
+        }
 
 # Oil Tracker models
 class BatchCreate(BaseModel):
-    batch_id: Optional[str] = Field(default=None, max_length=64)
-    origin: str = Field(min_length=1, max_length=128)
-    volume: float = Field(gt=0)
-    unit: str = Field(default='bbl', max_length=16)
-    status: str = Field(default='INITIATED', max_length=32)
-    metadata: Optional[dict] = None
+    batch_id: Optional[str] = Field(default=None, max_length=64, description="Optional custom batch ID")
+    origin: str = Field(min_length=1, max_length=128, description="Origin location of the oil batch")
+    volume: float = Field(gt=0, le=1000000, description="Volume of oil in barrels")
+    unit: str = Field(default='bbl', regex='^(bbl|gal|L|m3)$', description="Unit of measurement")
+    status: str = Field(default='INITIATED', max_length=32, description="Initial batch status")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional batch metadata")
+
+    @validator('batch_id')
+    def validate_batch_id(cls, v):
+        if v is not None and not re.match(r'^[A-Z0-9_-]+$', v):
+            raise ValueError('batch_id must contain only uppercase letters, numbers, underscores, and hyphens')
+        return v
+
+    @validator('status')
+    def validate_status(cls, v):
+        valid_statuses = ['INITIATED', 'DRILLING', 'EXTRACTION', 'REFINING', 'STORAGE', 'SHIPPING', 'DELIVERED']
+        if v.upper() not in valid_statuses:
+            raise ValueError(f'status must be one of: {", ".join(valid_statuses)}')
+        return v.upper()
+
+    @validator('volume')
+    def validate_volume(cls, v):
+        if v <= 0:
+            raise ValueError('volume must be positive')
+        if v > 1000000:
+            raise ValueError('volume cannot exceed 1,000,000 barrels')
+        return v
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "batch_id": "BATCH-2024-001",
+                "origin": "North Sea Platform A",
+                "volume": 50000.0,
+                "unit": "bbl",
+                "status": "INITIATED",
+                "metadata": {"api_gravity": 32.5, "sulfur_content": 0.8}
+            }
+        }
 
 class EventCreate(BaseModel):
-    ts: Optional[int] = None
-    stage: str = Field(min_length=1, max_length=32)
-    status: str = Field(default='IN_PROGRESS', max_length=32)
-    location_lat: Optional[float] = None
-    location_lon: Optional[float] = None
-    facility: Optional[str] = Field(default=None, max_length=128)
-    notes: Optional[str] = Field(default=None, max_length=512)
-    extra: Optional[dict] = None
+    ts: Optional[int] = Field(default=None, ge=0, le=2147483647, description="Event timestamp (defaults to current time)")
+    stage: str = Field(min_length=1, max_length=32, description="Production stage")
+    status: str = Field(default='IN_PROGRESS', max_length=32, description="Event status")
+    location_lat: Optional[float] = Field(default=None, ge=-90, le=90, description="Latitude coordinate")
+    location_lon: Optional[float] = Field(default=None, ge=-180, le=180, description="Longitude coordinate")
+    facility: Optional[str] = Field(default=None, max_length=128, description="Facility name")
+    notes: Optional[str] = Field(default=None, max_length=512, description="Event notes")
+    extra: Optional[Dict[str, Any]] = Field(default=None, description="Additional event data")
+
+    @validator('stage')
+    def validate_stage(cls, v):
+        valid_stages = ['DRILLING', 'EXTRACTION', 'REFINING', 'STORAGE', 'SHIPPING', 'QUALITY_CHECK', 'MAINTENANCE']
+        if v.upper() not in valid_stages:
+            raise ValueError(f'stage must be one of: {", ".join(valid_stages)}')
+        return v.upper()
+
+    @validator('status')
+    def validate_status(cls, v):
+        valid_statuses = ['IN_PROGRESS', 'COMPLETED', 'FAILED', 'ON_HOLD', 'CANCELLED']
+        if v.upper() not in valid_statuses:
+            raise ValueError(f'status must be one of: {", ".join(valid_statuses)}')
+        return v.upper()
+
+    @root_validator
+    def validate_coordinates(cls, values):
+        lat = values.get('location_lat')
+        lon = values.get('location_lon')
+
+        # If one coordinate is provided, both must be provided
+        if (lat is not None and lon is None) or (lat is None and lon is not None):
+            raise ValueError('Both latitude and longitude must be provided together')
+
+        return values
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "stage": "EXTRACTION",
+                "status": "IN_PROGRESS",
+                "location_lat": 57.5,
+                "location_lon": 1.8,
+                "facility": "North Sea Platform A",
+                "notes": "Started extraction phase",
+                "extra": {"pump_pressure": 2500, "flow_rate": 150}
+            }
+        }
 
 @app.on_event('startup')
 def _startup():
@@ -1894,19 +2025,6 @@ def analyze_anomaly_trends(
             'min_anomaly_rate': min(anomaly_rates),
             'total_anomalies': sum(agg['anomalies'] for agg in aggregations),
             'total_readings': sum(agg['total_readings'] for agg in aggregations)
-    return {
-        'device_id': device_id,
-        'bucket': bucket,
-        'time_range': {'from': ts_from, 'to': ts_to},
-        'total_buckets': len(aggregations),
-        'anomaly_trend': trend_analysis,
-        'anomaly_moving_average': moving_avg,
-        'anomaly_summary': {
-            'avg_anomaly_rate': sum(anomaly_rates) / len(anomaly_rates),
-            'max_anomaly_rate': max(anomaly_rates),
-            'min_anomaly_rate': min(anomaly_rates),
-            'total_anomalies': sum(agg['anomalies'] for agg in aggregations),
-            'total_readings': sum(agg['total_readings'] for agg in aggregations)
         }
     }
 
@@ -2466,3 +2584,348 @@ def cancel_subscription(user_id: str):
     count = cur.rowcount
     conn.close()
     return {'canceled': count > 0, 'user_id': user_id}
+
+# Audit Logging models
+class AuditLog(BaseModel):
+    id: int
+    timestamp: datetime
+    user_id: Optional[str]
+    action: str
+    resource: str
+    resource_id: Optional[str]
+    method: str
+    endpoint: str
+    ip_address: Optional[str]
+    user_agent: Optional[str]
+    status_code: int
+    response_time: float
+    details: Optional[Dict[str, Any]]
+    changes: Optional[Dict[str, Any]]
+
+class AuditLogCreate(BaseModel):
+    user_id: Optional[str] = Field(default=None, max_length=128, description="User identifier")
+    action: str = Field(min_length=1, max_length=64, description="Action performed")
+    resource: str = Field(min_length=1, max_length=64, description="Resource type affected")
+    resource_id: Optional[str] = Field(default=None, max_length=128, description="Resource identifier")
+    method: str = Field(min_length=1, max_length=16, description="HTTP method")
+    endpoint: str = Field(min_length=1, max_length=256, description="API endpoint")
+    ip_address: Optional[str] = Field(default=None, max_length=45, description="Client IP address")
+    user_agent: Optional[str] = Field(default=None, max_length=512, description="User agent string")
+    status_code: int = Field(ge=100, le=599, description="HTTP status code")
+    response_time: float = Field(ge=0, description="Response time in seconds")
+    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional details")
+    changes: Optional[Dict[str, Any]] = Field(default=None, description="Data changes made")
+
+    @validator('action')
+    def validate_action(cls, v):
+        valid_actions = ['CREATE', 'READ', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'EXPORT', 'IMPORT', 'ALERT']
+        if v.upper() not in valid_actions:
+            raise ValueError(f'action must be one of: {", ".join(valid_actions)}')
+        return v.upper()
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "action": "CREATE",
+                "resource": "telemetry",
+                "resource_id": "device-001",
+                "method": "POST",
+                "endpoint": "/api/telemetry",
+                "status_code": 201,
+                "response_time": 0.125,
+                "details": {"device_type": "sensor", "data_points": 5}
+            }
+        }
+
+# Audit logging middleware
+@app.middleware("http")
+async def audit_middleware(request: Request, call_next):
+    """Middleware to log all API requests for audit purposes"""
+    start_time = time.time()
+
+    # Extract request details
+    method = request.method
+    endpoint = str(request.url.path)
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+    user_id = request.headers.get("x-user-id")  # Custom header for user identification
+
+    # Skip logging for health checks and static files
+    if endpoint in ["/health", "/docs", "/openapi.json", "/redoc"] or endpoint.startswith("/static"):
+        return await call_next(request)
+
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        response_time = time.time() - start_time
+
+        # Determine action and resource from endpoint
+        action, resource = parse_endpoint_for_audit(endpoint, method)
+
+        # Log the audit entry
+        audit_data = AuditLogCreate(
+            user_id=user_id,
+            action=action,
+            resource=resource,
+            method=method,
+            endpoint=endpoint,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            status_code=status_code,
+            response_time=round(response_time, 3)
+        )
+
+        # Store audit log asynchronously (don't block response)
+        background_tasks.add_task(store_audit_log, audit_data)
+
+        return response
+
+    except Exception as e:
+        # Log failed requests too
+        response_time = time.time() - start_time
+        audit_data = AuditLogCreate(
+            user_id=user_id,
+            action="ERROR",
+            resource="unknown",
+            method=method,
+            endpoint=endpoint,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            status_code=500,
+            response_time=round(response_time, 3),
+            details={"error": str(e)}
+        )
+        background_tasks.add_task(store_audit_log, audit_data)
+        raise
+
+def parse_endpoint_for_audit(endpoint: str, method: str) -> tuple[str, str]:
+    """Parse endpoint to determine action and resource for audit logging"""
+    if method == "GET":
+        action = "READ"
+    elif method == "POST":
+        action = "CREATE"
+    elif method == "PUT" or method == "PATCH":
+        action = "UPDATE"
+    elif method == "DELETE":
+        action = "DELETE"
+    else:
+        action = method
+
+    # Extract resource from endpoint
+    if "/telemetry" in endpoint:
+        resource = "telemetry"
+    elif "/batch" in endpoint:
+        resource = "batch"
+    elif "/event" in endpoint:
+        resource = "event"
+    elif "/alert" in endpoint:
+        resource = "alert"
+    elif "/subscription" in endpoint:
+        resource = "subscription"
+    elif "/analytics" in endpoint:
+        resource = "analytics"
+    elif "/upload" in endpoint:
+        resource = "upload"
+    elif "/audit" in endpoint:
+        resource = "audit"
+    else:
+        resource = "unknown"
+
+    return action, resource
+
+async def store_audit_log(audit_data: AuditLogCreate):
+    """Store audit log entry in database"""
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+
+        cur.execute('''INSERT INTO audit_logs 
+                       (timestamp, user_id, action, resource, resource_id, method, endpoint, 
+                        ip_address, user_agent, status_code, response_time, details, changes)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    (int(time.time()), audit_data.user_id, audit_data.action, audit_data.resource,
+                     audit_data.resource_id, audit_data.method, audit_data.endpoint,
+                     audit_data.ip_address, audit_data.user_agent, audit_data.status_code,
+                     audit_data.response_time, json.dumps(audit_data.details) if audit_data.details else None,
+                     json.dumps(audit_data.changes) if audit_data.changes else None))
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        # Log audit logging errors to stderr (in production, use proper logging)
+        print(f"Audit logging error: {e}", file=sys.stderr)
+
+# Audit logging endpoints
+@app.get('/api/audit/logs')
+def get_audit_logs(
+    request: Request,
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    action: Optional[str] = Query(None, description="Filter by action"),
+    resource: Optional[str] = Query(None, description="Filter by resource"),
+    start_time: Optional[int] = Query(None, ge=0, description="Filter by start timestamp"),
+    end_time: Optional[int] = Query(None, ge=0, description="Filter by end timestamp")
+):
+    """Get audit logs with optional filtering"""
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # Build query with filters
+    query = '''SELECT id, timestamp, user_id, action, resource, resource_id, method, endpoint,
+                      ip_address, user_agent, status_code, response_time, details, changes
+               FROM audit_logs WHERE 1=1'''
+    params = []
+
+    if user_id:
+        query += ' AND user_id = ?'
+        params.append(user_id)
+
+    if action:
+        query += ' AND action = ?'
+        params.append(action.upper())
+
+    if resource:
+        query += ' AND resource = ?'
+        params.append(resource.lower())
+
+    if start_time:
+        query += ' AND timestamp >= ?'
+        params.append(start_time)
+
+    if end_time:
+        query += ' AND timestamp <= ?'
+        params.append(end_time)
+
+    query += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?'
+    params.extend([limit, skip])
+
+    cur.execute(query, params)
+    rows = cur.fetchall()
+
+    # Get total count for pagination
+    count_query = 'SELECT COUNT(*) FROM audit_logs WHERE 1=1'
+    count_params = params[:-2]  # Remove limit and offset
+    cur.execute(count_query, count_params)
+    total_count = cur.fetchone()[0]
+
+    conn.close()
+
+    # Convert rows to audit log objects
+    logs = []
+    for row in rows:
+        log = {
+            'id': row[0],
+            'timestamp': datetime.fromtimestamp(row[1]),
+            'user_id': row[2],
+            'action': row[3],
+            'resource': row[4],
+            'resource_id': row[5],
+            'method': row[6],
+            'endpoint': row[7],
+            'ip_address': row[8],
+            'user_agent': row[9],
+            'status_code': row[10],
+            'response_time': row[11],
+            'details': json.loads(row[12]) if row[12] else None,
+            'changes': json.loads(row[13]) if row[13] else None
+        }
+        logs.append(log)
+
+    return {
+        'logs': logs,
+        'total_count': total_count,
+        'skip': skip,
+        'limit': limit,
+        'has_more': skip + limit < total_count
+    }
+
+@app.get('/api/audit/logs/{log_id}')
+def get_audit_log(log_id: int):
+    """Get a specific audit log entry"""
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute('''SELECT id, timestamp, user_id, action, resource, resource_id, method, endpoint,
+                          ip_address, user_agent, status_code, response_time, details, changes
+                   FROM audit_logs WHERE id = ?''', (log_id,))
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Audit log not found")
+
+    return {
+        'id': row[0],
+        'timestamp': datetime.fromtimestamp(row[1]),
+        'user_id': row[2],
+        'action': row[3],
+        'resource': row[4],
+        'resource_id': row[5],
+        'method': row[6],
+        'endpoint': row[7],
+        'ip_address': row[8],
+        'user_agent': row[9],
+        'status_code': row[10],
+        'response_time': row[11],
+        'details': json.loads(row[12]) if row[12] else None,
+        'changes': json.loads(row[13]) if row[13] else None
+    }
+
+@app.get('/api/audit/stats')
+def get_audit_stats(
+    start_time: Optional[int] = Query(None, ge=0, description="Start timestamp for stats"),
+    end_time: Optional[int] = Query(None, ge=0, description="End timestamp for stats")
+):
+    """Get audit statistics"""
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # Build time filter
+    time_filter = ""
+    params = []
+    if start_time:
+        time_filter += ' AND timestamp >= ?'
+        params.append(start_time)
+    if end_time:
+        time_filter += ' AND timestamp <= ?'
+        params.append(end_time)
+
+    # Get action counts
+    cur.execute(f'SELECT action, COUNT(*) FROM audit_logs WHERE 1=1{time_filter} GROUP BY action', params)
+    action_counts = dict(cur.fetchall())
+
+    # Get resource counts
+    cur.execute(f'SELECT resource, COUNT(*) FROM audit_logs WHERE 1=1{time_filter} GROUP BY resource', params)
+    resource_counts = dict(cur.fetchall())
+
+    # Get status code distribution
+    cur.execute(f'SELECT status_code, COUNT(*) FROM audit_logs WHERE 1=1{time_filter} GROUP BY status_code', params)
+    status_counts = dict(cur.fetchall())
+
+    # Get average response time
+    cur.execute(f'SELECT AVG(response_time) FROM audit_logs WHERE 1=1{time_filter}', params)
+    avg_response_time = cur.fetchone()[0] or 0
+
+    # Get total requests
+    cur.execute(f'SELECT COUNT(*) FROM audit_logs WHERE 1=1{time_filter}', params)
+    total_requests = cur.fetchone()[0]
+
+    # Get error rate
+    cur.execute(f'SELECT COUNT(*) FROM audit_logs WHERE status_code >= 400 AND 1=1{time_filter}', params)
+    error_count = cur.fetchone()[0]
+    error_rate = (error_count / total_requests * 100) if total_requests > 0 else 0
+
+    conn.close()
+
+    return {
+        'total_requests': total_requests,
+        'action_counts': action_counts,
+        'resource_counts': resource_counts,
+        'status_code_counts': status_counts,
+        'average_response_time': round(avg_response_time, 3),
+        'error_rate': round(error_rate, 2),
+        'time_range': {
+            'start_time': start_time,
+            'end_time': end_time
+        }
+    }
