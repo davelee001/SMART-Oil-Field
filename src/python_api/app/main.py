@@ -155,6 +155,15 @@ try:
     import joblib
 except Exception:
     joblib = None
+try:
+    from prophet import Prophet
+    import pandas as pd
+    from sklearn.linear_model import LinearRegression
+    from sklearn.preprocessing import StandardScaler
+    from statsmodels.tsa.arima.model import ARIMA
+except Exception:
+    Prophet = None
+    pd = None
 
 DB = Path(__file__).resolve().parents[3] / 'data' / 'processed' / 'oilfield.db'
 DB_URL = f"sqlite:///{DB.as_posix()}"
