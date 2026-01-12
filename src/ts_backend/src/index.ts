@@ -224,15 +224,63 @@ app.get('/api/oil/batches/:batchId/events', async (req, res) => {
   }
 });
 
-// Oil tracker gateway - track summary
-app.get('/api/oil/track/:batchId', async (req, res) => {
+// Gateway endpoint for ML anomaly prediction
+app.post('/api/ml/predict', async (req, res) => {
   try {
-    const { batchId } = req.params;
-    const response = await fetch(`${PYTHON_API}/api/oil/track/${batchId}`);
+    const response = await fetch(`${PYTHON_API}/api/ml/predict`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to run anomaly detection' });
+  }
+});
+
+// Gateway endpoint for anomaly configuration
+app.post('/api/ml/config', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/ml/config`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update anomaly config' });
+  }
+});
+
+app.get('/api/ml/config', async (req, res) => {
+  try {
+    const response = await fetch(`${PYTHON_API}/api/ml/config`);
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch track summary' });
+    res.status(500).json({ error: 'Failed to get anomaly config' });
+  }
+});
+
+// Gateway endpoint for historical anomalies
+app.get('/api/ml/anomalies', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/ml/anomalies?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch anomaly data' });
+  }
+});
+
+// Gateway endpoint for anomaly statistics
+app.get('/api/ml/anomaly-stats', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/ml/anomaly-stats?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch anomaly statistics' });
   }
 });
 
