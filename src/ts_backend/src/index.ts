@@ -377,5 +377,28 @@ app.get('/api/alerts/test', async (req, res) => {
   }
 });
 
+// Data aggregation gateway endpoints
+app.get('/api/aggregation/telemetry', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/aggregation/telemetry?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to aggregate telemetry data' });
+  }
+});
+
+app.get('/api/aggregation/anomalies', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/aggregation/anomalies?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to aggregate anomaly data' });
+  }
+});
+
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 server.listen(port, () => console.log(`TS backend with WebSocket support listening on ${port}`));

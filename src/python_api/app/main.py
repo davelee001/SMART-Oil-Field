@@ -1287,6 +1287,291 @@ def test_alert_system():
         'sms_configured': ALERT_CONFIG.sms_enabled and bool(alert_manager.sms_client)
     }
 
+# -------------------------------
+# Data Aggregation by Time Buckets
+# -------------------------------
+
+class AggregationRequest(BaseModel):
+    device_id: Optional[str] = None
+    bucket: str = Field(default='hour', regex='^(hour|day|week|month)$')
+    ts_from: Optional[int] = None
+    ts_to: Optional[int] = None
+    metrics: list[str] = Field(default_factory=lambda: ['temperature', 'pressure'])
+
+def get_bucket_start_ts(ts: int, bucket: str) -> int:
+    """Get the start timestamp for the given bucket"""
+    dt = datetime.fromtimestamp(ts)
+    if bucket == 'hour':
+        return int(datetime(dt.year, dt.month, dt.day, dt.hour).timestamp())
+    elif bucket == 'day':
+        return int(datetime(dt.year, dt.month, dt.day).timestamp())
+    elif bucket == 'week':
+        # Start of week (Monday)
+        start_of_week = dt - timedelta(days=dt.weekday())
+        return int(datetime(start_of_week.year, start_of_week.month, start_of_week.day).timestamp())
+    elif bucket == 'month':
+        return int(datetime(dt.year, dt.month, 1).timestamp())
+    return ts
+
+@app.get('/api/aggregation/telemetry')
+def aggregate_telemetry(
+    device_id: Optional[str] = None,
+    bucket: str = 'hour',
+    ts_from: Optional[int] = None,
+    ts_to: Optional[int] = None,
+    metrics: str = 'temperature,pressure'
+):
+    """Aggregate telemetry data by time buckets"""
+    # Try cache
+    cache_key_val = f"agg_{device_id or 'all'}_{bucket}_{ts_from}_{ts_to}_{metrics}"
+    key = cache_key('telemetry_aggregation', {'key': cache_key_val})
+    cached = cache_get(key)
+    if cached:
+        return cached
+
+    metrics_list = [m.strip() for m in metrics.split(',') if m.strip()]
+
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # Build query
+    q = '''
+    SELECT
+        ts,
+        device_id,
+        temperature,
+        pressure,
+        status
+    FROM telemetry
+    WHERE 1=1
+    '''
+    params = []
+
+    if device_id:
+        q += ' AND device_id = ?'
+        params.append(device_id)
+
+    if ts_from:
+        q += ' AND ts >= ?'
+        params.append(ts_from)
+
+    if ts_to:
+        q += ' AND ts <= ?'
+        params.append(ts_to)
+
+    q += ' ORDER BY ts ASC'
+
+    cur.execute(q, tuple(params))
+    rows = cur.fetchall()
+    conn.close()
+
+    if not rows:
+        return {'aggregations': [], 'bucket': bucket, 'total_points': 0}
+
+    # Group by bucket
+    buckets = {}
+    for row in rows:
+        ts, dev_id, temp, pressure, status = row
+        bucket_start = get_bucket_start_ts(ts, bucket)
+
+        if bucket_start not in buckets:
+            buckets[bucket_start] = {
+                'bucket_start': bucket_start,
+                'device_id': dev_id if device_id else 'all',
+                'count': 0,
+                'temperature': {'sum': 0, 'min': float('inf'), 'max': float('-inf'), 'count': 0},
+                'pressure': {'sum': 0, 'min': float('inf'), 'max': float('-inf'), 'count': 0},
+                'status_counts': {},
+                'first_ts': ts,
+                'last_ts': ts
+            }
+
+        bucket_data = buckets[bucket_start]
+        bucket_data['count'] += 1
+        bucket_data['last_ts'] = ts
+
+        # Aggregate temperature
+        if temp is not None and 'temperature' in metrics_list:
+            bucket_data['temperature']['sum'] += temp
+            bucket_data['temperature']['min'] = min(bucket_data['temperature']['min'], temp)
+            bucket_data['temperature']['max'] = max(bucket_data['temperature']['max'], temp)
+            bucket_data['temperature']['count'] += 1
+
+        # Aggregate pressure
+        if pressure is not None and 'pressure' in metrics_list:
+            bucket_data['pressure']['sum'] += pressure
+            bucket_data['pressure']['min'] = min(bucket_data['pressure']['min'], pressure)
+            bucket_data['pressure']['max'] = max(bucket_data['pressure']['max'], pressure)
+            bucket_data['pressure']['count'] += 1
+
+        # Count status occurrences
+        if status:
+            bucket_data['status_counts'][status] = bucket_data['status_counts'].get(status, 0) + 1
+
+    # Calculate averages and finalize
+    aggregations = []
+    for bucket_start, data in buckets.items():
+        agg = {
+            'bucket_start': bucket_start,
+            'bucket_end': bucket_start + (
+                3600 if bucket == 'hour' else
+                86400 if bucket == 'day' else
+                604800 if bucket == 'week' else
+                2592000  # month approximation
+            ),
+            'device_id': data['device_id'],
+            'count': data['count'],
+            'duration_seconds': data['last_ts'] - data['first_ts'],
+            'metrics': {}
+        }
+
+        # Finalize temperature metrics
+        if data['temperature']['count'] > 0:
+            agg['metrics']['temperature'] = {
+                'avg': data['temperature']['sum'] / data['temperature']['count'],
+                'min': data['temperature']['min'],
+                'max': data['temperature']['max'],
+                'count': data['temperature']['count']
+            }
+
+        # Finalize pressure metrics
+        if data['pressure']['count'] > 0:
+            agg['metrics']['pressure'] = {
+                'avg': data['pressure']['sum'] / data['pressure']['count'],
+                'min': data['pressure']['min'],
+                'max': data['pressure']['max'],
+                'count': data['pressure']['count']
+            }
+
+        agg['status_distribution'] = data['status_counts']
+        aggregations.append(agg)
+
+    # Sort by bucket start time
+    aggregations.sort(key=lambda x: x['bucket_start'])
+
+    result = {
+        'aggregations': aggregations,
+        'bucket': bucket,
+        'total_points': len(rows),
+        'total_buckets': len(aggregations),
+        'metrics_included': metrics_list,
+        'time_range': {'from': ts_from, 'to': ts_to}
+    }
+
+    cache_set(key, result, ttl=600)  # Cache for 10 minutes
+    return result
+
+@app.get('/api/aggregation/anomalies')
+def aggregate_anomalies(
+    device_id: Optional[str] = None,
+    bucket: str = 'day',
+    ts_from: Optional[int] = None,
+    ts_to: Optional[int] = None
+):
+    """Aggregate anomaly data by time buckets"""
+    # Try cache
+    cache_key_val = f"agg_anom_{device_id or 'all'}_{bucket}_{ts_from}_{ts_to}"
+    key = cache_key('anomaly_aggregation', {'key': cache_key_val})
+    cached = cache_get(key)
+    if cached:
+        return cached
+
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # Get telemetry data and recalculate anomalies for aggregation
+    q = 'SELECT ts, device_id, temperature, pressure FROM telemetry WHERE 1=1'
+    params = []
+
+    if device_id:
+        q += ' AND device_id = ?'
+        params.append(device_id)
+
+    if ts_from:
+        q += ' AND ts >= ?'
+        params.append(ts_from)
+
+    if ts_to:
+        q += ' AND ts <= ?'
+        params.append(ts_to)
+
+    q += ' ORDER BY ts ASC'
+
+    cur.execute(q, tuple(params))
+    rows = cur.fetchall()
+    conn.close()
+
+    if not rows:
+        return {'anomaly_aggregations': [], 'bucket': bucket, 'total_points': 0}
+
+    # Group by bucket and count anomalies
+    buckets = {}
+    for row in rows:
+        ts, dev_id, temp, pressure = row
+        bucket_start = get_bucket_start_ts(ts, bucket)
+
+        if bucket_start not in buckets:
+            buckets[bucket_start] = {
+                'bucket_start': bucket_start,
+                'device_id': dev_id if device_id else 'all',
+                'total_readings': 0,
+                'anomalies': 0,
+                'anomaly_scores': [],
+                'temperature_readings': 0,
+                'pressure_readings': 0
+            }
+
+        bucket_data = buckets[bucket_start]
+        bucket_data['total_readings'] += 1
+
+        if temp is not None:
+            bucket_data['temperature_readings'] += 1
+        if pressure is not None:
+            bucket_data['pressure_readings'] += 1
+
+        # Check for anomaly
+        anomaly_result = ml_predict(MLPredictIn(temperature=temp or 0, pressure=pressure or 0, device_id=dev_id, ts=ts))
+        if anomaly_result['anomaly']:
+            bucket_data['anomalies'] += 1
+            bucket_data['anomaly_scores'].append(anomaly_result['score'])
+
+    # Calculate anomaly rates
+    aggregations = []
+    for bucket_start, data in buckets.items():
+        avg_score = sum(data['anomaly_scores']) / len(data['anomaly_scores']) if data['anomaly_scores'] else 0
+
+        agg = {
+            'bucket_start': bucket_start,
+            'bucket_end': bucket_start + (
+                3600 if bucket == 'hour' else
+                86400 if bucket == 'day' else
+                604800 if bucket == 'week' else
+                2592000
+            ),
+            'device_id': data['device_id'],
+            'total_readings': data['total_readings'],
+            'anomalies': data['anomalies'],
+            'anomaly_rate': data['anomalies'] / data['total_readings'] if data['total_readings'] > 0 else 0,
+            'avg_anomaly_score': avg_score,
+            'temperature_coverage': data['temperature_readings'] / data['total_readings'] if data['total_readings'] > 0 else 0,
+            'pressure_coverage': data['pressure_readings'] / data['total_readings'] if data['total_readings'] > 0 else 0
+        }
+        aggregations.append(agg)
+
+    # Sort by bucket start time
+    aggregations.sort(key=lambda x: x['bucket_start'])
+
+    result = {
+        'anomaly_aggregations': aggregations,
+        'bucket': bucket,
+        'total_points': len(rows),
+        'total_buckets': len(aggregations),
+        'time_range': {'from': ts_from, 'to': ts_to}
+    }
+
+    cache_set(key, result, ttl=600)
+    return result
+
 @app.post('/api/oil/batches')
 def create_batch(payload: BatchCreate):
     conn = get_conn()
