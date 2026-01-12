@@ -13,6 +13,40 @@ def rate_limit(user_id: str, endpoint: str):
         if count >= RATE_LIMIT_MAX:
             raise HTTPException(status_code=429, detail="Rate limit exceeded")
         RATE_LIMITS[key] = count + 1
+
+# WebSocket connection manager for real-time telemetry
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+        self.connection_lock = threading.Lock()
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        with self.connection_lock:
+            self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        with self.connection_lock:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
+
+    async def broadcast_telemetry(self, telemetry_data: dict):
+        """Broadcast new telemetry data to all connected clients"""
+        with self.connection_lock:
+            connections = self.active_connections.copy()
+
+        for connection in connections:
+            try:
+                await connection.send_json({
+                    "type": "telemetry_update",
+                    "data": telemetry_data,
+                    "timestamp": int(time.time())
+                })
+            except Exception:
+                # Connection might be dead, will be cleaned up on disconnect
+                pass
+
+manager = ConnectionManager()
 # Role-based access control (RBAC)
 def require_role(role: str):
     def checker(user=Depends(get_current_user)):
@@ -100,7 +134,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import QueuePool
 import time
 from typing import Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
@@ -298,6 +332,23 @@ def cache_set(key: str, value, ttl: int = 60):
 def health():
     return {'status': 'ok'}
 
+# WebSocket endpoint for real-time telemetry streaming
+@app.websocket("/ws/telemetry")
+async def websocket_telemetry(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive and wait for client messages
+            data = await websocket.receive_text()
+            # For now, just echo back (could be used for subscription filters later)
+            await websocket.send_json({
+                "type": "echo",
+                "message": f"Received: {data}",
+                "timestamp": int(time.time())
+            })
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
 
 # Example: API key protected endpoint (telemetry ingest)
 
@@ -322,6 +373,16 @@ async def ingest(
     conn.commit()
     id_ = cur.lastrowid
     conn.close()
+    # Broadcast to WebSocket clients
+    telemetry_data = {
+        'id': id_,
+        'device_id': payload.device_id,
+        'ts': payload.ts,
+        'temperature': payload.temperature,
+        'pressure': payload.pressure,
+        'status': payload.status
+    }
+    await manager.broadcast_telemetry(telemetry_data)
     # Write to InfluxDB (optional)
     try:
         if INFLUX_WRITE and INFLUX_BUCKET:
