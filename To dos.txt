@@ -1,17 +1,4 @@
 
-Features:
-
-Real-time websocket connections
-Anomaly detection for telemetry data
-Predictive analytics (ML models)
-Alerting system (email/SMS for threshold breaches)
-Data aggregation by time buckets
-Historical trend analysis
-Batch data upload (CSV import)
-Data validation schemas (Pydantic models)
-Audit logging
-
-
 💻 TypeScript Backend
 Core Implementation:
 
