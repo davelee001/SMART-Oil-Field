@@ -472,5 +472,39 @@ app.get('/api/upload/history', async (req, res) => {
   }
 });
 
+// Audit logging endpoints
+app.get('/api/audit/logs', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/audit/logs?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get audit logs' });
+  }
+});
+
+app.get('/api/audit/logs/:logId', async (req, res) => {
+  try {
+    const { logId } = req.params;
+    const response = await fetch(`${PYTHON_API}/api/audit/logs/${logId}`);
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get audit log' });
+  }
+});
+
+app.get('/api/audit/stats', async (req, res) => {
+  try {
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    const response = await fetch(`${PYTHON_API}/api/audit/stats?${queryParams}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get audit stats' });
+  }
+});
+
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 server.listen(port, () => console.log(`TS backend with WebSocket support listening on ${port}`));
