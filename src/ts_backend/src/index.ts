@@ -1,16 +1,246 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
+import { body, validationResult } from 'express-validator';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
+import { v4 as uuidv4 } from 'uuid';
+import dotenv from 'dotenv';
+import { ApolloServer } from 'apollo-server-express';
+import { typeDefs } from './graphql/schema';
+import { resolvers } from './graphql/resolvers';
+import { WebSocketManager, setupWebSocketEventHandlers } from './websocket/manager';
+import { MessageQueueManager, QUEUES } from './queue/rabbitmq';
+import { setupQueueHandlers, QueuePublisher } from './queue/handlers';
+import { AptosEventListener } from './blockchain/aptos-listener';
+import { CacheManager, cacheMiddleware } from './cache/redis';
+import { setupCacheInvalidationHandlers, CacheInvalidator } from './cache/invalidation';
+import { APIGateway, createRouteRateLimiter } from './gateway/proxy';
+
+// Load environment variables
+dotenv.config();
+
+// Environment configuration
+const PYTHON_API = process.env.PYTHON_API_URL || 'http://localhost:8000';
+const APTOS_RPC_URL = process.env.APTOS_RPC_URL || 'https://fullnode.devnet.aptoslabs.com/v1';
+const APTOS_MODULE_ADDRESS = process.env.APTOS_MODULE_ADDRESS || '0x1';
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://localhost:5672';
 
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-app.use(cors());
-app.use(express.json());
+// Security middleware
+app.use(helmet());
+app.use(compression());
 
-// WebSocket proxy for real-time telemetry
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api/', limiter);
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_ORIGIN || '*',
+  credentials: true
+}));
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request ID middleware
+app.use((req: any, _res, next) => {
+  req.id = uuidv4();
+  next();
+});
+
+// Request logging with morgan
+app.use(morgan('combined', {
+  format: ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" - :response-time ms'
+}));
+
+// Validation middleware helper
+const handleValidation = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      details: errors.array(),
+      timestamp: new Date().toISOString()
+    });
+  }
+  next();
+};
+
+// Global error handler
+app.use((error: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(`[${(req as any).id}] Error in ${req.method} ${req.url}:`, error);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
+    timestamp: new Date().toISOString(),
+    requestId: (req as any).id
+  });
+});
+
+// Initialize WebSocket Manager
+const wsManager = new WebSocketManager(wss);
+setupWebSocketEventHandlers(wsManager);
+
+// Initialize Cache Manager
+const cacheManager = new CacheManager({
+  url: REDIS_URL,
+  defaultTTL: 600, // 10 minutes default
+});
+
+// Initialize API Gateway
+const apiGateway = new APIGateway(app, cacheManager);
+
+// Register proxy routes to Python API with caching
+apiGateway.register('/api/v1/oil-movements', {
+  target: PYTHON_API,
+  pathRewrite: { '^/api/v1': '/api' },
+  changeOrigin: true,
+  timeout: 10000,
+  retries: 2,
+  cache: { enabled: true, ttl: 300 }, // 5 minutes cache
+});
+
+apiGateway.register('/api/v1/subscriptions', {
+  target: PYTHON_API,
+  pathRewrite: { '^/api/v1': '/api' },
+  changeOrigin: true,
+  timeout: 10000,
+  retries: 2,
+  cache: { enabled: true, ttl: 300 },
+});
+
+apiGateway.register('/api/v1/stats', {
+  target: PYTHON_API,
+  pathRewrite: { '^/api/v1': '/api' },
+  changeOrigin: true,
+  timeout: 5000,
+  retries: 1,
+  cache: { enabled: true, ttl: 60 }, // 1 minute cache for stats
+});
+
+// Connect to Redis
+cacheManager.connect().then(() => {
+  console.log('✅ Redis cache connected');
+}).catch((error) => {
+  console.error('❌ Failed to connect to Redis:', error);
+});
+
+// Initialize Message Queue Manager
+const queueManager = new MessageQueueManager({
+  url: RABBITMQ_URL,
+  queues: Object.values(QUEUES),
+});
+
+// Connect to RabbitMQ and setup handlers
+queueManager.connect().then(() => {
+  setupQueueHandlers(queueManager, wsManager);
+  setupCacheInvalidationHandlers(cacheManager, queueManager);
+  console.log('✅ Message queue connected and handlers configured');
+}).catch((error) => {
+  console.error('❌ Failed to connect to message queue:', error);
+});
+
+// Create queue publisher for easy publishing
+const queuePublisher = new QueuePublisher(queueManager);
+
+// Initialize Aptos Blockchain Event Listener
+const aptosListener = new AptosEventListener(
+  {
+    rpcUrl: APTOS_RPC_URL,
+    moduleAddress: APTOS_MODULE_ADDRESS,
+    pollInterval: 15000, // Poll every 15 seconds
+  },
+  queuePublisher
+);
+
+// Start blockchain listener
+aptosListener.start().then(() => {
+  console.log('✅ Aptos blockchain event listener started');
+}).catch((error) => {
+  console.error('❌ Failed to start blockchain listener:', error);
+});
+
+// Add WebSocket stats endpoint
+app.get('/api/ws/stats', (req, res) => {
+  res.json(wsManager.getStats());
+});
+
+// Add queue stats endpoint
+app.get('/api/queue/stats', (req, res) => {
+  res.json({
+    connected: queueManager.isConnected(),
+    url: RABBITMQ_URL.replace(/\/\/.*@/, '//<credentials>@'), // Hide credentials
+  });
+});
+
+// Add blockchain stats endpoint
+app.get('/api/blockchain/stats', (req, res) => {
+  res.json(aptosListener.getStats());
+});
+
+// Add cache stats endpoint
+app.get('/api/cache/stats', async (req, res) => {
+  const stats = await cacheManager.getStats();
+  res.json(stats);
+});
+
+// Add cache invalidation endpoints (for admin use)
+app.post('/api/cache/invalidate/all', async (req, res) => {
+  const invalidator = new CacheInvalidator(cacheManager);
+  await invalidator.invalidateAll();
+  res.json({ message: 'All caches invalidated' });
+});
+
+app.post('/api/cache/invalidate/oil-movements', async (req, res) => {
+  const invalidator = new CacheInvalidator(cacheManager);
+  await invalidator.invalidateAllOilMovements();
+  res.json({ message: 'Oil movement caches invalidated' });
+});
+
+app.post('/api/cache/invalidate/subscriptions', async (req, res) => {
+  const invalidator = new CacheInvalidator(cacheManager);
+  await invalidator.invalidateAllSubscriptions();
+  res.json({ message: 'Subscription caches invalidated' });
+});
+
+// Apply caching middleware to specific routes (with shorter TTL for dynamic data)
+app.use('/api/stats', cacheMiddleware(cacheManager, 60)); // 1 minute cache for stats
+app.use('/api/oil-movements', cacheMiddleware(cacheManager, 300)); // 5 minutes cache
+
+// Add gateway stats endpoint
+app.get('/api/gateway/stats', (req, res) => {
+  res.json(apiGateway.getStats());
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    services: {
+      cache: cacheManager.getConnectionStatus(),
+      queue: queueManager.isConnected(),
+      blockchain: aptosListener.getStats().isRunning,
+    },
+  });
+});
+
+// Legacy WebSocket proxy for real-time telemetry (keeping for backward compatibility)
 wss.on('connection', (ws: WebSocket, req) => {
   if (req.url === '/ws/telemetry') {
     // Proxy WebSocket connection to Python API
@@ -506,5 +736,85 @@ app.get('/api/audit/stats', async (req, res) => {
   }
 });
 
+// Initialize Apollo Server for GraphQL
+async function startApolloServer() {
+  const apolloServer = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: ({ req }: any) => {
+      return {
+        requestId: req.id,
+        user: req.user, // Add authentication user if available
+      };
+    },
+    formatError: (error) => {
+      console.error('GraphQL Error:', error);
+      return error;
+    },
+    introspection: process.env.NODE_ENV !== 'production',
+    playground: process.env.NODE_ENV !== 'production',
+  });
+
+  await apolloServer.start();
+  apolloServer.applyMiddleware({
+    app,
+    path: '/graphql',
+    cors: false // Using app-level CORS
+  });
+
+  console.log(`GraphQL endpoint available at /graphql`);
+}
+
+// Start server
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-server.listen(port, () => console.log(`TS backend with WebSocket support listening on ${port}`));
+
+startApolloServer().then(() => {
+  server.listen(port, () => {
+    console.log(`
+╔════════════════════════════════════════════════════════════╗
+║          🚀 TypeScript Backend Server Started              ║
+╠════════════════════════════════════════════════════════════╣
+║  Port:              ${port}                                    ║
+║  GraphQL:           http://localhost:${port}/graphql        ║
+║  Health Check:      http://localhost:${port}/health         ║
+╠════════════════════════════════════════════════════════════╣
+║  📊 Services Status:                                       ║
+║  ✅ Express API      Ready                                 ║
+║  ✅ GraphQL          Ready                                 ║
+║  🔌 WebSocket        Ready                                 ║
+║  🐰 RabbitMQ         ${queueManager.isConnected() ? 'Connected   ' : 'Connecting...'}                         ║
+║  💾 Redis Cache      ${cacheManager.getConnectionStatus() ? 'Connected   ' : 'Connecting...'}                         ║
+║  ⛓️  Blockchain       ${aptosListener.getStats().isRunning ? 'Listening   ' : 'Starting...  '}                         ║
+║  🚪 API Gateway      Ready (${apiGateway.getStats().totalRoutes} routes)                       ║
+╚════════════════════════════════════════════════════════════╝
+    `);
+  });
+}).catch((error) => {
+  console.error('Failed to start Apollo Server:', error);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  await aptosListener.stop();
+  await queueManager.close();
+  await cacheManager.disconnect();
+  wsManager.cleanup();
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT signal received: closing HTTP server');
+  await aptosListener.stop();
+  await queueManager.close();
+  await cacheManager.disconnect();
+  wsManager.cleanup();
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
