@@ -21,7 +21,7 @@ This project integrates multiple technologies:
 | Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
 | Blockchain | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
 | Notifications | Subscription expiration reminders with 3 severity levels, email/SMS alerts |
-| Frontend | Interactive dashboard, real-time status indicators, modal-based actions |
+| Frontend | Modern React TypeScript app with Material-UI, real-time charts, interactive maps, dark/light mode, mobile-responsive design, PWA capabilities |
 | Analytics | InfluxDB time-series, DuckDB warehouse, ML anomaly detection, predictive analytics, trend analysis |
 | Monitoring | Real-time WebSocket connections, anomaly detection, alerting system, audit logging |
 | Data Management | Batch CSV upload, data validation schemas, aggregation by time buckets, historical trends |
@@ -32,7 +32,7 @@ This project integrates multiple technologies:
 - **TypeScript Backend**: Express + TypeScript API gateway with full proxy coverage for all Python API endpoints (telemetry, subscriptions, oil tracking). See [src/ts_backend/README.md](src/ts_backend/README.md).
 - **Move Subscriptions**: Aptos Move package for blockchain-based subscription management with payment processing, discount codes, seasonal promotions, and referral rewards. See [blockchain/move/subscriptions](blockchain/move/subscriptions).
 - **Move Oil Tracker**: Aptos Move module for immutable, blockchain-verified oil batch tracking with ownership transfer and lifecycle events. See [blockchain/move/oil_tracker](blockchain/move/oil_tracker).
-- **Frontend Dashboard**: Interactive web interface with configurable API routing, real-time backend status indicators, and subscription expiration reminders. See [src/frontend/index.html](src/frontend/index.html).
+- **Frontend Dashboard**: Modern React TypeScript application with Material-UI components, real-time charts, interactive maps, dark/light mode toggle, and PWA capabilities. Features responsive design, smooth animations, and comprehensive data visualization. See [src/frontend/](src/frontend/).
 
 ## Features
 
@@ -101,6 +101,24 @@ This project integrates multiple technologies:
 - **Smart contract logic**: All refund calculations handled transparently on-chain
 - **Example**: 15 days unused of 30-day plan (1 APT) = 0.5 APT refund
 - **Protection**: Payment amount and subscription start tracked for accurate calculations
+
+### 🖥️ Modern React Frontend
+- **React TypeScript**: Modern component-based architecture with type safety
+- **Material-UI Design System**: Consistent, professional UI components with theme support
+- **Dark/Light Mode**: Seamless theme switching with system preference detection
+- **Responsive Design**: Mobile-first design that works on all screen sizes
+- **Real-time Charts**: Interactive data visualization using Chart.js and react-chartjs-2
+- **Interactive Maps**: Leaflet-based maps for oil field location visualization
+- **PWA Capabilities**: Progressive Web App features for offline functionality
+- **Smooth Animations**: Framer Motion animations for enhanced user experience
+- **Toast Notifications**: Real-time feedback with react-toastify
+- **Loading States**: Skeleton screens and loading indicators for better UX
+- **Data Export**: PDF and Excel export capabilities for reports and analytics
+- **Search & Filtering**: Advanced data filtering and search functionality
+- **WebSocket Integration**: Real-time updates via WebSocket connections
+- **State Management**: React Query for efficient data fetching and caching
+- **Modern Build System**: Webpack configuration with hot reloading and TypeScript support
+
 ### Blockchain Features
 
 **Subscriptions** ([blockchain/move/subscriptions](blockchain/move/subscriptions)):
