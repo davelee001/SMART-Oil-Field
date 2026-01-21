@@ -23,6 +23,8 @@ This project integrates multiple technologies:
 | Notifications | Subscription expiration reminders with 3 severity levels, email/SMS alerts |
 | Frontend | Modern React TypeScript app with Material-UI, real-time charts, interactive maps, dark/light mode, mobile-responsive design, PWA capabilities |
 | Analytics | InfluxDB time-series, DuckDB warehouse, ML anomaly detection, predictive analytics, trend analysis |
+| Data Science | Ensemble ML models, advanced feature engineering, real-time stream processing, production optimization, comprehensive ETL with data quality validation |
+| Machine Learning | Multi-algorithm anomaly detection, predictive maintenance, time series forecasting, automated training pipeline, synthetic data generation |
 | Monitoring | Real-time WebSocket connections, anomaly detection, alerting system, audit logging |
 | Data Management | Batch CSV upload, data validation schemas, aggregation by time buckets, historical trends |
 
@@ -30,6 +32,7 @@ This project integrates multiple technologies:
 
 - **Python API**: FastAPI service with CORS enabled for telemetry ingestion, querying, subscription management, oil tracking, and CSV export. See [src/python_api/README.md](src/python_api/README.md).
 - **TypeScript Backend**: Express + TypeScript API gateway with full proxy coverage for all Python API endpoints (telemetry, subscriptions, oil tracking). See [src/ts_backend/README.md](src/ts_backend/README.md).
+- **Data Science Suite**: Comprehensive ML and analytics platform with ensemble models, real-time stream processing, advanced feature engineering, production optimization, and ETL pipelines with data quality validation. See [src/data_science/](src/data_science/).
 - **Move Subscriptions**: Aptos Move package for blockchain-based subscription management with payment processing, discount codes, seasonal promotions, and referral rewards. See [blockchain/move/subscriptions](blockchain/move/subscriptions).
 - **Move Oil Tracker**: Aptos Move module for immutable, blockchain-verified oil batch tracking with ownership transfer and lifecycle events. See [blockchain/move/oil_tracker](blockchain/move/oil_tracker).
 - **Frontend Dashboard**: Modern React TypeScript application with Material-UI components, real-time charts, interactive maps, dark/light mode toggle, and PWA capabilities. Features responsive design, smooth animations, and comprehensive data visualization. See [src/frontend/](src/frontend/).
@@ -246,6 +249,114 @@ This project integrates multiple technologies:
 - Batch upload and validation endpoints
 - InfluxDB read endpoints
 - Async task status for exports
+
+## 🧠 Advanced Data Science & ML Suite
+
+### 📊 Comprehensive ML Models
+- **Ensemble Anomaly Detection**: Multi-algorithm approach combining Isolation Forest, DBSCAN, and statistical methods for robust outlier detection with confidence scoring
+- **Predictive Maintenance**: LightGBM-based machine learning model for equipment failure prediction with feature importance analysis
+- **Production Forecasting**: Advanced time series forecasting using gradient boosting with multi-step ahead predictions
+- **Model Management**: Centralized training, validation, and deployment pipeline with automated model versioning
+
+### 🔧 Advanced Feature Engineering
+- **TelemetryFeatureEngineer**: Sophisticated feature extraction pipeline including:
+  - Time-based features (cyclical encoding, business hours, seasonal patterns)
+  - Rolling window statistics (mean, std, min, max, median, z-scores)
+  - Fourier transform features for cyclical pattern detection
+  - Rate of change and deviation calculations
+  - Cross-feature relationship modeling
+- **Production Optimization**: ML-driven analytics for optimal parameter recommendations with efficiency scoring
+- **Real-time Processing**: Stream-compatible feature engineering for live data analysis
+
+### 🌊 Real-Time Stream Processing Engine
+- **Configurable Stream Processors**: Modular architecture with pluggable processors for:
+  - Real-time anomaly detection with 3-sigma rule implementation
+  - Threshold monitoring with configurable alert levels
+  - Trend analysis with linear regression and pattern detection
+- **Device Health Monitoring**: Comprehensive health scoring with stability metrics and alert correlation
+- **Stream Analytics**: System-wide insights with device aggregation and real-time dashboards
+- **Event Buffering**: Circular buffer implementation for efficient memory usage and historical context
+
+### 🏗️ Enhanced ETL Pipeline with Data Quality
+- **Data Quality Validation Engine**: Comprehensive rule-based validation with:
+  - Range validation for sensor readings
+  - Null value detection and handling
+  - Uniqueness constraints and duplicate detection
+  - Custom validation rules with severity levels
+- **Multi-Source Data Extraction**: Support for SQLite, CSV, and extensible for future data sources
+- **Advanced Transformations**: 
+  - Outlier detection and capping using IQR methods
+  - Missing value imputation strategies
+  - Data type optimization and categorical encoding
+  - Feature engineering integration
+- **Data Warehouse Operations**: DuckDB-based analytics warehouse with:
+  - Automated aggregations (hourly, daily, device-level)
+  - Parquet export for BI tools (Power BI, Tableau)
+  - Health summary tables and device analytics
+- **Quality Scoring**: Automated data quality assessment with detailed reporting
+
+### 📈 Production Analytics & Optimization
+- **Parameter Optimization**: ML-driven recommendations for optimal operating ranges based on historical performance
+- **Efficiency Scoring**: Multi-factor analysis considering stability, performance, and operational metrics
+- **Production Insights**: Advanced analytics for:
+  - Equipment degradation patterns
+  - Optimal temperature and pressure ranges
+  - Maintenance scheduling recommendations
+  - Performance benchmarking across devices
+
+### 🔄 Comprehensive Training Pipeline
+- **Enhanced Synthetic Data Generation**: Realistic telemetry simulation with:
+  - Daily temperature cycles and equipment degradation trends
+  - Multiple anomaly types (spikes, drift, oscillations)
+  - Device-specific patterns and failure modes
+  - Configurable sample sizes and device counts
+- **Multi-Model Training**: Automated pipeline for training all models with:
+  - Cross-validation and hyperparameter optimization
+  - Model performance evaluation and comparison
+  - Feature importance analysis and selection
+  - Automated model saving and versioning
+- **Comprehensive Reporting**: Detailed training reports including:
+  - Model performance metrics (accuracy, RMSE, feature importance)
+  - Data quality assessments
+  - Training duration and resource usage
+  - Production optimization recommendations
+- **Legacy Compatibility**: Backward-compatible model formats for existing API integrations
+
+### 📦 Data Science Dependencies
+- **Advanced ML Libraries**: LightGBM, XGBoost, Prophet for time series, Optuna for hyperparameter tuning
+- **Stream Processing**: Kafka, Redis, WebSockets for real-time data pipelines
+- **Deep Learning**: TensorFlow, PyTorch, PyTorch Lightning for advanced modeling
+- **Data Quality**: Great Expectations, Pandera, Evidently for monitoring and validation
+- **Visualization**: Plotly, Bokeh, Seaborn for advanced analytics dashboards
+- **Database & Storage**: DuckDB for analytics, PyArrow for Parquet, SQLAlchemy for ORM
+
+### 🚀 Getting Started with Data Science
+```bash
+# Install data science dependencies
+cd src/data_science
+pip install -r requirements.txt
+
+# Run enhanced ML training pipeline
+python scripts/train_ml.py
+
+# Run ETL pipeline with data quality validation
+python src/data_science/pipelines/enhanced_etl.py
+
+# Start stream processing (example)
+python -c "
+from src.data_science.pipelines.stream_processing import StreamProcessor
+processor = StreamProcessor()
+# Add processors and start processing
+"
+```
+
+### 📋 Data Science Modules
+- **[src/data_science/](src/data_science/)**: Main data science package
+- **[models/ml_models.py](src/data_science/models/ml_models.py)**: Comprehensive ML model implementations
+- **[pipelines/feature_engineering.py](src/data_science/pipelines/feature_engineering.py)**: Advanced feature engineering pipeline
+- **[pipelines/stream_processing.py](src/data_science/pipelines/stream_processing.py)**: Real-time stream processing engine
+- **[pipelines/enhanced_etl.py](src/data_science/pipelines/enhanced_etl.py)**: ETL pipeline with data quality validation
+- **[scripts/train_ml.py](scripts/train_ml.py)**: Enhanced training pipeline with synthetic data generation
 
 ### Running the Application
 
