@@ -75,15 +75,25 @@ const Dashboard: React.FC = () => {
         });
     }, [searchTerm, quickFilter]);
 
-    // Mock data - replace with actual API calls
-    const stats = {
-        totalWells: 45,
-        activeWells: 42,
-        warningWells: 2,
-        errorWells: 1,
-        totalProduction: '1,234 bbl',
-        avgTemperature: '85°F',
-    };
+    const stats = useMemo(() => {
+        const activeWells = filteredWells.filter((w) => w.status === 'active').length;
+        const warningWells = filteredWells.filter((w) => w.status === 'warning').length;
+        const errorWells = filteredWells.filter((w) => w.status === 'error').length;
+        const totalProduction = filteredWells.reduce((sum, w) => sum + w.production, 0);
+        const avgTemperature =
+            filteredWells.length > 0
+                ? filteredWells.reduce((sum, w) => sum + w.temperature, 0) / filteredWells.length
+                : 0;
+
+        return {
+            totalWells: filteredWells.length,
+            activeWells,
+            warningWells,
+            errorWells,
+            totalProduction: `${totalProduction.toFixed(1)} bbl`,
+            avgTemperature: `${avgTemperature.toFixed(1)}°F`,
+        };
+    }, [filteredWells]);
 
     const cardVariants = {
         hidden: { opacity: 0, y: 20 },
