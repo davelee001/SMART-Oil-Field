@@ -7,6 +7,7 @@ import { lightTheme, darkTheme } from './themes/theme';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
+import Subscriptions from './pages/Subscriptions';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 
@@ -57,6 +58,7 @@ const App: React.FC = () => {
                                 <Route path="/" element={<Dashboard />} />
                                 <Route path="/login" element={<Login />} />
                                 <Route path="/profile" element={<Profile />} />
+                                <Route path="/subscriptions" element={<Subscriptions />} />
                             </Routes>
                         </motion.div>
                     </Box>
