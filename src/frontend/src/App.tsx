@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 
 import { lightTheme, darkTheme } from './themes/theme';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 
@@ -53,6 +54,7 @@ const App: React.FC = () => {
                         >
                             <Routes>
                                 <Route path="/" element={<Dashboard />} />
+                                <Route path="/login" element={<Login />} />
                             </Routes>
                         </motion.div>
                     </Box>
