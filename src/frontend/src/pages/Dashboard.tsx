@@ -95,6 +95,10 @@ const Dashboard: React.FC = () => {
         };
     }, [filteredWells]);
 
+    const applyQuickFilter = (filter: QuickFilter) => {
+        setQuickFilter(filter);
+    };
+
     const cardVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0 },
@@ -144,16 +148,32 @@ const Dashboard: React.FC = () => {
                                 sx={{ mb: 2 }}
                             />
                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                <Button variant="outlined" size="small">
+                                <Button
+                                    variant={quickFilter === 'all' ? 'contained' : 'outlined'}
+                                    size="small"
+                                    onClick={() => applyQuickFilter('all')}
+                                >
                                     All Wells
                                 </Button>
-                                <Button variant="outlined" size="small">
+                                <Button
+                                    variant={quickFilter === 'active' ? 'contained' : 'outlined'}
+                                    size="small"
+                                    onClick={() => applyQuickFilter('active')}
+                                >
                                     Active Only
                                 </Button>
-                                <Button variant="outlined" size="small">
+                                <Button
+                                    variant={quickFilter === 'warning' ? 'contained' : 'outlined'}
+                                    size="small"
+                                    onClick={() => applyQuickFilter('warning')}
+                                >
                                     Warnings
                                 </Button>
-                                <Button variant="outlined" size="small">
+                                <Button
+                                    variant={quickFilter === '24h' ? 'contained' : 'outlined'}
+                                    size="small"
+                                    onClick={() => applyQuickFilter('24h')}
+                                >
                                     Last 24h
                                 </Button>
                             </Box>
