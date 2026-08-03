@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
     AppBar,
     Toolbar,
@@ -7,6 +8,8 @@ import {
     Switch,
     FormControlLabel,
     Box,
+    Avatar,
+    Tooltip,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -14,6 +17,8 @@ import {
     Brightness7 as LightModeIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+
+import { getStoredUser } from '../../utils/auth';
 
 interface NavbarProps {
     onThemeToggle: () => void;
@@ -26,6 +31,8 @@ const Navbar: React.FC<NavbarProps> = ({
     darkMode,
     onSidebarToggle,
 }) => {
+    const user = getStoredUser();
+
     return (
         <AppBar
             position="fixed"
@@ -71,6 +78,14 @@ const Navbar: React.FC<NavbarProps> = ({
                     }
                     label=""
                 />
+
+                <Tooltip title={user ? user.name || user.email : 'Sign in'}>
+                    <IconButton component={Link} to={user ? '/profile' : '/login'} sx={{ ml: 1 }}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+                            {user ? (user.name || user.email).charAt(0).toUpperCase() : '?'}
+                        </Avatar>
+                    </IconButton>
+                </Tooltip>
             </Toolbar>
         </AppBar>
     );
