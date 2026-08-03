@@ -240,6 +240,7 @@ const Dashboard: React.FC = () => {
                                     <Button
                                         variant={quickFilter === 'warning' ? 'contained' : 'outlined'}
                                         size="small"
+                                        color="warning"
                                         onClick={() => applyQuickFilter('warning', 'Warnings')}
                                     >
                                         Warnings
