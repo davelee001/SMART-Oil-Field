@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Subscriptions from './pages/Subscriptions';
+import PaymentHistory from './pages/PaymentHistory';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 
@@ -59,6 +60,7 @@ const App: React.FC = () => {
                                 <Route path="/login" element={<Login />} />
                                 <Route path="/profile" element={<Profile />} />
                                 <Route path="/subscriptions" element={<Subscriptions />} />
+                                <Route path="/payment-history" element={<PaymentHistory />} />
                             </Routes>
                         </motion.div>
                     </Box>
