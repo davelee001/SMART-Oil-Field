@@ -35,7 +35,7 @@ This project integrates multiple technologies:
 - **Data Science Suite**: Comprehensive ML and analytics platform with ensemble models, real-time stream processing, advanced feature engineering, production optimization, and ETL pipelines with data quality validation. See [src/data_science/](src/data_science/).
 - **Move Subscriptions**: Aptos Move package for blockchain-based subscription management with payment processing, discount codes, seasonal promotions, and referral rewards. See [blockchain/move/subscriptions](blockchain/move/subscriptions).
 - **Move Oil Tracker**: Aptos Move module for immutable, blockchain-verified oil batch tracking with ownership transfer and lifecycle events. See [blockchain/move/oil_tracker](blockchain/move/oil_tracker).
-- **Frontend Dashboard**: Modern React TypeScript application with Material-UI components, real-time charts, interactive maps, dark/light mode toggle, and PWA capabilities. Features responsive design, smooth animations, and comprehensive data visualization. See [src/frontend/](src/frontend/).
+- **Frontend Dashboard**: Modern React TypeScript application with Material-UI components, real-time charts, interactive maps, dark/light mode toggle, and PWA capabilities. Features responsive design, smooth animations, comprehensive data visualization, user authentication UI, profile management, a subscription management dashboard with discount code redemption, and payment history. See [src/frontend/](src/frontend/).
 
 ## Features
 
@@ -116,11 +116,20 @@ This project integrates multiple technologies:
 - **Smooth Animations**: Framer Motion animations for enhanced user experience
 - **Toast Notifications**: Real-time feedback with react-toastify
 - **Loading States**: Skeleton screens and loading indicators for better UX
-- **Data Export**: PDF and Excel export capabilities for reports and analytics
-- **Search & Filtering**: Advanced data filtering and search functionality
+- **Data Export**: PDF (jsPDF) and Excel (xlsx) export of the filtered well report
+- **Search & Filtering**: Live search plus quick filters (All/Active/Warnings/Last 24h) wired to well data and summary stats
 - **WebSocket Integration**: Real-time updates via WebSocket connections
 - **State Management**: React Query for efficient data fetching and caching
 - **Modern Build System**: Webpack configuration with hot reloading and TypeScript support
+
+### 👤 Account, Subscriptions & Payments (Frontend)
+- **User Authentication UI** (`/login`): Login/register form with tabbed UI; session stored via `src/frontend/src/utils/auth.ts`
+- **Profile Management** (`/profile`): View/edit name, email, and Aptos wallet address; logout
+- **Subscription Management Dashboard** (`/subscriptions`): Plan cards (Basic/Pro/Enterprise), subscribe/cancel actions, current plan status
+- **Discount Code Redemption**: Promo code entry embedded in the Subscriptions page, applies a live discount to plan pricing
+- **Payment History** (`/payment-history`): Table of past subscription payments with status and linked Aptos Explorer transaction hash
+- Sidebar and Navbar updated with working navigation links (including a profile avatar) to all of the above
+- Note: these pages currently use mock/local-storage data — see [TS_BACKEND_IMPLEMENTATION.md](TS_BACKEND_IMPLEMENTATION.md) for backend integration status
 
 ### Blockchain Features
 
@@ -186,6 +195,23 @@ This project integrates multiple technologies:
 - `GET /api/subscription/:userId` - Status
 
 **Sync Status**: **Fully synced** - All frontend endpoints supported by both backends
+
+## Recent Updates (v0.7.0)
+
+### Frontend: Account, Subscriptions & Dashboard Interactivity
+
+**Dashboard**:
+- Search box and quick-filter buttons (All Wells/Active Only/Warnings/Last 24h) now filter a live well dataset instead of static mock numbers
+- Summary stat cards and the new Well Details table recompute from the filtered results
+- Real PDF (jsPDF) and Excel (xlsx) export of the currently filtered wells
+- Toast notifications (react-toastify) for applied filters and export results
+
+**New Account & Subscription Pages**:
+- `Login` page with login/register tabs and mock session storage
+- `Profile` page for viewing/editing user details and wallet address
+- `Subscriptions` page with plan cards, subscribe/cancel actions, and embedded discount code redemption
+- `PaymentHistory` page listing past payments with Aptos Explorer transaction links
+- Sidebar and Navbar wired with working links to all new routes
 
 ## Recent Updates (v0.6.0)
 
