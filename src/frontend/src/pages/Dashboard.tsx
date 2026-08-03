@@ -11,6 +11,12 @@ import {
     TextField,
     InputAdornment,
     Skeleton,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -308,6 +314,69 @@ const Dashboard: React.FC = () => {
                         </motion.div>
                     </Grid>
                 </Grid>
+
+                {/* Well Details Table */}
+                <motion.div variants={cardVariants}>
+                    <Card sx={{ mb: 3 }}>
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                                Well Details ({filteredWells.length})
+                            </Typography>
+                            {loading ? (
+                                <LoadingCard height={250} />
+                            ) : (
+                                <TableContainer>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Well</TableCell>
+                                                <TableCell>Location</TableCell>
+                                                <TableCell>Status</TableCell>
+                                                <TableCell align="right">Production (bbl/day)</TableCell>
+                                                <TableCell align="right">Temp (°F)</TableCell>
+                                                <TableCell align="right">Pressure (PSI)</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {filteredWells.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} align="center">
+                                                        No wells match the current search/filter.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                filteredWells.map((well) => (
+                                                    <TableRow key={well.id} hover>
+                                                        <TableCell>{well.name}</TableCell>
+                                                        <TableCell>{well.location}</TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={well.status}
+                                                                size="small"
+                                                                color={
+                                                                    well.status === 'active'
+                                                                        ? 'success'
+                                                                        : well.status === 'warning'
+                                                                        ? 'warning'
+                                                                        : well.status === 'error'
+                                                                        ? 'error'
+                                                                        : 'default'
+                                                                }
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell align="right">{well.production.toFixed(1)}</TableCell>
+                                                        <TableCell align="right">{well.temperature.toFixed(1)}</TableCell>
+                                                        <TableCell align="right">{well.pressure.toFixed(1)}</TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            )}
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </motion.div>
         </Container>
     );
