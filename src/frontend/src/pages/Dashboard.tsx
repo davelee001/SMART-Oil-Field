@@ -25,6 +25,29 @@ import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
 import LoadingCard from '../components/common/LoadingCard';
 
+interface OilWellRow {
+    id: string;
+    name: string;
+    location: string;
+    status: 'active' | 'warning' | 'error' | 'inactive';
+    production: number;
+    temperature: number;
+    pressure: number;
+    lastUpdated: number;
+}
+
+// Mock data - replace with actual API calls
+const ALL_WELLS: OilWellRow[] = [
+    { id: 'well-001', name: 'Well Alpha-1', location: 'Houston, TX', status: 'active', production: 150.2, temperature: 75.5, pressure: 200.0, lastUpdated: Date.now() - 1000 * 60 * 30 },
+    { id: 'well-002', name: 'Well Beta-2', location: 'Midland, TX', status: 'active', production: 142.8, temperature: 76.1, pressure: 198.5, lastUpdated: Date.now() - 1000 * 60 * 60 * 4 },
+    { id: 'well-003', name: 'Well Gamma-3', location: 'Odessa, TX', status: 'warning', production: 95.3, temperature: 82.1, pressure: 185.2, lastUpdated: Date.now() - 1000 * 60 * 60 * 12 },
+    { id: 'well-004', name: 'Well Delta-4', location: 'Permian Basin, TX', status: 'error', production: 0, temperature: 0, pressure: 0, lastUpdated: Date.now() - 1000 * 60 * 60 * 36 },
+    { id: 'well-005', name: 'Well Epsilon-5', location: 'Eagle Ford, TX', status: 'active', production: 168.4, temperature: 74.9, pressure: 205.3, lastUpdated: Date.now() - 1000 * 60 * 60 * 2 },
+    { id: 'well-006', name: 'Well Zeta-6', location: 'Bakken, ND', status: 'inactive', production: 0, temperature: 68.2, pressure: 0, lastUpdated: Date.now() - 1000 * 60 * 60 * 50 },
+];
+
+type QuickFilter = 'all' | 'active' | 'warning' | '24h';
+
 const Dashboard: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
