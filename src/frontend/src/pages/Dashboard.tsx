@@ -24,9 +24,11 @@ import {
     CheckCircle,
     Error,
     PictureAsPdf,
+    TableChart,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
 
 import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
@@ -145,6 +147,26 @@ const Dashboard: React.FC = () => {
         doc.save(`oil-field-report-${Date.now()}.pdf`);
     };
 
+    const handleExportExcel = () => {
+        if (filteredWells.length === 0) {
+            return;
+        }
+
+        const worksheet = XLSX.utils.json_to_sheet(
+            filteredWells.map((well) => ({
+                Well: well.name,
+                Location: well.location,
+                Status: well.status,
+                'Production (bbl/day)': well.production,
+                'Temperature (°F)': well.temperature,
+                'Pressure (PSI)': well.pressure,
+            }))
+        );
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Oil Wells');
+        XLSX.writeFile(workbook, `oil-field-report-${Date.now()}.xlsx`);
+    };
+
     const cardVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0 },
@@ -232,6 +254,14 @@ const Dashboard: React.FC = () => {
                                         onClick={handleExportPDF}
                                     >
                                         Export PDF
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<TableChart />}
+                                        onClick={handleExportExcel}
+                                    >
+                                        Export Excel
                                     </Button>
                                 </Box>
                             </Box>
