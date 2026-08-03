@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Container,
     Grid,
@@ -50,7 +50,30 @@ type QuickFilter = 'all' | 'active' | 'warning' | '24h';
 
 const Dashboard: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
     const [loading, setLoading] = useState(false);
+
+    const filteredWells = useMemo(() => {
+        const term = searchTerm.trim().toLowerCase();
+        return ALL_WELLS.filter((well) => {
+            const matchesSearch =
+                term === '' ||
+                well.name.toLowerCase().includes(term) ||
+                well.location.toLowerCase().includes(term);
+            if (!matchesSearch) return false;
+
+            switch (quickFilter) {
+                case 'active':
+                    return well.status === 'active';
+                case 'warning':
+                    return well.status === 'warning' || well.status === 'error';
+                case '24h':
+                    return Date.now() - well.lastUpdated < 24 * 60 * 60 * 1000;
+                default:
+                    return true;
+            }
+        });
+    }, [searchTerm, quickFilter]);
 
     // Mock data - replace with actual API calls
     const stats = {
