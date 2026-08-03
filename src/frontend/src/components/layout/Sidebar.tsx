@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
     Drawer,
     List,
@@ -17,6 +18,9 @@ import {
     Settings as SettingsIcon,
     CloudUpload as UploadIcon,
     Download as DownloadIcon,
+    Person as PersonIcon,
+    Subscriptions as SubscriptionsIcon,
+    Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
@@ -30,10 +34,15 @@ const menuItems = [
     { text: 'Map View', icon: <MapIcon />, path: '/map' },
     { text: 'Data Upload', icon: <UploadIcon />, path: '/upload' },
     { text: 'Export Data', icon: <DownloadIcon />, path: '/export' },
+    { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
+    { text: 'Payment History', icon: <ReceiptIcon />, path: '/payment-history' },
+    { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ open }) => {
+    const location = useLocation();
+
     return (
         <Drawer
             variant="persistent"
@@ -68,6 +77,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                     >
                         <ListItem disablePadding>
                             <ListItemButton
+                                component={Link}
+                                to={item.path}
+                                selected={location.pathname === item.path}
                                 sx={{
                                     '&:hover': {
                                         backgroundColor: (theme) =>
