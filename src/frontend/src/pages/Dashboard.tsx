@@ -23,8 +23,10 @@ import {
     Warning,
     CheckCircle,
     Error,
+    PictureAsPdf,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import jsPDF from 'jspdf';
 
 import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
@@ -104,6 +106,45 @@ const Dashboard: React.FC = () => {
         setQuickFilter(filter);
     };
 
+    const handleExportPDF = () => {
+        if (filteredWells.length === 0) {
+            return;
+        }
+
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text('SMART Oil Field - Well Report', 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+
+        const headers = ['Well', 'Location', 'Status', 'Prod. (bbl/day)', 'Temp (°F)', 'Pressure (PSI)'];
+        const colX = [14, 55, 100, 128, 160, 182];
+        let y = 32;
+
+        doc.setFont('helvetica', 'bold');
+        headers.forEach((header, i) => doc.text(header, colX[i], y));
+        doc.setLineWidth(0.1);
+        doc.line(14, y + 2, 196, y + 2);
+        doc.setFont('helvetica', 'normal');
+        y += 8;
+
+        filteredWells.forEach((well) => {
+            if (y > 280) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.text(well.name, colX[0], y);
+            doc.text(well.location, colX[1], y);
+            doc.text(well.status, colX[2], y);
+            doc.text(well.production.toFixed(1), colX[3], y);
+            doc.text(well.temperature.toFixed(1), colX[4], y);
+            doc.text(well.pressure.toFixed(1), colX[5], y);
+            y += 7;
+        });
+
+        doc.save(`oil-field-report-${Date.now()}.pdf`);
+    };
+
     const cardVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0 },
@@ -152,35 +193,47 @@ const Dashboard: React.FC = () => {
                                 }}
                                 sx={{ mb: 2 }}
                             />
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                <Button
-                                    variant={quickFilter === 'all' ? 'contained' : 'outlined'}
-                                    size="small"
-                                    onClick={() => applyQuickFilter('all')}
-                                >
-                                    All Wells
-                                </Button>
-                                <Button
-                                    variant={quickFilter === 'active' ? 'contained' : 'outlined'}
-                                    size="small"
-                                    onClick={() => applyQuickFilter('active')}
-                                >
-                                    Active Only
-                                </Button>
-                                <Button
-                                    variant={quickFilter === 'warning' ? 'contained' : 'outlined'}
-                                    size="small"
-                                    onClick={() => applyQuickFilter('warning')}
-                                >
-                                    Warnings
-                                </Button>
-                                <Button
-                                    variant={quickFilter === '24h' ? 'contained' : 'outlined'}
-                                    size="small"
-                                    onClick={() => applyQuickFilter('24h')}
-                                >
-                                    Last 24h
-                                </Button>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                    <Button
+                                        variant={quickFilter === 'all' ? 'contained' : 'outlined'}
+                                        size="small"
+                                        onClick={() => applyQuickFilter('all')}
+                                    >
+                                        All Wells
+                                    </Button>
+                                    <Button
+                                        variant={quickFilter === 'active' ? 'contained' : 'outlined'}
+                                        size="small"
+                                        onClick={() => applyQuickFilter('active')}
+                                    >
+                                        Active Only
+                                    </Button>
+                                    <Button
+                                        variant={quickFilter === 'warning' ? 'contained' : 'outlined'}
+                                        size="small"
+                                        onClick={() => applyQuickFilter('warning')}
+                                    >
+                                        Warnings
+                                    </Button>
+                                    <Button
+                                        variant={quickFilter === '24h' ? 'contained' : 'outlined'}
+                                        size="small"
+                                        onClick={() => applyQuickFilter('24h')}
+                                    >
+                                        Last 24h
+                                    </Button>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<PictureAsPdf />}
+                                        onClick={handleExportPDF}
+                                    >
+                                        Export PDF
+                                    </Button>
+                                </Box>
                             </Box>
                         </CardContent>
                     </Card>
