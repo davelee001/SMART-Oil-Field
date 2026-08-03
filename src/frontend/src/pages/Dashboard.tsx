@@ -27,6 +27,7 @@ import {
     TableChart,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 
@@ -104,12 +105,14 @@ const Dashboard: React.FC = () => {
         };
     }, [filteredWells]);
 
-    const applyQuickFilter = (filter: QuickFilter) => {
+    const applyQuickFilter = (filter: QuickFilter, label: string) => {
         setQuickFilter(filter);
+        toast.info(`Filter applied: ${label}`);
     };
 
     const handleExportPDF = () => {
         if (filteredWells.length === 0) {
+            toast.warning('No wells match the current filters — nothing to export');
             return;
         }
 
@@ -145,10 +148,12 @@ const Dashboard: React.FC = () => {
         });
 
         doc.save(`oil-field-report-${Date.now()}.pdf`);
+        toast.success(`Exported ${filteredWells.length} well(s) to PDF`);
     };
 
     const handleExportExcel = () => {
         if (filteredWells.length === 0) {
+            toast.warning('No wells match the current filters — nothing to export');
             return;
         }
 
@@ -165,6 +170,7 @@ const Dashboard: React.FC = () => {
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Oil Wells');
         XLSX.writeFile(workbook, `oil-field-report-${Date.now()}.xlsx`);
+        toast.success(`Exported ${filteredWells.length} well(s) to Excel`);
     };
 
     const cardVariants = {
@@ -220,28 +226,28 @@ const Dashboard: React.FC = () => {
                                     <Button
                                         variant={quickFilter === 'all' ? 'contained' : 'outlined'}
                                         size="small"
-                                        onClick={() => applyQuickFilter('all')}
+                                        onClick={() => applyQuickFilter('all', 'All Wells')}
                                     >
                                         All Wells
                                     </Button>
                                     <Button
                                         variant={quickFilter === 'active' ? 'contained' : 'outlined'}
                                         size="small"
-                                        onClick={() => applyQuickFilter('active')}
+                                        onClick={() => applyQuickFilter('active', 'Active Only')}
                                     >
                                         Active Only
                                     </Button>
                                     <Button
                                         variant={quickFilter === 'warning' ? 'contained' : 'outlined'}
                                         size="small"
-                                        onClick={() => applyQuickFilter('warning')}
+                                        onClick={() => applyQuickFilter('warning', 'Warnings')}
                                     >
                                         Warnings
                                     </Button>
                                     <Button
                                         variant={quickFilter === '24h' ? 'contained' : 'outlined'}
                                         size="small"
-                                        onClick={() => applyQuickFilter('24h')}
+                                        onClick={() => applyQuickFilter('24h', 'Last 24h')}
                                     >
                                         Last 24h
                                     </Button>
@@ -439,10 +445,10 @@ const Dashboard: React.FC = () => {
                                                                     well.status === 'active'
                                                                         ? 'success'
                                                                         : well.status === 'warning'
-                                                                        ? 'warning'
-                                                                        : well.status === 'error'
-                                                                        ? 'error'
-                                                                        : 'default'
+                                                                            ? 'warning'
+                                                                            : well.status === 'error'
+                                                                                ? 'error'
+                                                                                : 'default'
                                                                 }
                                                             />
                                                         </TableCell>
