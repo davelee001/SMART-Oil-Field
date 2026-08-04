@@ -45,12 +45,12 @@ import { toast } from 'react-toastify';
 
 // Real-time Global Energy Commodities Ticker Data
 const MARKET_PRICES = [
-    { name: 'Brent Crude', symbol: 'BRENT', price: '$78.42', unit: '/bbl', change: '+1.35%', positive: true },
-    { name: 'WTI Crude', symbol: 'WTI', price: '$74.18', unit: '/bbl', change: '+0.92%', positive: true },
-    { name: 'Natural Gas', symbol: 'NG', price: '$2.15', unit: '/MMBtu', change: '-0.46%', positive: false },
-    { name: 'OPEC Basket', symbol: 'OPEC', price: '$81.10', unit: '/bbl', change: '+1.10%', positive: true },
-    { name: 'Gasoline RBOB', symbol: 'RBOB', price: '$2.38', unit: '/gal', change: '+0.75%', positive: true },
-    { name: 'Heating Oil', symbol: 'HO', price: '$2.49', unit: '/gal', change: '-0.12%', positive: false },
+    { name: 'Brent Crude', symbol: 'BRENT', price: '$78.42', unit: '/bbl', change: '+1.35%', positive: true, high: '$79.10', low: '$77.20', volume: '342K bbls' },
+    { name: 'WTI Crude', symbol: 'WTI', price: '$74.18', unit: '/bbl', change: '+0.92%', positive: true, high: '$75.05', low: '$73.50', volume: '410K bbls' },
+    { name: 'Natural Gas', symbol: 'NG', price: '$2.15', unit: '/MMBtu', change: '-0.46%', positive: false, high: '$2.22', low: '$2.10', volume: '180K MMBtu' },
+    { name: 'OPEC Basket', symbol: 'OPEC', price: '$81.10', unit: '/bbl', change: '+1.10%', positive: true, high: '$81.80', low: '$80.20', volume: '520K bbls' },
+    { name: 'Gasoline RBOB', symbol: 'RBOB', price: '$2.38', unit: '/gal', change: '+0.75%', positive: true, high: '$2.42', low: '$2.32', volume: '115K gals' },
+    { name: 'Heating Oil', symbol: 'HO', price: '$2.49', unit: '/gal', change: '-0.12%', positive: false, high: '$2.53', low: '$2.45', volume: '95K gals' },
 ];
 
 // Oil & Gas Core Solutions across Upstream, Midstream & Downstream
@@ -189,7 +189,7 @@ const Home: React.FC = () => {
                         <Grid item xs={6} sm={4} md={2} key={item.symbol}>
                             <Box
                                 sx={{
-                                    p: 1,
+                                    p: 1.25,
                                     borderRadius: 1.5,
                                     backgroundColor: 'rgba(255, 255, 255, 0.06)',
                                     border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -201,25 +201,30 @@ const Home: React.FC = () => {
                                     {item.name} ({item.symbol})
                                 </Typography>
                                 <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mt: 0.2 }}>
-                                    <Typography variant="body2" fontWeight={800} sx={{ color: '#ffffff', fontSize: '0.9rem' }}>
+                                    <Typography variant="body2" fontWeight={850} sx={{ color: '#ffffff', fontSize: '0.95rem' }}>
                                         {item.price}
                                     </Typography>
                                     <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)' }}>
                                         {item.unit}
                                     </Typography>
                                 </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, mt: 0.2 }}>
-                                    {item.positive ? (
-                                        <TrendingUpIcon sx={{ fontSize: 14, color: '#4CAF50' }} />
-                                    ) : (
-                                        <TrendingDownIcon sx={{ fontSize: 14, color: '#FF5252' }} />
-                                    )}
-                                    <Typography
-                                        variant="caption"
-                                        fontWeight={700}
-                                        sx={{ fontSize: '0.7rem', color: item.positive ? '#4CAF50' : '#FF5252' }}
-                                    >
-                                        {item.change}
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.3 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+                                        {item.positive ? (
+                                            <TrendingUpIcon sx={{ fontSize: 14, color: '#4CAF50' }} />
+                                        ) : (
+                                            <TrendingDownIcon sx={{ fontSize: 14, color: '#FF5252' }} />
+                                        )}
+                                        <Typography
+                                            variant="caption"
+                                            fontWeight={700}
+                                            sx={{ fontSize: '0.7rem', color: item.positive ? '#4CAF50' : '#FF5252' }}
+                                        >
+                                            {item.change}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="caption" sx={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.5)' }}>
+                                        24h Vol: {item.volume}
                                     </Typography>
                                 </Box>
                             </Box>
