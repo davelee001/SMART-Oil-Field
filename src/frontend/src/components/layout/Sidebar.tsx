@@ -83,6 +83,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                                 to={item.path}
                                 selected={location.pathname === item.path}
                                 sx={{
+                                    borderLeft: '3px solid transparent',
+                                    '&.Mui-selected': {
+                                        borderColor: 'primary.main',
+                                        backgroundColor: (theme) =>
+                                            theme.palette.mode === 'dark'
+                                                ? 'rgba(112, 167, 204, 0.14)'
+                                                : 'rgba(23, 63, 95, 0.09)',
+                                    },
                                     '&:hover': {
                                         backgroundColor: (theme) =>
                                             theme.palette.mode === 'dark'
