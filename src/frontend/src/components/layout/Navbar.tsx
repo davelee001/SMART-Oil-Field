@@ -44,7 +44,7 @@ const Navbar: React.FC<NavbarProps> = ({
                         : 'linear-gradient(110deg, #0F2942 0%, #173F5F 68%, #1A5563 100%)',
             }}
         >
-            <Toolbar>
+            <Toolbar sx={{ minHeight: '64px !important', px: { xs: 2, sm: 3 } }}>
                 <IconButton
                     color="inherit"
                     onClick={onSidebarToggle}
@@ -59,7 +59,11 @@ const Navbar: React.FC<NavbarProps> = ({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{ flexGrow: 1, fontWeight: 750, letterSpacing: '-0.015em' }}
+                    >
                         SMART Oil Field Dashboard
                     </Typography>
                 </motion.div>
