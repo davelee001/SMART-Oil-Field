@@ -156,6 +156,7 @@ const Home: React.FC = () => {
                     background: 'linear-gradient(125deg, #0F2942 0%, #173F5F 58%, #1A5563 100%)',
                     color: '#ffffff',
                     borderRadius: 2,
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
                     p: { xs: 2, sm: 3 },
                     mb: 2,
                 }}
@@ -302,6 +303,8 @@ const Home: React.FC = () => {
                                 p: 1.5,
                                 textAlign: 'center',
                                 borderRadius: 1.5,
+                                border: '1px solid',
+                                borderColor: 'divider',
                                 borderTop: '3px solid #173F5F',
                             }}
                         >
@@ -455,7 +458,7 @@ const Home: React.FC = () => {
             {/* FAQ Accordion & Newsletter row */}
             <Grid container spacing={2}>
                 <Grid item xs={12} md={7}>
-                    <Paper elevation={1} sx={{ p: 1.5, borderRadius: 2 }}>
+                    <Paper elevation={1} sx={{ p: 1.5, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle2" fontWeight={800} color="primary" sx={{ mb: 1 }}>
                             Frequently Asked Questions
                         </Typography>
