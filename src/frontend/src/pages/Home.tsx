@@ -239,6 +239,12 @@ const Home: React.FC = () => {
                                         24h Vol: {item.volume}
                                     </Typography>
                                 </Box>
+                                <Typography
+                                    variant="caption"
+                                    sx={{ display: 'block', mt: 0.45, fontSize: '0.62rem', color: 'rgba(255,255,255,0.58)' }}
+                                >
+                                    Day range: {item.low} – {item.high}
+                                </Typography>
                             </Box>
                         </Grid>
                     ))}
