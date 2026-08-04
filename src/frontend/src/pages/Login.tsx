@@ -31,14 +31,20 @@ const Login: React.FC = () => {
             return;
         }
 
+        const displayName = tab === 'register' ? name.trim() : email.split('@')[0];
+
         storeUser({
-            name: tab === 'register' ? name.trim() : email.split('@')[0],
+            name: displayName,
             email: email.trim(),
             walletAddress: '',
         });
 
-        toast.success(tab === 'register' ? 'Account created — welcome!' : 'Logged in successfully');
-        navigate('/profile');
+        toast.success(
+            tab === 'register'
+                ? `Welcome to SMART Oil Field, ${displayName}!`
+                : `Welcome back, ${displayName}!`
+        );
+        navigate('/dashboard', { replace: true });
     };
 
     return (
