@@ -22,28 +22,33 @@ import {
     Person as PersonIcon,
     Subscriptions as SubscriptionsIcon,
     Receipt as ReceiptIcon,
+    Lock as LockIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { getStoredUser } from '../../utils/auth';
 
 interface SidebarProps {
     open: boolean;
 }
 
+const PUBLIC_PATHS = ['/'];
+
 const menuItems = [
-    { text: 'Home', icon: <HomeIcon />, path: '/' },
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
-    { text: 'Map View', icon: <MapIcon />, path: '/map' },
-    { text: 'Data Upload', icon: <UploadIcon />, path: '/upload' },
-    { text: 'Export Data', icon: <DownloadIcon />, path: '/export' },
-    { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
-    { text: 'Payment History', icon: <ReceiptIcon />, path: '/payment-history' },
-    { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+    { text: 'Home', icon: <HomeIcon />, path: '/', isPublic: true },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', isPublic: false },
+    { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics', isPublic: false },
+    { text: 'Map View', icon: <MapIcon />, path: '/map', isPublic: false },
+    { text: 'Data Upload', icon: <UploadIcon />, path: '/upload', isPublic: false },
+    { text: 'Export Data', icon: <DownloadIcon />, path: '/export', isPublic: false },
+    { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions', isPublic: false },
+    { text: 'Payment History', icon: <ReceiptIcon />, path: '/payment-history', isPublic: false },
+    { text: 'Profile', icon: <PersonIcon />, path: '/profile', isPublic: false },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings', isPublic: false },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ open }) => {
     const location = useLocation();
+    const user = getStoredUser();
 
     return (
         <Drawer
@@ -99,10 +104,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                                     },
                                 }}
                             >
-                                <ListItemIcon sx={{ color: 'primary.main' }}>
+                                <ListItemIcon sx={{ color: 'primary.main', minWidth: 36 }}>
                                     {item.icon}
                                 </ListItemIcon>
                                 <ListItemText primary={item.text} />
+                                {!item.isPublic && !user && (
+                                    <LockIcon sx={{ fontSize: 16, color: 'text.disabled', ml: 1 }} />
+                                )}
                             </ListItemButton>
                         </ListItem>
                     </motion.div>

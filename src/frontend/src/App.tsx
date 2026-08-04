@@ -12,6 +12,7 @@ import Subscriptions from './pages/Subscriptions';
 import PaymentHistory from './pages/PaymentHistory';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 const App: React.FC = () => {
     const [darkMode, setDarkMode] = useState(false);
@@ -58,12 +59,43 @@ const App: React.FC = () => {
                             style={{ width: '100%' }}
                         >
                             <Routes>
+                                {/* Public Landing Page */}
                                 <Route path="/" element={<Home />} />
-                                <Route path="/dashboard" element={<Dashboard />} />
                                 <Route path="/login" element={<Login />} />
-                                <Route path="/profile" element={<Profile />} />
-                                <Route path="/subscriptions" element={<Subscriptions />} />
-                                <Route path="/payment-history" element={<PaymentHistory />} />
+
+                                {/* Protected Application Pages */}
+                                <Route
+                                    path="/dashboard"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Dashboard />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/profile"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Profile />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/subscriptions"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Subscriptions />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/payment-history"
+                                    element={
+                                        <ProtectedRoute>
+                                            <PaymentHistory />
+                                        </ProtectedRoute>
+                                    }
+                                />
                             </Routes>
                         </motion.div>
                     </Box>
