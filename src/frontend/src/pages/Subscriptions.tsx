@@ -243,30 +243,3 @@ const Subscriptions: React.FC = () => {
 };
 
 export default Subscriptions;
-                                    per { plan.durationDays } days
-                                </Typography >
-    <Box sx={{ mt: 2 }}>
-        {plan.perks.map((perk) => (
-            <Chip key={perk} label={perk} size="small" sx={{ mr: 1, mb: 1 }} />
-        ))}
-    </Box>
-                            </CardContent >
-    <CardActions sx={{ p: 2 }}>
-        <Button
-            fullWidth
-            variant={activePlanId === plan.id ? 'outlined' : 'contained'}
-            disabled={activePlanId === plan.id}
-            onClick={() => handleSubscribe(plan)}
-        >
-            {activePlanId === plan.id ? 'Current Plan' : 'Subscribe'}
-        </Button>
-    </CardActions>
-                        </Card >
-                    </Grid >
-                ))}
-            </Grid >
-        </Container >
-    );
-};
-
-export default Subscriptions;
