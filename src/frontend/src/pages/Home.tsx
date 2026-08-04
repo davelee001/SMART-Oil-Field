@@ -189,10 +189,17 @@ const Home: React.FC = () => {
                         </Typography>
                     </Box>
                     <Chip
+                        role="status"
                         icon={<SparklesIcon sx={{ color: '#4CAF50 !important', fontSize: 14 }} />}
-                        label="Live Exchange Feed • Updated Every 30s"
+                        label="Market Feed Online • 30s Refresh"
                         size="small"
-                        sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#ffffff', height: 22, fontSize: '0.7rem' }}
+                        sx={{
+                            backgroundColor: 'rgba(76, 175, 80, 0.14)',
+                            border: '1px solid rgba(76, 175, 80, 0.35)',
+                            color: '#ffffff',
+                            height: 22,
+                            fontSize: '0.7rem',
+                        }}
                     />
                 </Box>
 
