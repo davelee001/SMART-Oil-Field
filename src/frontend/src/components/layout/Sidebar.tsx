@@ -12,6 +12,7 @@ import {
     Divider,
 } from '@mui/material';
 import {
+    Home as HomeIcon,
     Dashboard as DashboardIcon,
     Analytics as AnalyticsIcon,
     Map as MapIcon,
@@ -29,7 +30,8 @@ interface SidebarProps {
 }
 
 const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+    { text: 'Home', icon: <HomeIcon />, path: '/' },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
     { text: 'Map View', icon: <MapIcon />, path: '/map' },
     { text: 'Data Upload', icon: <UploadIcon />, path: '/upload' },

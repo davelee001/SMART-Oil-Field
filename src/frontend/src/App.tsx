@@ -4,6 +4,7 @@ import { Box, ThemeProvider } from '@mui/material';
 import { motion } from 'framer-motion';
 
 import { lightTheme, darkTheme } from './themes/theme';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
@@ -56,7 +57,8 @@ const App: React.FC = () => {
                             transition={{ duration: 0.5 }}
                         >
                             <Routes>
-                                <Route path="/" element={<Dashboard />} />
+                                <Route path="/" element={<Home />} />
+                                <Route path="/dashboard" element={<Dashboard />} />
                                 <Route path="/login" element={<Login />} />
                                 <Route path="/profile" element={<Profile />} />
                                 <Route path="/subscriptions" element={<Subscriptions />} />
