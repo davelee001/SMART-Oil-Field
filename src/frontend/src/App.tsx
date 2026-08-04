@@ -43,18 +43,19 @@ const App: React.FC = () => {
                         component="main"
                         sx={{
                             flexGrow: 1,
-                            p: 3,
+                            minWidth: 0,
+                            width: '100%',
+                            p: { xs: 1.5, sm: 2, lg: 3 },
                             marginTop: '64px',
-                            marginLeft: sidebarOpen ? '280px' : '0px',
-                            transition: 'margin-left 0.3s ease',
                             backgroundColor: theme.palette.background.default,
-                            minHeight: '100vh',
+                            minHeight: 'calc(100vh - 64px)',
                         }}
                     >
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
+                            style={{ width: '100%' }}
                         >
                             <Routes>
                                 <Route path="/" element={<Home />} />
