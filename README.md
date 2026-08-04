@@ -196,6 +196,20 @@ This project integrates multiple technologies:
 
 **Sync Status**: **Fully synced** - All frontend endpoints supported by both backends
 
+## Recent Updates (v0.8.0)
+
+### Public Website, Design System & Layout Optimization
+
+**Public Landing Page (`/`)**:
+- Created a dedicated public website (`Home.tsx`) introducing the SMART Oil Field project to visitors and operators
+- High-impact Hero section with live operations snapshot card, core capabilities grid, architecture stack breakdown, pricing plan teasers, FAQ accordion, and newsletter subscription form
+- Integrated router update in `App.tsx` placing public landing page at `/` and moving operational dashboard to `/dashboard`
+
+**Design System & UI/UX Refinements**:
+- **Theme & Colors**: Established industrial color palette (`#0f2027` ➔ `#203a43` gradients, primary `#1e3c72`) with dark top Navbar and clear active Sidebar navigation states
+- **Accessibility**: Added focus-visible keyboard rings and high-contrast text ratios across Material-UI components
+- **Compact Layouts**: Optimized padding, typography scale, and card heights so content fits comfortably across standard screens without excessive vertical scrolling
+
 ## Recent Updates (v0.7.0)
 
 ### Frontend: Account, Subscriptions & Dashboard Interactivity
