@@ -40,8 +40,8 @@ const Navbar: React.FC<NavbarProps> = ({
                 zIndex: (theme) => theme.zIndex.drawer + 1,
                 background: (theme) =>
                     darkMode
-                        ? 'linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%)'
-                        : 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                        ? 'linear-gradient(110deg, #0B1720 0%, #142B39 100%)'
+                        : 'linear-gradient(110deg, #0F2942 0%, #173F5F 68%, #1A5563 100%)',
             }}
         >
             <Toolbar>
