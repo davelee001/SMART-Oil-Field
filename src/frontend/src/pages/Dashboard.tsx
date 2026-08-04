@@ -36,6 +36,7 @@ import * as XLSX from 'xlsx';
 import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
 import LoadingCard from '../components/common/LoadingCard';
+import { getStoredUser } from '../utils/auth';
 
 interface OilWellRow {
     id: string;
@@ -63,10 +64,13 @@ const ALL_WELLS: OilWellRow[] = [
 type QuickFilter = 'all' | 'active' | 'warning' | '24h';
 
 const Dashboard: React.FC = () => {
+    const user = getStoredUser();
     const [searchTerm, setSearchTerm] = useState('');
     const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
     const [loading, setLoading] = useState(false);
     const hasSearch = searchTerm.trim().length > 0;
+    const rawDisplayName = user?.name?.trim() || 'Operator';
+    const displayName = rawDisplayName.charAt(0).toUpperCase() + rawDisplayName.slice(1);
 
     const filteredWells = useMemo(() => {
         const term = searchTerm.trim().toLowerCase();
@@ -208,13 +212,33 @@ const Dashboard: React.FC = () => {
             >
                 {/* Header */}
                 <motion.div variants={cardVariants}>
-                    <Box sx={{ mb: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                    <Box
+                        sx={{
+                            mb: 2.5,
+                            p: { xs: 2, sm: 2.5 },
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: { xs: 'flex-start', sm: 'center' },
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            flexWrap: 'wrap',
+                            gap: 2,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderLeft: '4px solid',
+                            borderLeftColor: 'secondary.main',
+                            borderRadius: 1,
+                            background: (theme) =>
+                                theme.palette.mode === 'dark'
+                                    ? 'linear-gradient(110deg, rgba(23, 63, 95, 0.55), rgba(20, 125, 130, 0.16))'
+                                    : 'linear-gradient(110deg, #FFFFFF 0%, #EDF6F6 100%)',
+                        }}
+                    >
                         <Box>
                             <Typography variant="h4" color="primary" fontWeight={800} gutterBottom sx={{ mb: 0.5 }}>
-                                Operational Telemetry & Analytics
+                                Welcome back, {displayName}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Live IoT sensor feeds, spatial map distributions, and AI anomaly tracking.
+                                Here is your live oil field operations overview.
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 1 }}>
