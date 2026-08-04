@@ -143,507 +143,399 @@ const Home: React.FC = () => {
             toast.error('Please enter a valid email address.');
             return;
         }
-        toast.success('Thank you! We will reach out with early access details.');
+        toast.success('Thank you! Early access details sent.');
         setContactEmail('');
     };
 
     return (
-        <Box sx={{ width: '100%', overflowX: 'hidden' }}>
+        <Box sx={{ width: '100%', maxWidth: '1400px', mx: 'auto', p: { xs: 1, sm: 2 } }}>
             {/* Hero Section */}
             <Paper
                 elevation={0}
                 sx={{
                     background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
                     color: '#ffffff',
-                    borderRadius: 3,
-                    p: { xs: 4, md: 8 },
-                    mb: 6,
-                    position: 'relative',
-                    overflow: 'hidden',
+                    borderRadius: 2,
+                    p: { xs: 2, sm: 3 },
+                    mb: 2,
                 }}
             >
-                <Container maxWidth="lg">
-                    <Grid container spacing={4} alignItems="center">
-                        <Grid item xs={12} md={7}>
-                            <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6 }}
+                <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={7}>
+                        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+                            <Chip
+                                icon={<SparklesIcon sx={{ color: '#ffd700 !important', fontSize: 16 }} />}
+                                label="Next-Gen Energy Tech • Aptos Powered"
+                                size="small"
+                                sx={{
+                                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                    color: '#ffffff',
+                                    fontWeight: 600,
+                                    mb: 1,
+                                }}
+                            />
+                            <Typography
+                                variant="h4"
+                                component="h1"
+                                sx={{
+                                    fontWeight: 800,
+                                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.3rem' },
+                                    lineHeight: 1.25,
+                                    mb: 1,
+                                }}
                             >
-                                <Chip
-                                    icon={<SparklesIcon sx={{ color: '#ffd700 !important' }} />}
-                                    label="Next-Gen Energy Tech • Aptos Powered"
+                                Real-Time Telemetry meets <span style={{ color: '#64b5f6' }}>Blockchain Trust</span>
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: 'rgba(255, 255, 255, 0.85)',
+                                    mb: 2,
+                                    fontSize: '0.9rem',
+                                }}
+                            >
+                                Monitor oil wells, automate predictive maintenance with AI, and verify movement provenance on Aptos Move smart contracts.
+                            </Typography>
+
+                            <Stack direction="row" spacing={1.5}>
+                                <Button
+                                    variant="contained"
+                                    size="medium"
+                                    component={Link}
+                                    to="/dashboard"
+                                    endIcon={<ArrowForwardIcon />}
                                     sx={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                        backgroundColor: '#1e3c72',
+                                        '&:hover': { backgroundColor: '#2a5298' },
+                                        fontWeight: 700,
+                                        borderRadius: 1.5,
+                                        px: 2.5,
+                                    }}
+                                >
+                                    Dashboard
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    size="medium"
+                                    component={Link}
+                                    to="/subscriptions"
+                                    startIcon={<DemoIcon />}
+                                    sx={{
                                         color: '#ffffff',
+                                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                                        '&:hover': {
+                                            borderColor: '#ffffff',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        },
                                         fontWeight: 600,
-                                        mb: 2,
-                                        backdropFilter: 'blur(10px)',
-                                    }}
-                                />
-                                <Typography
-                                    variant="h2"
-                                    component="h1"
-                                    sx={{
-                                        fontWeight: 800,
-                                        fontSize: { xs: '2.2rem', md: '3.4rem' },
-                                        lineHeight: 1.2,
-                                        mb: 2,
+                                        borderRadius: 1.5,
+                                        px: 2,
                                     }}
                                 >
-                                    Real-Time Telemetry meets <span style={{ color: '#64b5f6' }}>Blockchain Trust</span>
-                                </Typography>
-                                <Typography
-                                    variant="h6"
-                                    sx={{
-                                        color: 'rgba(255, 255, 255, 0.85)',
-                                        fontWeight: 400,
-                                        mb: 4,
-                                        fontSize: { xs: '1rem', md: '1.2rem' },
-                                    }}
-                                >
-                                    Monitor oil wells, automate predictive maintenance with AI, and verify movement provenance on Aptos Move smart contracts — all in one unified platform.
-                                </Typography>
-
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                    <Button
-                                        variant="contained"
-                                        size="large"
-                                        component={Link}
-                                        to="/"
-                                        endIcon={<ArrowForwardIcon />}
-                                        sx={{
-                                            backgroundColor: '#1e3c72',
-                                            '&:hover': { backgroundColor: '#2a5298' },
-                                            px: 4,
-                                            py: 1.5,
-                                            fontWeight: 700,
-                                            borderRadius: 2,
-                                        }}
-                                    >
-                                        Launch Dashboard
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        size="large"
-                                        component={Link}
-                                        to="/subscriptions"
-                                        startIcon={<DemoIcon />}
-                                        sx={{
-                                            color: '#ffffff',
-                                            borderColor: 'rgba(255, 255, 255, 0.5)',
-                                            '&:hover': {
-                                                borderColor: '#ffffff',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                            },
-                                            px: 3,
-                                            py: 1.5,
-                                            fontWeight: 600,
-                                            borderRadius: 2,
-                                        }}
-                                    >
-                                        View Pricing & Plans
-                                    </Button>
-                                </Stack>
-                            </motion.div>
-                        </Grid>
-
-                        <Grid item xs={12} md={5}>
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.6, delay: 0.2 }}
-                            >
-                                <Paper
-                                    elevation={8}
-                                    sx={{
-                                        p: 3,
-                                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                                        backdropFilter: 'blur(12px)',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        borderRadius: 3,
-                                        color: '#ffffff',
-                                    }}
-                                >
-                                    <Typography variant="subtitle2" sx={{ opacity: 0.8, textTransform: 'uppercase', tracking: 1, mb: 1 }}>
-                                        Live Operations Snapshot
-                                    </Typography>
-                                    <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', mb: 2 }} />
-
-                                    <Stack spacing={2}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Typography variant="body2">Active Wells</Typography>
-                                            <Chip label="5 / 6 Active" color="success" size="small" />
-                                        </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Typography variant="body2">Total Production</Typography>
-                                            <Typography variant="body1" fontWeight={700}>8,770 bbl/d</Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Typography variant="body2">Aptos Network Status</Typography>
-                                            <Chip label="Testnet Synced" color="info" size="small" />
-                                        </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Typography variant="body2">AI Health Score</Typography>
-                                            <Typography variant="body1" fontWeight={700} color="#81c784">98.4% Normal</Typography>
-                                        </Box>
-                                    </Stack>
-
-                                    <Button
-                                        fullWidth
-                                        variant="contained"
-                                        size="medium"
-                                        onClick={() => navigate('/')}
-                                        sx={{ mt: 3, backgroundColor: 'rgba(255, 255, 255, 0.2)', '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' } }}
-                                    >
-                                        Explore Interactive Map & Well Data
-                                    </Button>
-                                </Paper>
-                            </motion.div>
-                        </Grid>
+                                    Pricing
+                                </Button>
+                            </Stack>
+                        </motion.div>
                     </Grid>
-                </Container>
+
+                    <Grid item xs={12} md={5}>
+                        <Paper
+                            elevation={4}
+                            sx={{
+                                p: 2,
+                                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: 2,
+                                color: '#ffffff',
+                            }}
+                        >
+                            <Typography variant="caption" sx={{ opacity: 0.8, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>
+                                Live Operations Snapshot
+                            </Typography>
+                            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', my: 1 }} />
+
+                            <Grid container spacing={1}>
+                                <Grid item xs={6}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Active Wells</Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.3 }}>
+                                        <Chip label="5 / 6 Active" color="success" size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Total Production</Typography>
+                                    <Typography variant="body2" fontWeight={700}>8,770 bbl/d</Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Aptos Network</Typography>
+                                    <Box sx={{ mt: 0.3 }}>
+                                        <Chip label="Testnet Synced" color="info" size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">AI Health Score</Typography>
+                                    <Typography variant="body2" fontWeight={700} color="#81c784">98.4% Normal</Typography>
+                                </Grid>
+                            </Grid>
+
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                size="small"
+                                onClick={() => navigate('/dashboard')}
+                                sx={{ mt: 1.5, backgroundColor: 'rgba(255, 255, 255, 0.2)', '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' }, textTransform: 'none', py: 0.5 }}
+                            >
+                                Open Live Well Details Table
+                            </Button>
+                        </Paper>
+                    </Grid>
+                </Grid>
             </Paper>
 
-            {/* Key Metrics Banner */}
-            <Container maxWidth="lg" sx={{ mb: 8 }}>
-                <Grid container spacing={3}>
-                    {METRICS.map((metric, idx) => (
-                        <Grid item xs={6} md={3} key={metric.label}>
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                            >
-                                <Paper
-                                    elevation={1}
-                                    sx={{
-                                        p: 3,
-                                        textAlign: 'center',
-                                        borderRadius: 2,
-                                        borderTop: '4px solid #1e3c72',
-                                    }}
-                                >
-                                    <Typography variant="h4" color="primary" fontWeight={800}>
-                                        {metric.value}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                        {metric.label}
-                                    </Typography>
-                                </Paper>
-                            </motion.div>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Container>
+            {/* Key Metrics Row */}
+            <Grid container spacing={1.5} sx={{ mb: 2 }}>
+                {METRICS.map((metric) => (
+                    <Grid item xs={6} sm={3} key={metric.label}>
+                        <Paper
+                            elevation={1}
+                            sx={{
+                                p: 1.5,
+                                textAlign: 'center',
+                                borderRadius: 1.5,
+                                borderTop: '3px solid #1e3c72',
+                            }}
+                        >
+                            <Typography variant="h6" color="primary" fontWeight={800} sx={{ lineHeight: 1.2 }}>
+                                {metric.value}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                {metric.label}
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                ))}
+            </Grid>
 
             {/* Core Features Grid */}
-            <Container maxWidth="lg" sx={{ mb: 8 }}>
-                <Box textAlign="center" sx={{ mb: 5 }}>
-                    <Typography variant="overline" color="primary" fontWeight={700} letterSpacing={1.5}>
-                        Capabilities Overview
-                    </Typography>
-                    <Typography variant="h4" fontWeight={800} sx={{ mt: 0.5 }}>
-                        Built for Operators, Engineers & Stakeholders
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 680, mx: 'auto', mt: 1 }}>
-                        From SCADA IoT sensors to Aptos Move smart contracts, our stack covers every layer of modern energy field management.
-                    </Typography>
-                </Box>
-
-                <Grid container spacing={4}>
-                    {FEATURES.map((feat, idx) => (
+            <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1, textAlign: 'center', color: '#1e3c72' }}>
+                    Core Capabilities
+                </Typography>
+                <Grid container spacing={1.5}>
+                    {FEATURES.map((feat) => (
                         <Grid item xs={12} sm={6} md={4} key={feat.title}>
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                                style={{ height: '100%' }}
-                            >
-                                <Card
-                                    elevation={2}
-                                    sx={{
-                                        height: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        borderRadius: 3,
-                                        transition: 'transform 0.2s, box-shadow 0.2s',
-                                        '&:hover': {
-                                            transform: 'translateY(-6px)',
-                                            boxShadow: 6,
-                                        },
-                                    }}
-                                >
-                                    <CardContent sx={{ p: 3, flexGrow: 1 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                            {feat.icon}
-                                            <Chip label={feat.chip} size="small" variant="outlined" color="primary" />
-                                        </Box>
-                                        <Typography variant="h6" fontWeight={700} gutterBottom>
-                                            {feat.title}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {feat.description}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Container>
-
-            {/* Architecture Preview Section */}
-            <Paper sx={{ backgroundColor: '#f8f9fa', py: 8, mb: 8 }}>
-                <Container maxWidth="lg">
-                    <Grid container spacing={4} alignItems="center">
-                        <Grid item xs={12} md={6}>
-                            <Typography variant="overline" color="primary" fontWeight={700} letterSpacing={1.5}>
-                                Full-Stack Synergy
-                            </Typography>
-                            <Typography variant="h4" fontWeight={800} sx={{ mt: 0.5, mb: 2 }}>
-                                How the SMART Oil Field Engine Works
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" paragraph>
-                                Sensor telemetry flows into our high-speed ingestion gateway (Python FastAPI & Express/TypeScript). Real-time streams are cached in Redis and dispatched through RabbitMQ to machine learning pipelines for instant anomaly scoring.
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" paragraph>
-                                Critical custody events and subscription rights are simultaneously committed to Move modules deployed on Aptos, giving operators tamper-proof auditability.
-                            </Typography>
-
-                            <Stack spacing={1.5} sx={{ mt: 3 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <CheckIcon color="success" />
-                                    <Typography variant="body2" fontWeight={600}>REST, GraphQL & WebSocket API Gateway</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <CheckIcon color="success" />
-                                    <Typography variant="body2" fontWeight={600}>Move Smart Contracts on Aptos Blockchain</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <CheckIcon color="success" />
-                                    <Typography variant="body2" fontWeight={600}>Scikit-Learn & PyTorch ML Anomaly Engines</Typography>
-                                </Box>
-                            </Stack>
-                        </Grid>
-
-                        <Grid item xs={12} md={6}>
-                            <Paper
-                                elevation={4}
-                                sx={{
-                                    p: 3,
-                                    borderRadius: 3,
-                                    backgroundColor: '#0f2027',
-                                    color: '#ffffff',
-                                    fontFamily: 'monospace',
-                                }}
-                            >
-                                <Typography variant="caption" color="primary.light" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                                    Architecture Stack
-                                </Typography>
-                                <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', my: 1.5 }} />
-
-                                <Box sx={{ fontSize: '0.85rem', lineHeight: 1.8 }}>
-                                    <Typography component="div" color="#81c784">[Frontend]</Typography>
-                                    <Typography component="div" sx={{ pl: 2, color: 'rgba(255,255,255,0.7)' }}>
-                                        React 18 • TypeScript • MUI 5 • Webpack 5
-                                    </Typography>
-
-                                    <Typography component="div" color="#64b5f6" sx={{ mt: 1 }}>[Ingestion & Gateway]</Typography>
-                                    <Typography component="div" sx={{ pl: 2, color: 'rgba(255,255,255,0.7)' }}>
-                                        Python FastAPI • Node.js TS Backend • Redis • RabbitMQ
-                                    </Typography>
-
-                                    <Typography component="div" color="#ffd54f" sx={{ mt: 1 }}>[Blockchain Layer]</Typography>
-                                    <Typography component="div" sx={{ pl: 2, color: 'rgba(255,255,255,0.7)' }}>
-                                        Aptos Move Contracts • `oil_tracker` • `subscriptions`
-                                    </Typography>
-
-                                    <Typography component="div" color="#ff8a65" sx={{ mt: 1 }}>[Data Science Suite]</Typography>
-                                    <Typography component="div" sx={{ pl: 2, color: 'rgba(255,255,255,0.7)' }}>
-                                        ETL Pipelines • ML Anomaly Models • Stream Processors
-                                    </Typography>
-                                </Box>
-                            </Paper>
-                        </Grid>
-                    </Grid>
-                </Container>
-            </Paper>
-
-            {/* Pricing Section Teaser */}
-            <Container maxWidth="lg" sx={{ mb: 8 }}>
-                <Box textAlign="center" sx={{ mb: 5 }}>
-                    <Typography variant="overline" color="primary" fontWeight={700} letterSpacing={1.5}>
-                        Transparent Subscription
-                    </Typography>
-                    <Typography variant="h4" fontWeight={800} sx={{ mt: 0.5 }}>
-                        Flexible Plans Payable in APT Token
-                    </Typography>
-                </Box>
-
-                <Grid container spacing={4}>
-                    {PLANS.map((plan) => (
-                        <Grid item xs={12} md={4} key={plan.name}>
                             <Card
-                                elevation={plan.highlighted ? 8 : 2}
+                                elevation={1}
                                 sx={{
-                                    borderRadius: 3,
-                                    position: 'relative',
-                                    border: plan.highlighted ? '2px solid #1e3c72' : '1px solid #e0e0e0',
                                     height: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column',
+                                    borderRadius: 1.5,
+                                    border: '1px solid #e0e0e0',
                                 }}
                             >
-                                {plan.badge && (
-                                    <Chip
-                                        label={plan.badge}
-                                        color="primary"
-                                        size="small"
-                                        sx={{
-                                            position: 'absolute',
-                                            top: 16,
-                                            right: 16,
-                                            fontWeight: 700,
-                                        }}
-                                    />
-                                )}
-                                <CardContent sx={{ p: 4, flexGrow: 1 }}>
-                                    <Typography variant="h6" fontWeight={700}>
-                                        {plan.name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ minHeight: 40, mt: 1 }}>
-                                        {plan.description}
-                                    </Typography>
-
-                                    <Box sx={{ my: 3, display: 'flex', alignItems: 'baseline' }}>
-                                        <Typography variant="h3" fontWeight={800} color="primary">
-                                            {plan.price}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                                            {plan.period}
-                                        </Typography>
+                                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                        {feat.icon}
+                                        <Chip label={feat.chip} size="small" color="primary" variant="outlined" sx={{ height: 18, fontSize: '0.65rem' }} />
                                     </Box>
-
-                                    <Divider sx={{ mb: 3 }} />
-
-                                    <Stack spacing={1.5}>
-                                        {plan.features.map((feat) => (
-                                            <Box key={feat} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <CheckIcon color="success" fontSize="small" />
-                                                <Typography variant="body2">{feat}</Typography>
-                                            </Box>
-                                        ))}
-                                    </Stack>
+                                    <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
+                                        {feat.title}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.3, lineHeight: 1.3 }}>
+                                        {feat.description}
+                                    </Typography>
                                 </CardContent>
-
-                                <Box sx={{ p: 3, pt: 0 }}>
-                                    <Button
-                                        fullWidth
-                                        variant={plan.highlighted ? 'contained' : 'outlined'}
-                                        color="primary"
-                                        component={Link}
-                                        to="/subscriptions"
-                                        sx={{ py: 1.2, fontWeight: 700, borderRadius: 2 }}
-                                    >
-                                        Select Plan
-                                    </Button>
-                                </Box>
                             </Card>
                         </Grid>
                     ))}
                 </Grid>
-            </Container>
+            </Box>
 
-            {/* FAQ Accordion */}
-            <Container maxWidth="md" sx={{ mb: 8 }}>
-                <Box textAlign="center" sx={{ mb: 4 }}>
-                    <Typography variant="overline" color="primary" fontWeight={700} letterSpacing={1.5}>
-                        Questions & Answers
-                    </Typography>
-                    <Typography variant="h4" fontWeight={800} sx={{ mt: 0.5 }}>
-                        Frequently Asked Questions
-                    </Typography>
-                </Box>
-
-                <Stack spacing={2}>
-                    {FAQS.map((faq) => (
-                        <Accordion key={faq.q} sx={{ borderRadius: 2, '&:before': { display: 'none' }, boxShadow: 1 }}>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                <Typography fontWeight={700}>{faq.q}</Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                                <Typography variant="body2" color="text.secondary">
-                                    {faq.a}
-                                </Typography>
-                            </AccordionDetails>
-                        </Accordion>
-                    ))}
-                </Stack>
-            </Container>
-
-            {/* Stay Connected / Newsletter */}
-            <Paper
-                elevation={0}
-                sx={{
-                    backgroundColor: '#1e3c72',
-                    color: '#ffffff',
-                    borderRadius: 3,
-                    p: { xs: 4, md: 6 },
-                    textAlign: 'center',
-                }}
-            >
-                <Container maxWidth="sm">
-                    <Typography variant="h4" fontWeight={800} gutterBottom>
-                        Stay Updated on SMART Oil Field Releases
-                    </Typography>
-                    <Typography variant="body1" sx={{ opacity: 0.85, mb: 4 }}>
-                        Get monthly updates on new Move smart contract deployments, ML anomaly algorithms, and dashboard feature drops.
-                    </Typography>
-
-                    <form onSubmit={handleNewsletterSubmit}>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                placeholder="Enter your work email..."
-                                value={contactEmail}
-                                onChange={(e) => setContactEmail(e.target.value)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <EmailIcon sx={{ color: '#ffffff' }} />
-                                        </InputAdornment>
-                                    ),
-                                    sx: {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                                        color: '#ffffff',
-                                        borderRadius: 2,
-                                        '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                                        '&:hover fieldset': { borderColor: '#ffffff' },
-                                    },
-                                }}
-                            />
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                size="large"
-                                sx={{
-                                    backgroundColor: '#ffffff',
-                                    color: '#1e3c72',
-                                    fontWeight: 700,
-                                    whiteSpace: 'nowrap',
-                                    px: 4,
-                                    '&:hover': { backgroundColor: '#f0f0f0' },
-                                    borderRadius: 2,
-                                }}
-                            >
-                                Subscribe
-                            </Button>
+            {/* Compact Architecture + Pricing split section */}
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+                {/* Architecture Column */}
+                <Grid item xs={12} md={6}>
+                    <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%', border: '1px solid #e0e0e0' }}>
+                        <Typography variant="subtitle1" fontWeight={800} color="primary" gutterBottom>
+                            System Architecture
+                        </Typography>
+                        <Stack spacing={1} sx={{ mb: 1.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <CheckIcon color="success" sx={{ fontSize: 18 }} />
+                                <Typography variant="caption" fontWeight={600}>REST, GraphQL & WebSocket Gateway</Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <CheckIcon color="success" sx={{ fontSize: 18 }} />
+                                <Typography variant="caption" fontWeight={600}>Move Smart Contracts on Aptos Blockchain</Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <CheckIcon color="success" sx={{ fontSize: 18 }} />
+                                <Typography variant="caption" fontWeight={600}>Scikit-Learn ML Anomaly Pipelines</Typography>
+                            </Box>
                         </Stack>
-                    </form>
-                </Container>
-            </Paper>
+
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 1.5,
+                                backgroundColor: '#0f2027',
+                                color: '#ffffff',
+                                fontFamily: 'monospace',
+                                fontSize: '0.75rem',
+                                lineHeight: 1.6,
+                            }}
+                        >
+                            <Typography component="div" color="#81c784">[Frontend] React 18 • TypeScript • MUI 5</Typography>
+                            <Typography component="div" color="#64b5f6">[Gateway] Python FastAPI • TS • Redis • RabbitMQ</Typography>
+                            <Typography component="div" color="#ffd54f">[Move Chain] `oil_tracker` & `subscriptions`</Typography>
+                        </Paper>
+                    </Paper>
+                </Grid>
+
+                {/* Pricing Column */}
+                <Grid item xs={12} md={6}>
+                    <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%', border: '1px solid #e0e0e0' }}>
+                        <Typography variant="subtitle1" fontWeight={800} color="primary" gutterBottom>
+                            Plans & Subscriptions
+                        </Typography>
+                        <Grid container spacing={1}>
+                            {PLANS.map((plan) => (
+                                <Grid item xs={4} key={plan.name}>
+                                    <Card
+                                        elevation={0}
+                                        sx={{
+                                            p: 1,
+                                            border: plan.highlighted ? '2px solid #1e3c72' : '1px solid #e0e0e0',
+                                            borderRadius: 1.5,
+                                            height: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justify: 'space-between',
+                                            textAlign: 'center',
+                                        }}
+                                    >
+                                        <Box>
+                                            <Typography variant="caption" fontWeight={700} sx={{ display: 'block', fontSize: '0.75rem' }}>
+                                                {plan.name}
+                                            </Typography>
+                                            <Typography variant="body2" fontWeight={800} color="primary" sx={{ my: 0.5 }}>
+                                                {plan.price}
+                                            </Typography>
+                                        </Box>
+                                        <Button
+                                            size="small"
+                                            variant={plan.highlighted ? 'contained' : 'outlined'}
+                                            component={Link}
+                                            to="/subscriptions"
+                                            sx={{ fontSize: '0.65rem', py: 0.2, minWidth: 0 }}
+                                        >
+                                            Select
+                                        </Button>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+                        <Button
+                            fullWidth
+                            variant="text"
+                            size="small"
+                            component={Link}
+                            to="/subscriptions"
+                            endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                            sx={{ mt: 1.5, textTransform: 'none', fontWeight: 600, fontSize: '0.8rem' }}
+                        >
+                            Compare full plan perks & redeem discount codes
+                        </Button>
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            {/* FAQ Accordion & Newsletter row */}
+            <Grid container spacing={2}>
+                <Grid item xs={12} md={7}>
+                    <Paper elevation={1} sx={{ p: 1.5, borderRadius: 2 }}>
+                        <Typography variant="subtitle2" fontWeight={800} color="primary" sx={{ mb: 1 }}>
+                            Frequently Asked Questions
+                        </Typography>
+                        <Stack spacing={0.5}>
+                            {FAQS.map((faq) => (
+                                <Accordion key={faq.q} elevation={0} sx={{ border: '1px solid #eee', '&:before': { display: 'none' } }}>
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />} sx={{ minHeight: 36, py: 0 }}>
+                                        <Typography variant="caption" fontWeight={700}>{faq.q}</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails sx={{ py: 0.5 }}>
+                                        <Typography variant="caption" color="text.secondary">{faq.a}</Typography>
+                                    </AccordionDetails>
+                                </Accordion>
+                            ))}
+                        </Stack>
+                    </Paper>
+                </Grid>
+
+                <Grid item xs={12} md={5}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            backgroundColor: '#1e3c72',
+                            color: '#ffffff',
+                            borderRadius: 2,
+                            p: 2,
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justify: 'center',
+                        }}
+                    >
+                        <Typography variant="subtitle2" fontWeight={800} gutterBottom>
+                            Stay Updated
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.85, mb: 1.5, display: 'block' }}>
+                            Get updates on new Move smart contract deployments and ML anomaly models.
+                        </Typography>
+
+                        <form onSubmit={handleNewsletterSubmit}>
+                            <Stack spacing={1}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    variant="outlined"
+                                    placeholder="Enter work email..."
+                                    value={contactEmail}
+                                    onChange={(e) => setContactEmail(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <EmailIcon sx={{ color: '#ffffff', fontSize: 16 }} />
+                                            </InputAdornment>
+                                        ),
+                                        sx: {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                            color: '#ffffff',
+                                            borderRadius: 1,
+                                            fontSize: '0.8rem',
+                                            '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
+                                        },
+                                    }}
+                                />
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    size="small"
+                                    sx={{
+                                        backgroundColor: '#ffffff',
+                                        color: '#1e3c72',
+                                        fontWeight: 700,
+                                        '&:hover': { backgroundColor: '#f0f0f0' },
+                                        borderRadius: 1,
+                                    }}
+                                >
+                                    Subscribe
+                                </Button>
+                            </Stack>
+                        </form>
+                    </Paper>
+                </Grid>
+            </Grid>
         </Box>
     );
 };
