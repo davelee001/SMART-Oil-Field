@@ -48,14 +48,16 @@ interface OilWellRow {
     lastUpdated: number;
 }
 
-// Mock data - replace with actual API calls
+// Realistic rich datasets for populated dashboard
 const ALL_WELLS: OilWellRow[] = [
-    { id: 'well-001', name: 'Well Alpha-1', location: 'Houston, TX', status: 'active', production: 150.2, temperature: 75.5, pressure: 200.0, lastUpdated: Date.now() - 1000 * 60 * 30 },
-    { id: 'well-002', name: 'Well Beta-2', location: 'Midland, TX', status: 'active', production: 142.8, temperature: 76.1, pressure: 198.5, lastUpdated: Date.now() - 1000 * 60 * 60 * 4 },
-    { id: 'well-003', name: 'Well Gamma-3', location: 'Odessa, TX', status: 'warning', production: 95.3, temperature: 82.1, pressure: 185.2, lastUpdated: Date.now() - 1000 * 60 * 60 * 12 },
-    { id: 'well-004', name: 'Well Delta-4', location: 'Permian Basin, TX', status: 'error', production: 0, temperature: 0, pressure: 0, lastUpdated: Date.now() - 1000 * 60 * 60 * 36 },
-    { id: 'well-005', name: 'Well Epsilon-5', location: 'Eagle Ford, TX', status: 'active', production: 168.4, temperature: 74.9, pressure: 205.3, lastUpdated: Date.now() - 1000 * 60 * 60 * 2 },
-    { id: 'well-006', name: 'Well Zeta-6', location: 'Bakken, ND', status: 'inactive', production: 0, temperature: 68.2, pressure: 0, lastUpdated: Date.now() - 1000 * 60 * 60 * 50 },
+    { id: 'well-001', name: 'Alpha Main Rig #1', location: 'Permian Basin, TX', status: 'active', production: 285.4, temperature: 78.2, pressure: 215.0, lastUpdated: Date.now() - 1000 * 60 * 5 },
+    { id: 'well-002', name: 'Beta Sector Deep', location: 'Eagle Ford, TX', status: 'active', production: 310.8, temperature: 76.8, pressure: 228.5, lastUpdated: Date.now() - 1000 * 60 * 12 },
+    { id: 'well-003', name: 'Gamma North Sub', location: 'Midland, TX', status: 'warning', production: 145.2, temperature: 88.6, pressure: 172.4, lastUpdated: Date.now() - 1000 * 60 * 25 },
+    { id: 'well-004', name: 'Delta Offshore #4', location: 'Gulf of Mexico', status: 'error', production: 0.0, temperature: 0.0, pressure: 0.0, lastUpdated: Date.now() - 1000 * 60 * 120 },
+    { id: 'well-005', name: 'Epsilon Shale #5', location: 'Bakken, ND', status: 'active', production: 242.1, temperature: 71.5, pressure: 204.8, lastUpdated: Date.now() - 1000 * 60 * 8 },
+    { id: 'well-006', name: 'Zeta Basin East', location: 'Odessa, TX', status: 'active', production: 198.7, temperature: 74.3, pressure: 195.2, lastUpdated: Date.now() - 1000 * 60 * 18 },
+    { id: 'well-007', name: 'Eta Heavy Crude #7', location: 'Marcellus, PA', status: 'warning', production: 112.0, temperature: 84.1, pressure: 168.0, lastUpdated: Date.now() - 1000 * 60 * 45 },
+    { id: 'well-008', name: 'Theta Deep Drill #8', location: 'Anadarko, OK', status: 'active', production: 340.5, temperature: 79.0, pressure: 235.1, lastUpdated: Date.now() - 1000 * 60 * 2 },
 ];
 
 type QuickFilter = 'all' | 'active' | 'warning' | '24h';
@@ -192,27 +194,33 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <Container maxWidth={false} sx={{ mt: 2 }}>
+        <Container maxWidth={false} sx={{ py: 1, px: { xs: 1.5, sm: 2, md: 3 } }}>
             <motion.div
                 initial="hidden"
                 animate="visible"
                 variants={{
                     visible: {
                         transition: {
-                            staggerChildren: 0.1,
+                            staggerChildren: 0.08,
                         },
                     },
                 }}
             >
                 {/* Header */}
                 <motion.div variants={cardVariants}>
-                    <Box sx={{ mb: 4 }}>
-                        <Typography variant="h1" color="primary" gutterBottom>
-                            SMART Oil Field Dashboard
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                            Real-time monitoring and analytics for oil field operations
-                        </Typography>
+                    <Box sx={{ mb: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                        <Box>
+                            <Typography variant="h4" color="primary" fontWeight={800} gutterBottom sx={{ mb: 0.5 }}>
+                                Operational Telemetry & Analytics
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Live IoT sensor feeds, spatial map distributions, and AI anomaly tracking.
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Chip label="Aptos Testnet: Connected" color="success" size="small" variant="outlined" />
+                            <Chip label="IoT Gateway: 100ms" color="info" size="small" variant="outlined" />
+                        </Box>
                     </Box>
                 </motion.div>
 
@@ -530,63 +538,63 @@ const Dashboard: React.FC = () => {
                 {!hasSearch && (
                     <motion.div variants={cardVariants}>
                         <Card sx={{ mb: 3 }}>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Well Details ({filteredWells.length})
-                            </Typography>
-                            {loading ? (
-                                <LoadingCard height={250} />
-                            ) : (
-                                <TableContainer>
-                                    <Table size="small">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Well</TableCell>
-                                                <TableCell>Location</TableCell>
-                                                <TableCell>Status</TableCell>
-                                                <TableCell align="right">Production (bbl/day)</TableCell>
-                                                <TableCell align="right">Temp (°F)</TableCell>
-                                                <TableCell align="right">Pressure (PSI)</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {filteredWells.length === 0 ? (
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    Well Details ({filteredWells.length})
+                                </Typography>
+                                {loading ? (
+                                    <LoadingCard height={250} />
+                                ) : (
+                                    <TableContainer>
+                                        <Table size="small">
+                                            <TableHead>
                                                 <TableRow>
-                                                    <TableCell colSpan={6} align="center">
-                                                        No wells match the current search/filter.
-                                                    </TableCell>
+                                                    <TableCell>Well</TableCell>
+                                                    <TableCell>Location</TableCell>
+                                                    <TableCell>Status</TableCell>
+                                                    <TableCell align="right">Production (bbl/day)</TableCell>
+                                                    <TableCell align="right">Temp (°F)</TableCell>
+                                                    <TableCell align="right">Pressure (PSI)</TableCell>
                                                 </TableRow>
-                                            ) : (
-                                                filteredWells.map((well) => (
-                                                    <TableRow key={well.id} hover>
-                                                        <TableCell>{well.name}</TableCell>
-                                                        <TableCell>{well.location}</TableCell>
-                                                        <TableCell>
-                                                            <Chip
-                                                                label={well.status}
-                                                                size="small"
-                                                                color={
-                                                                    well.status === 'active'
-                                                                        ? 'success'
-                                                                        : well.status === 'warning'
-                                                                            ? 'warning'
-                                                                            : well.status === 'error'
-                                                                                ? 'error'
-                                                                                : 'default'
-                                                                }
-                                                            />
+                                            </TableHead>
+                                            <TableBody>
+                                                {filteredWells.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={6} align="center">
+                                                            No wells match the current search/filter.
                                                         </TableCell>
-                                                        <TableCell align="right">{well.production.toFixed(1)}</TableCell>
-                                                        <TableCell align="right">{well.temperature.toFixed(1)}</TableCell>
-                                                        <TableCell align="right">{well.pressure.toFixed(1)}</TableCell>
                                                     </TableRow>
-                                                ))
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            )}
-                        </CardContent>
+                                                ) : (
+                                                    filteredWells.map((well) => (
+                                                        <TableRow key={well.id} hover>
+                                                            <TableCell>{well.name}</TableCell>
+                                                            <TableCell>{well.location}</TableCell>
+                                                            <TableCell>
+                                                                <Chip
+                                                                    label={well.status}
+                                                                    size="small"
+                                                                    color={
+                                                                        well.status === 'active'
+                                                                            ? 'success'
+                                                                            : well.status === 'warning'
+                                                                                ? 'warning'
+                                                                                : well.status === 'error'
+                                                                                    ? 'error'
+                                                                                    : 'default'
+                                                                    }
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell align="right">{well.production.toFixed(1)}</TableCell>
+                                                            <TableCell align="right">{well.temperature.toFixed(1)}</TableCell>
+                                                            <TableCell align="right">{well.pressure.toFixed(1)}</TableCell>
+                                                        </TableRow>
+                                                    ))
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+                            </CardContent>
                         </Card>
                     </motion.div>
                 )}

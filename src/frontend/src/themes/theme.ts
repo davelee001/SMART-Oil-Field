@@ -48,7 +48,7 @@ const components: ThemeOptions['components'] = {
         styleOverrides: {
             root: {
                 backgroundImage: 'none',
-                boxShadow: '0 2px 10px rgba(15, 39, 64, 0.18)',
+                boxShadow: '0 4px 20px rgba(15, 39, 64, 0.15)',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
             },
         },
@@ -58,7 +58,8 @@ const components: ThemeOptions['components'] = {
             paper: ({ theme }) => ({
                 borderRight: '1px solid',
                 borderColor: theme.palette.divider,
-                boxShadow: '4px 0 16px rgba(15, 39, 64, 0.04)',
+                boxShadow: '4px 0 20px rgba(15, 39, 64, 0.05)',
+                background: theme.palette.mode === 'dark' ? '#0D1B2A' : '#ffffff',
             }),
         },
     },
@@ -66,9 +67,10 @@ const components: ThemeOptions['components'] = {
         styleOverrides: {
             root: {
                 backgroundImage: 'none',
+                borderRadius: 12,
             },
             elevation1: {
-                boxShadow: '0 3px 12px rgba(15, 39, 64, 0.08)',
+                boxShadow: '0 4px 16px rgba(15, 39, 64, 0.06)',
             },
         },
     },
@@ -76,12 +78,13 @@ const components: ThemeOptions['components'] = {
         styleOverrides: {
             root: ({ theme }) => ({
                 border: '1px solid',
-                borderColor: theme.palette.divider,
-                boxShadow: '0 3px 12px rgba(15, 39, 64, 0.07)',
-                transition: 'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 39, 64, 0.08)',
+                boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 16px rgba(15, 39, 64, 0.06)',
+                borderRadius: 12,
+                transition: 'transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease',
                 '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 20px rgba(15, 39, 64, 0.11)',
+                    transform: 'translateY(-3px)',
+                    boxShadow: theme.palette.mode === 'dark' ? '0 8px 30px rgba(0,0,0,0.5)' : '0 10px 28px rgba(15, 39, 64, 0.12)',
                 },
             }),
         },
@@ -92,19 +95,20 @@ const components: ThemeOptions['components'] = {
         },
         styleOverrides: {
             root: ({ theme }) => ({
-                borderRadius: 6,
+                borderRadius: 8,
                 textTransform: 'none',
-                fontSize: '0.925rem',
-                padding: '9px 18px',
+                fontSize: '0.9rem',
+                fontWeight: 650,
+                padding: '8px 18px',
                 '&:focus-visible': {
                     outline: `3px solid ${theme.palette.primary.main}55`,
                     outlineOffset: 2,
                 },
             }),
             contained: {
-                boxShadow: '0 2px 5px rgba(15, 39, 64, 0.16)',
+                boxShadow: '0 2px 8px rgba(15, 39, 64, 0.18)',
                 '&:hover': {
-                    boxShadow: '0 4px 10px rgba(15, 39, 64, 0.22)',
+                    boxShadow: '0 4px 14px rgba(15, 39, 64, 0.28)',
                 },
             },
         },
@@ -112,7 +116,7 @@ const components: ThemeOptions['components'] = {
     MuiChip: {
         styleOverrides: {
             root: {
-                borderRadius: 5,
+                borderRadius: 6,
                 fontWeight: 650,
             },
         },
