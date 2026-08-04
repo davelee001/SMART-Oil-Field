@@ -10,11 +10,15 @@ import {
     Box,
     Avatar,
     Tooltip,
+    Button,
+    Stack,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
     Brightness4 as DarkModeIcon,
     Brightness7 as LightModeIcon,
+    Login as LoginIcon,
+    PersonAddOutlined as RegisterIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
@@ -83,13 +87,57 @@ const Navbar: React.FC<NavbarProps> = ({
                     label=""
                 />
 
-                <Tooltip title={user ? user.name || user.email : 'Sign in'}>
-                    <IconButton component={Link} to={user ? '/profile' : '/login'} sx={{ ml: 1 }}>
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                            {user ? (user.name || user.email).charAt(0).toUpperCase() : '?'}
-                        </Avatar>
-                    </IconButton>
-                </Tooltip>
+                {user ? (
+                    <Tooltip title={user.name || user.email}>
+                        <IconButton component={Link} to="/profile" sx={{ ml: 1 }}>
+                            <Avatar sx={{ width: 34, height: 32, bgcolor: 'secondary.main', fontWeight: 700 }}>
+                                {(user.name || user.email).charAt(0).toUpperCase()}
+                            </Avatar>
+                        </IconButton>
+                    </Tooltip>
+                ) : (
+                    <Stack direction="row" spacing={1} sx={{ ml: 1.5 }}>
+                        <Button
+                            component={Link}
+                            to="/login"
+                            variant="outlined"
+                            size="small"
+                            startIcon={<LoginIcon />}
+                            sx={{
+                                color: '#ffffff',
+                                borderColor: 'rgba(255, 255, 255, 0.4)',
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                px: 1.5,
+                                '&:hover': {
+                                    borderColor: '#ffffff',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                },
+                            }}
+                        >
+                            Sign In
+                        </Button>
+                        <Button
+                            component={Link}
+                            to="/login"
+                            variant="contained"
+                            size="small"
+                            startIcon={<RegisterIcon />}
+                            sx={{
+                                backgroundColor: '#2a5298',
+                                color: '#ffffff',
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                px: 1.5,
+                                '&:hover': {
+                                    backgroundColor: '#1e3c72',
+                                },
+                            }}
+                        >
+                            Sign Up
+                        </Button>
+                    </Stack>
+                )}
             </Toolbar>
         </AppBar>
     );

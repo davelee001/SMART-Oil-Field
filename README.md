@@ -8,7 +8,7 @@ This project integrates multiple technologies:
 - **IoT & SCADA**: Real-time telemetry from oilfield sensors with WebSocket streaming
 - **RESTful APIs**: FastAPI (Python) and Express (TypeScript) with comprehensive endpoints
 - **Blockchain**: Aptos Move smart contracts for immutable records
-- **Web Dashboard**: Interactive frontend with live status monitoring
+- **Public & Operational Portals**: Public showcase website landing page and interactive operational dashboard
 - **Data Analytics**: Time-series DB, warehouse, ML predictions, anomaly detection, and backup/DR
 - **Advanced Features**: Predictive analytics, alerting system, audit logging, and real-time monitoring
 
@@ -21,7 +21,7 @@ This project integrates multiple technologies:
 | Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
 | Blockchain | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
 | Notifications | Subscription expiration reminders with 3 severity levels, email/SMS alerts |
-| Frontend | Modern React TypeScript app with Material-UI, real-time charts, interactive maps, dark/light mode, mobile-responsive design, PWA capabilities |
+| Public Website & UI | Public landing page (`Home.tsx`) introducing platform capabilities, full-stack preview, pricing, and live stats; clean public navigation with top Sign In / Sign Up actions; protected internal routing |
 | Analytics | InfluxDB time-series, DuckDB warehouse, ML anomaly detection, predictive analytics, trend analysis |
 | Data Science | Ensemble ML models, advanced feature engineering, real-time stream processing, production optimization, comprehensive ETL with data quality validation |
 | Machine Learning | Multi-algorithm anomaly detection, predictive maintenance, time series forecasting, automated training pipeline, synthetic data generation |
@@ -220,13 +220,24 @@ This project integrates multiple technologies:
 - Real PDF (jsPDF) and Excel (xlsx) export of the currently filtered wells
 - Toast notifications (react-toastify) for applied filters and export results
 
-**New Account & Subscription Pages**:
-- `Login` page with login/register tabs and mock session storage
-- `Profile` page for viewing/editing user details and wallet address
-- `Subscriptions` page with plan cards, subscribe/cancel actions, and embedded discount code redemption
-- `PaymentHistory` page listing past payments with Aptos Explorer transaction links
-- `ProtectedRoute` wrapper guarding `/dashboard`, `/profile`, `/subscriptions`, and `/payment-history` while keeping public landing page `/` open to everyone
-- Sidebar and Navbar updated with working links and lock indicators for protected routes
+**New Public Website & Account Pages (v0.8.0)**:
+- `Home` (`Home.tsx`): Clean, modern public landing page showcasing SMART Oil Field features, architecture preview, pricing teasers, live metrics, FAQ accordion, and newsletter subscription.
+- `Navbar`: Dedicated top navigation with dark/light mode toggle and top-right **Sign In** and **Sign Up** action buttons for seamless onboarding.
+- `Sidebar`: Clean navigation menu without intrusive visual clutter or lock icons, offering direct links to public and operational areas.
+- `Login` page with login/register tabs and session storage authentication.
+- `Profile` page for viewing/editing user details and wallet address.
+- `Subscriptions` page with plan cards, subscribe/cancel actions, and embedded discount code redemption.
+- `PaymentHistory` page listing past payments with Aptos Explorer transaction links.
+- `ProtectedRoute` wrapper guarding `/dashboard`, `/profile`, `/subscriptions`, and `/payment-history` while keeping public landing page `/` open to everyone.
+
+## Recent Updates (v0.8.0)
+
+### Major Feature Enhancements
+
+**Public Website Suite & Onboarding UX**:
+- **Public Landing Page**: Created full-featured `Home.tsx` with Hero presentation, Live Operations snapshot, metrics bar, capability grid, full-stack architecture preview, tier pricing teaser, FAQ, and newsletter.
+- **Uncluttered Navigation**: Removed lock icons from public view lists while maintaining robust, seamless client-side protection via `ProtectedRoute.tsx`.
+- **Primary Auth Calls-to-Action**: Added prominent "Sign In" and "Sign Up" action buttons in the global `Navbar.tsx` for easy user access.
 
 ## Recent Updates (v0.6.0)
 
