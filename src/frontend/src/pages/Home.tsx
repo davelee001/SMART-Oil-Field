@@ -43,8 +43,20 @@ import {
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 
+interface MarketPrice {
+    name: string;
+    symbol: string;
+    price: string;
+    unit: string;
+    change: string;
+    positive: boolean;
+    high: string;
+    low: string;
+    volume: string;
+}
+
 // Real-time Global Energy Commodities Ticker Data
-const MARKET_PRICES = [
+const MARKET_PRICES: MarketPrice[] = [
     { name: 'Brent Crude', symbol: 'BRENT', price: '$78.42', unit: '/bbl', change: '+1.35%', positive: true, high: '$79.10', low: '$77.20', volume: '342K bbls' },
     { name: 'WTI Crude', symbol: 'WTI', price: '$74.18', unit: '/bbl', change: '+0.92%', positive: true, high: '$75.05', low: '$73.50', volume: '410K bbls' },
     { name: 'Natural Gas', symbol: 'NG', price: '$2.15', unit: '/MMBtu', change: '-0.46%', positive: false, high: '$2.22', low: '$2.10', volume: '180K MMBtu' },
