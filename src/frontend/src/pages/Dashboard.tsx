@@ -8,6 +8,7 @@ import {
     Box,
     Chip,
     Button,
+    IconButton,
     TextField,
     InputAdornment,
     Table,
@@ -19,6 +20,7 @@ import {
 } from '@mui/material';
 import {
     Search as SearchIcon,
+    Clear as ClearIcon,
     TrendingUp,
     Warning,
     CheckCircle,
@@ -62,14 +64,25 @@ const Dashboard: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
     const [loading, setLoading] = useState(false);
+    const hasSearch = searchTerm.trim().length > 0;
 
     const filteredWells = useMemo(() => {
         const term = searchTerm.trim().toLowerCase();
         return ALL_WELLS.filter((well) => {
             const matchesSearch =
                 term === '' ||
-                well.name.toLowerCase().includes(term) ||
-                well.location.toLowerCase().includes(term);
+                [
+                    well.id,
+                    well.name,
+                    well.location,
+                    well.status,
+                    well.production,
+                    well.temperature,
+                    well.pressure,
+                ]
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(term);
             if (!matchesSearch) return false;
 
             switch (quickFilter) {
@@ -218,9 +231,118 @@ const Dashboard: React.FC = () => {
                                             <SearchIcon />
                                         </InputAdornment>
                                     ),
+                                    endAdornment: hasSearch ? (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="Clear well search"
+                                                size="small"
+                                                onClick={() => setSearchTerm('')}
+                                            >
+                                                <ClearIcon />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ) : undefined,
                                 }}
-                                sx={{ mb: 2 }}
+                                sx={{ mb: hasSearch ? 1 : 2 }}
                             />
+
+                            {hasSearch && (
+                                <Box
+                                    aria-live="polite"
+                                    sx={{
+                                        mb: 2,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        borderRadius: 1,
+                                        overflow: 'hidden',
+                                        backgroundColor: 'background.paper',
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            px: 2,
+                                            py: 1,
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            backgroundColor: 'background.default',
+                                            borderBottom: filteredWells.length > 0 ? '1px solid' : 0,
+                                            borderColor: 'divider',
+                                        }}
+                                    >
+                                        <Typography variant="subtitle2" fontWeight={750}>
+                                            Search results
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {filteredWells.length} {filteredWells.length === 1 ? 'well' : 'wells'} found
+                                        </Typography>
+                                    </Box>
+
+                                    {filteredWells.length === 0 ? (
+                                        <Box sx={{ px: 2, py: 2.5, textAlign: 'center' }}>
+                                            <Typography fontWeight={650}>No matching wells found</Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Try a well name, ID, location, status, or telemetry value.
+                                            </Typography>
+                                        </Box>
+                                    ) : (
+                                        filteredWells.map((well) => (
+                                            <Box
+                                                key={well.id}
+                                                sx={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: {
+                                                        xs: '1fr 1fr',
+                                                        md: 'minmax(180px, 1.4fr) minmax(150px, 1fr) 110px repeat(3, minmax(90px, 0.7fr))',
+                                                    },
+                                                    gap: { xs: 1.25, md: 2 },
+                                                    alignItems: 'center',
+                                                    px: 2,
+                                                    py: 1.5,
+                                                    '& + &': {
+                                                        borderTop: '1px solid',
+                                                        borderColor: 'divider',
+                                                    },
+                                                    '&:hover': { backgroundColor: 'action.hover' },
+                                                }}
+                                            >
+                                                <Box>
+                                                    <Typography variant="body2" fontWeight={750}>{well.name}</Typography>
+                                                    <Typography variant="caption" color="text.secondary">{well.id}</Typography>
+                                                </Box>
+                                                <Typography variant="body2">{well.location}</Typography>
+                                                <Chip
+                                                    label={well.status}
+                                                    size="small"
+                                                    color={
+                                                        well.status === 'active'
+                                                            ? 'success'
+                                                            : well.status === 'warning'
+                                                                ? 'warning'
+                                                                : well.status === 'error'
+                                                                    ? 'error'
+                                                                    : 'default'
+                                                    }
+                                                    sx={{ justifySelf: 'start' }}
+                                                />
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">Production</Typography>
+                                                    <Typography variant="body2" fontWeight={650}>{well.production.toFixed(1)} bbl/d</Typography>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">Temperature</Typography>
+                                                    <Typography variant="body2" fontWeight={650}>{well.temperature.toFixed(1)}°F</Typography>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">Pressure</Typography>
+                                                    <Typography variant="body2" fontWeight={650}>{well.pressure.toFixed(1)} PSI</Typography>
+                                                </Box>
+                                            </Box>
+                                        ))
+                                    )}
+                                </Box>
+                            )}
+
                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'space-between' }}>
                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                                     <Button
@@ -405,8 +527,9 @@ const Dashboard: React.FC = () => {
                 </Grid>
 
                 {/* Well Details Table */}
-                <motion.div variants={cardVariants}>
-                    <Card sx={{ mb: 3 }}>
+                {!hasSearch && (
+                    <motion.div variants={cardVariants}>
+                        <Card sx={{ mb: 3 }}>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
                                 Well Details ({filteredWells.length})
@@ -464,8 +587,9 @@ const Dashboard: React.FC = () => {
                                 </TableContainer>
                             )}
                         </CardContent>
-                    </Card>
-                </motion.div>
+                        </Card>
+                    </motion.div>
+                )}
             </motion.div>
         </Container>
     );
