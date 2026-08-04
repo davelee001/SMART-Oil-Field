@@ -200,6 +200,8 @@ const Home: React.FC = () => {
                     {MARKET_PRICES.map((item) => (
                         <Grid item xs={6} sm={4} md={2} key={item.symbol}>
                             <Box
+                                role="group"
+                                aria-label={`${item.name}: ${item.price}${item.unit}, ${item.change}, daily range ${item.low} to ${item.high}`}
                                 sx={{
                                     p: 1.25,
                                     borderRadius: 1.5,
