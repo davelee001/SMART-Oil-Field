@@ -28,18 +28,21 @@ interface NavbarProps {
     onThemeToggle: () => void;
     darkMode: boolean;
     onSidebarToggle: () => void;
+    isPublicPage?: boolean;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
     onThemeToggle,
     darkMode,
     onSidebarToggle,
+    isPublicPage = false,
 }) => {
     const user = getStoredUser();
 
     return (
         <AppBar
             position="fixed"
+            elevation={isPublicPage ? 1 : 4}
             sx={{
                 zIndex: (theme) => theme.zIndex.drawer + 1,
                 background: (theme) =>
@@ -49,14 +52,16 @@ const Navbar: React.FC<NavbarProps> = ({
             }}
         >
             <Toolbar sx={{ minHeight: '64px !important', px: { xs: 2, sm: 3 } }}>
-                <IconButton
-                    color="inherit"
-                    onClick={onSidebarToggle}
-                    edge="start"
-                    sx={{ mr: 2 }}
-                >
-                    <MenuIcon />
-                </IconButton>
+                {!isPublicPage && (
+                    <IconButton
+                        color="inherit"
+                        onClick={onSidebarToggle}
+                        edge="start"
+                        sx={{ mr: 2 }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                )}
 
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -65,12 +70,54 @@ const Navbar: React.FC<NavbarProps> = ({
                 >
                     <Typography
                         variant="h6"
-                        component="div"
-                        sx={{ flexGrow: 1, fontWeight: 750, letterSpacing: '-0.015em' }}
+                        component={Link}
+                        to="/"
+                        sx={{
+                            fontWeight: 750,
+                            letterSpacing: '-0.015em',
+                            color: 'inherit',
+                            textDecoration: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                        }}
                     >
-                        SMART Oil Field Dashboard
+                        SMART Oil Field
                     </Typography>
                 </motion.div>
+
+                {isPublicPage && (
+                    <Stack direction="row" spacing={3} sx={{ ml: 4, display: { xs: 'none', md: 'flex' } }}>
+                        <Button
+                            component={Link}
+                            to="/"
+                            color="inherit"
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                fontSize: '0.95rem',
+                                color: 'rgba(255, 255, 255, 0.85)',
+                                '&:hover': { color: '#ffffff' },
+                            }}
+                        >
+                            Overview
+                        </Button>
+                        <Button
+                            component={Link}
+                            to="/dashboard"
+                            color="inherit"
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                fontSize: '0.95rem',
+                                color: 'rgba(255, 255, 255, 0.85)',
+                                '&:hover': { color: '#ffffff' },
+                            }}
+                        >
+                            Live Portal
+                        </Button>
+                    </Stack>
+                )}
 
                 <Box sx={{ flexGrow: 1 }} />
 

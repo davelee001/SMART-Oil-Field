@@ -148,7 +148,7 @@ const Home: React.FC = () => {
     };
 
     return (
-        <Box sx={{ width: '100%', minWidth: 0 }}>
+        <Box sx={{ width: '100%', minWidth: 0, px: { xs: 2, sm: 3, md: 4 }, py: 2 }}>
             {/* Hero Section */}
             <Paper
                 elevation={0}
