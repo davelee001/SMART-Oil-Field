@@ -148,12 +148,12 @@ const Home: React.FC = () => {
     };
 
     return (
-        <Box sx={{ width: '100%', maxWidth: '1400px', mx: 'auto', p: { xs: 1, sm: 2 } }}>
+        <Box sx={{ width: '100%', minWidth: 0 }}>
             {/* Hero Section */}
             <Paper
                 elevation={0}
                 sx={{
-                    background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+                    background: 'linear-gradient(125deg, #0F2942 0%, #173F5F 58%, #1A5563 100%)',
                     color: '#ffffff',
                     borderRadius: 2,
                     p: { xs: 2, sm: 3 },
@@ -184,7 +184,7 @@ const Home: React.FC = () => {
                                     mb: 1,
                                 }}
                             >
-                                Real-Time Telemetry meets <span style={{ color: '#64b5f6' }}>Blockchain Trust</span>
+                                Real-Time Telemetry meets <span style={{ color: '#73C7E8' }}>Blockchain Trust</span>
                             </Typography>
                             <Typography
                                 variant="body2"
@@ -205,8 +205,8 @@ const Home: React.FC = () => {
                                     to="/dashboard"
                                     endIcon={<ArrowForwardIcon />}
                                     sx={{
-                                        backgroundColor: '#1e3c72',
-                                        '&:hover': { backgroundColor: '#2a5298' },
+                                        backgroundColor: '#236A8D',
+                                        '&:hover': { backgroundColor: '#1B5572' },
                                         fontWeight: 700,
                                         borderRadius: 1.5,
                                         px: 2.5,
@@ -302,7 +302,7 @@ const Home: React.FC = () => {
                                 p: 1.5,
                                 textAlign: 'center',
                                 borderRadius: 1.5,
-                                borderTop: '3px solid #1e3c72',
+                                borderTop: '3px solid #173F5F',
                             }}
                         >
                             <Typography variant="h6" color="primary" fontWeight={800} sx={{ lineHeight: 1.2 }}>
@@ -318,7 +318,7 @@ const Home: React.FC = () => {
 
             {/* Core Features Grid */}
             <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1, textAlign: 'center', color: '#1e3c72' }}>
+                <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1, textAlign: 'center', color: 'primary.main' }}>
                     Core Capabilities
                 </Typography>
                 <Grid container spacing={1.5}>
@@ -329,7 +329,8 @@ const Home: React.FC = () => {
                                 sx={{
                                     height: '100%',
                                     borderRadius: 1.5,
-                                    border: '1px solid #e0e0e0',
+                                    border: '1px solid',
+                                    borderColor: 'divider',
                                 }}
                             >
                                 <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
@@ -354,7 +355,7 @@ const Home: React.FC = () => {
             <Grid container spacing={2} sx={{ mb: 2 }}>
                 {/* Architecture Column */}
                 <Grid item xs={12} md={6}>
-                    <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%', border: '1px solid #e0e0e0' }}>
+                    <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%', border: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle1" fontWeight={800} color="primary" gutterBottom>
                             System Architecture
                         </Typography>
@@ -378,7 +379,7 @@ const Home: React.FC = () => {
                             sx={{
                                 p: 1.5,
                                 borderRadius: 1.5,
-                                backgroundColor: '#0f2027',
+                                backgroundColor: '#102A3A',
                                 color: '#ffffff',
                                 fontFamily: 'monospace',
                                 fontSize: '0.75rem',
@@ -394,7 +395,7 @@ const Home: React.FC = () => {
 
                 {/* Pricing Column */}
                 <Grid item xs={12} md={6}>
-                    <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%', border: '1px solid #e0e0e0' }}>
+                    <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%', border: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle1" fontWeight={800} color="primary" gutterBottom>
                             Plans & Subscriptions
                         </Typography>
@@ -405,7 +406,8 @@ const Home: React.FC = () => {
                                         elevation={0}
                                         sx={{
                                             p: 1,
-                                            border: plan.highlighted ? '2px solid #1e3c72' : '1px solid #e0e0e0',
+                                            border: '1px solid',
+                                            borderColor: plan.highlighted ? 'primary.main' : 'divider',
                                             borderRadius: 1.5,
                                             height: '100%',
                                             display: 'flex',
@@ -476,7 +478,7 @@ const Home: React.FC = () => {
                     <Paper
                         elevation={0}
                         sx={{
-                            backgroundColor: '#1e3c72',
+                            backgroundColor: '#173F5F',
                             color: '#ffffff',
                             borderRadius: 2,
                             p: 2,
@@ -523,7 +525,7 @@ const Home: React.FC = () => {
                                     size="small"
                                     sx={{
                                         backgroundColor: '#ffffff',
-                                        color: '#1e3c72',
+                                        color: '#173F5F',
                                         fontWeight: 700,
                                         '&:hover': { backgroundColor: '#f0f0f0' },
                                         borderRadius: 1,
