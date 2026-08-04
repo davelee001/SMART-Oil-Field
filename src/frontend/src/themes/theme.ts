@@ -91,12 +91,16 @@ const components: ThemeOptions['components'] = {
             disableElevation: true,
         },
         styleOverrides: {
-            root: {
+            root: ({ theme }) => ({
                 borderRadius: 6,
                 textTransform: 'none',
                 fontSize: '0.925rem',
                 padding: '9px 18px',
-            },
+                '&:focus-visible': {
+                    outline: `3px solid ${theme.palette.primary.main}55`,
+                    outlineOffset: 2,
+                },
+            }),
             contained: {
                 boxShadow: '0 2px 5px rgba(15, 39, 64, 0.16)',
                 '&:hover': {
@@ -131,10 +135,24 @@ const components: ThemeOptions['components'] = {
     },
     MuiListItemButton: {
         styleOverrides: {
-            root: {
+            root: ({ theme }) => ({
                 borderRadius: 6,
                 margin: '2px 8px',
-            },
+                '&:focus-visible': {
+                    outline: `3px solid ${theme.palette.primary.main}55`,
+                    outlineOffset: -2,
+                },
+            }),
+        },
+    },
+    MuiIconButton: {
+        styleOverrides: {
+            root: ({ theme }) => ({
+                '&:focus-visible': {
+                    outline: `3px solid ${theme.palette.primary.main}55`,
+                    outlineOffset: 2,
+                },
+            }),
         },
     },
 };
