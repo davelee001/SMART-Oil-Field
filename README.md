@@ -225,7 +225,8 @@ This project integrates multiple technologies:
 - `Profile` page for viewing/editing user details and wallet address
 - `Subscriptions` page with plan cards, subscribe/cancel actions, and embedded discount code redemption
 - `PaymentHistory` page listing past payments with Aptos Explorer transaction links
-- Sidebar and Navbar wired with working links to all new routes
+- `ProtectedRoute` wrapper guarding `/dashboard`, `/profile`, `/subscriptions`, and `/payment-history` while keeping public landing page `/` open to everyone
+- Sidebar and Navbar updated with working links and lock indicators for protected routes
 
 ## Recent Updates (v0.6.0)
 
