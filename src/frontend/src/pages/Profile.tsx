@@ -50,7 +50,6 @@ const Profile: React.FC = () => {
                             <Chip label={ROLE_LABELS[user.role]} size="small" color="primary" variant="outlined" sx={{ mt: 0.75 }} />
                         </Box>
                     </Box>
-
                     <Box component="form" onSubmit={handleSave} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <TextField
                             label="Full Name"
