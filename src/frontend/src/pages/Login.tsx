@@ -94,8 +94,8 @@ const Login: React.FC = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
-                        <Button type="submit" variant="contained" size="large" sx={{ mt: 1 }}>
-                            {tab === 'register' ? 'Create Account' : 'Sign In'}
+                        <Button type="submit" variant="contained" size="large" disabled={submitting} sx={{ mt: 1 }}>
+                            {submitting ? 'Please wait…' : tab === 'register' ? 'Create Account' : 'Sign In'}
                         </Button>
                     </Box>
                 </CardContent>
