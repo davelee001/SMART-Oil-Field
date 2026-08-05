@@ -55,12 +55,8 @@ const Profile: React.FC = () => {
                         <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                         <TextField label="Wallet Address" placeholder="0x..." value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} helperText="Aptos wallet address used for subscription payments" />
                         <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                            <Button type="submit" variant="contained">
-                                Save Changes
-                            </Button>
-                            <Button variant="outlined" color="error" onClick={handleLogout}>
-                                Log Out
-                            </Button>
+                            <Button type="submit" variant="contained" disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</Button>
+                            <Button variant="outlined" color="error" onClick={() => void handleLogout()}>Log Out</Button>
                         </Box>
                     </Box>
                 </CardContent>
