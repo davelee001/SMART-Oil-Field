@@ -51,27 +51,9 @@ const Profile: React.FC = () => {
                         </Box>
                     </Box>
                     <Box component="form" onSubmit={handleSave} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <TextField
-                            label="Full Name"
-                            fullWidth
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                        <TextField
-                            label="Email"
-                            type="email"
-                            fullWidth
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                        <TextField
-                            label="Wallet Address"
-                            fullWidth
-                            placeholder="0x..."
-                            value={walletAddress}
-                            onChange={(e) => setWalletAddress(e.target.value)}
-                            helperText="Aptos wallet address used for subscription payments"
-                        />
+                        <TextField label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
+                        <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        <TextField label="Wallet Address" placeholder="0x..." value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} helperText="Aptos wallet address used for subscription payments" />
                         <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
                             <Button type="submit" variant="contained">
                                 Save Changes
