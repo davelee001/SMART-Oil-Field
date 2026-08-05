@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Box, Button, Card, CardContent, Chip, Container, TextField, Typography } from '@mui/material';
 import { toast } from 'react-toastify';
-
-import { getStoredUser, storeUser, clearStoredUser, AppUser } from '../utils/auth';
+import { useAuth } from '../contexts/AuthContext';
+import { ROLE_LABELS } from '../utils/auth';
 
 const Profile: React.FC = () => {
     const navigate = useNavigate();
