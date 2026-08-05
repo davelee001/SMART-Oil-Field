@@ -23,6 +23,7 @@ const Login: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
