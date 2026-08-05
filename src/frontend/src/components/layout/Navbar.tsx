@@ -37,7 +37,7 @@ const Navbar: React.FC<NavbarProps> = ({
     onSidebarToggle,
     isPublicPage = false,
 }) => {
-    const user = getStoredUser();
+    const { user } = useAuth();
 
     return (
         <AppBar
