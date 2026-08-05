@@ -22,7 +22,7 @@ import {
 import { toast } from 'react-toastify';
 
 import DiscountCodeRedemption from '../components/subscription/DiscountCodeRedemption';
-import { getStoredUser } from '../utils/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Plan {
     id: string;
