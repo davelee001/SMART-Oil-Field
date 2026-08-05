@@ -47,6 +47,7 @@ const Profile: React.FC = () => {
                         <Box>
                             <Typography variant="h5">{name || 'Unnamed User'}</Typography>
                             <Typography variant="body2" color="text.secondary">{email}</Typography>
+                            <Chip label={ROLE_LABELS[user.role]} size="small" color="primary" variant="outlined" sx={{ mt: 0.75 }} />
                         </Box>
                     </Box>
 
