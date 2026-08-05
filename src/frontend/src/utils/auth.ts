@@ -24,7 +24,11 @@ export interface AppUser {
     id: string;
     name: string;
     email: string;
-    walletAddress: string;
+    role: PmsRole;
+    walletAddress: string | null;
+    isActive: boolean;
+    createdAt: string;
+    lastLoginAt: string | null;
 }
 
 const STORAGE_KEY = 'sof_user';
