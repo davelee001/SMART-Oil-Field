@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Subscriptions from './pages/Subscriptions';
 import PaymentHistory from './pages/PaymentHistory';
+import AdminUsers from './pages/AdminUsers';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -96,6 +97,14 @@ const AppContent: React.FC = () => {
                                 element={
                                     <ProtectedRoute>
                                         <PaymentHistory />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/admin/users"
+                                element={
+                                    <ProtectedRoute roles={['ADMINISTRATOR']}>
+                                        <AdminUsers />
                                     </ProtectedRoute>
                                 }
                             />
