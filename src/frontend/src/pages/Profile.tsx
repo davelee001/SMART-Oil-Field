@@ -14,12 +14,10 @@ const Profile: React.FC = () => {
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        const stored = getStoredUser();
-        setUser(stored);
-        if (stored) {
-            setName(stored.name);
-            setEmail(stored.email);
-            setWalletAddress(stored.walletAddress);
+        if (user) {
+            setName(user.name);
+            setEmail(user.email);
+            setWalletAddress(user.walletAddress || '');
         }
     }, []);
 
