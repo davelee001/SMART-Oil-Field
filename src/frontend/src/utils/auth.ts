@@ -35,7 +35,7 @@ export class ApiError extends Error {
     constructor(message: string, public status: number) {
         super(message);
     }
-};
+}
 
 export const storeUser = (user: AppUser): void => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
