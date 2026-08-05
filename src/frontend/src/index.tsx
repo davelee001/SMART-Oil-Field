@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import App from './App';
 import { lightTheme } from './themes/theme';
+import { AuthProvider } from './contexts/AuthContext';
 
 const queryClient = new QueryClient({
     defaultOptions: {
