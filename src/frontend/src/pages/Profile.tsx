@@ -21,10 +21,15 @@ const Profile: React.FC = () => {
         }
     }, [user]);
 
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        storeUser({ name: name.trim(), email: email.trim(), walletAddress: walletAddress.trim() });
-        toast.success('Profile updated');
+    const handleSave = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setSaving(true);
+        try {
+            await updateProfile({ name: name.trim(), email: email.trim(), walletAddress: walletAddress.trim() || null });
+            toast.success('Profile updated');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Could not update profile');
+        } finally { setSaving(false); }
     };
 
     const handleLogout = () => {
