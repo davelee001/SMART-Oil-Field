@@ -32,10 +32,8 @@ const Profile: React.FC = () => {
         } finally { setSaving(false); }
     };
 
-    const handleLogout = () => {
-        clearStoredUser();
-        toast.info('Logged out');
-        navigate('/login');
+    const handleLogout = async () => {
+        try { await logout(); } finally { navigate('/login', { replace: true }); }
     };
 
     if (!user) {
