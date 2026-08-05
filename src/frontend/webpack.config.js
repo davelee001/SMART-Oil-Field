@@ -51,5 +51,11 @@ module.exports = {
         port: Number(process.env.PORT || 3001),
         hot: true,
         historyApiFallback: true,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:4000',
+                changeOrigin: true,
+            },
+        },
     },
 };
