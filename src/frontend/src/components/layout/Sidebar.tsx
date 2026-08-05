@@ -76,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
             <Divider />
 
             <List>
-                {menuItems.map((item, index) => (
+                {visibleMenuItems.map((item, index) => (
                     <motion.div
                         key={item.text}
                         initial={{ opacity: 0, x: -20 }}
