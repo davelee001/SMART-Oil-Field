@@ -11,6 +11,7 @@ const Profile: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [walletAddress, setWalletAddress] = useState('');
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         const stored = getStoredUser();
