@@ -36,15 +36,7 @@ const Profile: React.FC = () => {
         try { await logout(); } finally { navigate('/login', { replace: true }); }
     };
 
-    if (!user) {
-        return (
-            <Container maxWidth="sm" sx={{ mt: 8 }}>
-                <Alert severity="info" action={<Button onClick={() => navigate('/login')}>Sign In</Button>}>
-                    You need to sign in to view your profile.
-                </Alert>
-            </Container>
-        );
-    }
+    if (!user) return null;
 
     return (
         <Container maxWidth="sm" sx={{ mt: 4 }}>
