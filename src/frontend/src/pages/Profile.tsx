@@ -7,7 +7,7 @@ import { ROLE_LABELS } from '../utils/auth';
 
 const Profile: React.FC = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState<AppUser | null>(null);
+    const { user, logout, updateProfile } = useAuth();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [walletAddress, setWalletAddress] = useState('');
