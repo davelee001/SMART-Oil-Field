@@ -52,6 +52,5 @@ export const apiRequest = async <T>(path: string, options: RequestInit = {}): Pr
         throw new ApiError(body.message || 'Request failed', response.status);
     }
 
-export const clearStoredUser = (): void => {
-    localStorage.removeItem(STORAGE_KEY);
+    return response.status === 204 ? (undefined as T) : response.json();
 };
