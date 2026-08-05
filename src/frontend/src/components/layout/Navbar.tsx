@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-import { getStoredUser } from '../../utils/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface NavbarProps {
     onThemeToggle: () => void;
