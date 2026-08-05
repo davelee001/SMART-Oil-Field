@@ -19,7 +19,7 @@ const Profile: React.FC = () => {
             setEmail(user.email);
             setWalletAddress(user.walletAddress || '');
         }
-    }, []);
+    }, [user]);
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
