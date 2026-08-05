@@ -64,7 +64,7 @@ const PLANS: Plan[] = [
 
 const Subscriptions: React.FC = () => {
     const navigate = useNavigate();
-    const user = getStoredUser();
+    const { user } = useAuth();
     const [activePlanId, setActivePlanId] = useState<string | null>('pro');
     const [appliedCode, setAppliedCode] = useState<string | null>(null);
     const [discountPercent, setDiscountPercent] = useState(0);
