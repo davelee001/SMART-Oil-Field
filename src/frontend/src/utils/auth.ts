@@ -21,6 +21,7 @@ export const ROLE_LABELS: Record<PmsRole, string> = {
 };
 
 export interface AppUser {
+    id: string;
     name: string;
     email: string;
     walletAddress: string;
