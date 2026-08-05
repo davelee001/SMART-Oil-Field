@@ -22,6 +22,7 @@ import {
     Person as PersonIcon,
     Subscriptions as SubscriptionsIcon,
     Receipt as ReceiptIcon,
+    ManageAccounts as ManageAccountsIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
