@@ -25,7 +25,7 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!email.trim() || !password.trim() || (tab === 'register' && !name.trim())) {
