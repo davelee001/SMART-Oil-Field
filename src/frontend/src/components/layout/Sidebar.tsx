@@ -32,7 +32,7 @@ interface SidebarProps {
     open: boolean;
 }
 
-const menuItems = [
+const menuItems: Array<{ text: string; icon: React.ReactNode; path: string; roles?: PmsRole[] }> = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
