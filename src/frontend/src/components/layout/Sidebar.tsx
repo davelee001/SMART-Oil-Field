@@ -25,6 +25,8 @@ import {
     ManageAccounts as ManageAccountsIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext';
+import { PmsRole } from '../../utils/auth';
 
 interface SidebarProps {
     open: boolean;
