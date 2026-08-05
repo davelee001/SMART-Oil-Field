@@ -31,15 +31,9 @@ export interface AppUser {
     lastLoginAt: string | null;
 }
 
-const STORAGE_KEY = 'sof_user';
-
-export const getStoredUser = (): AppUser | null => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    try {
-        return JSON.parse(raw) as AppUser;
-    } catch {
-        return null;
+export class ApiError extends Error {
+    constructor(message: string, public status: number) {
+        super(message);
     }
 };
 
