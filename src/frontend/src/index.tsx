@@ -28,7 +28,9 @@ root.render(
         <QueryClientProvider client={queryClient}>
             <ThemeProvider theme={lightTheme}>
                 <CssBaseline />
-                <App />
+                <AuthProvider>
+                    <App />
+                </AuthProvider>
                 <ToastContainer
                     position="top-right"
                     autoClose={5000}
