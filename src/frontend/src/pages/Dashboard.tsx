@@ -36,7 +36,7 @@ import * as XLSX from 'xlsx';
 import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
 import LoadingCard from '../components/common/LoadingCard';
-import { getStoredUser } from '../utils/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 interface OilWellRow {
     id: string;
