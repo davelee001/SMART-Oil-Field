@@ -42,6 +42,7 @@ const menuItems: Array<{ text: string; icon: React.ReactNode; path: string; role
     { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/subscriptions' },
     { text: 'Payment History', icon: <ReceiptIcon />, path: '/payment-history' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
+    { text: 'User Management', icon: <ManageAccountsIcon />, path: '/admin/users', roles: ['ADMINISTRATOR'] },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
 ];
 
