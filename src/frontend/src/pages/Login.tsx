@@ -33,20 +33,18 @@ const Login: React.FC = () => {
             return;
         }
 
-        const displayName = tab === 'register' ? name.trim() : email.split('@')[0];
-
-        storeUser({
-            name: displayName,
-            email: email.trim(),
-            walletAddress: '',
-        });
-
-        toast.success(
-            tab === 'register'
-                ? `Welcome to SMART Oil Field, ${displayName}!`
-                : `Welcome back, ${displayName}!`
-        );
-        navigate('/dashboard', { replace: true });
+        setSubmitting(true);
+        try {
+            const user = tab === 'register'
+                ? await register(name.trim(), email.trim(), password)
+                : await login(email.trim(), password);
+            toast.success(tab === 'register' ? `Welcome to SMART Oil Field, ${user.name}!` : `Welcome back, ${user.name}!`);
+            navigate('/dashboard', { replace: true });
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Authentication failed');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
