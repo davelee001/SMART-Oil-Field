@@ -43,9 +43,7 @@ const Profile: React.FC = () => {
             <Card>
                 <CardContent sx={{ p: 4 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                        <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
-                            {name.charAt(0).toUpperCase() || '?'}
-                        </Avatar>
+                        <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>{name.charAt(0).toUpperCase() || '?'}</Avatar>
                         <Box>
                             <Typography variant="h5">{name || 'Unnamed User'}</Typography>
                             <Typography variant="body2" color="text.secondary">{email}</Typography>
