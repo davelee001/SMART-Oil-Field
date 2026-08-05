@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 // Mock authentication UI — replace with real API-backed auth (JWT/session).
 const Login: React.FC = () => {
     const navigate = useNavigate();
+    const { login, register } = useAuth();
     const [tab, setTab] = useState<'login' | 'register'>('login');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
