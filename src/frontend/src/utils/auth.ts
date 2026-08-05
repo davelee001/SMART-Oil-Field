@@ -37,9 +37,20 @@ export class ApiError extends Error {
     }
 }
 
-export const storeUser = (user: AppUser): void => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-};
+export const apiRequest = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
+    const response = await fetch(path, {
+        ...options,
+        credentials: 'include',
+        headers: {
+            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+            ...options.headers,
+        },
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new ApiError(body.message || 'Request failed', response.status);
+    }
 
 export const clearStoredUser = (): void => {
     localStorage.removeItem(STORAGE_KEY);
