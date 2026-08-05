@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 
-import { storeUser } from '../utils/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 // Mock authentication UI — replace with real API-backed auth (JWT/session).
 const Login: React.FC = () => {
