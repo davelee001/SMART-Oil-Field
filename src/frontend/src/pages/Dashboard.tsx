@@ -64,7 +64,7 @@ const ALL_WELLS: OilWellRow[] = [
 type QuickFilter = 'all' | 'active' | 'warning' | '24h';
 
 const Dashboard: React.FC = () => {
-    const user = getStoredUser();
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
     const [loading, setLoading] = useState(false);
