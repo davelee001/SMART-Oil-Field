@@ -48,6 +48,8 @@ const menuItems: Array<{ text: string; icon: React.ReactNode; path: string; role
 
 const Sidebar: React.FC<SidebarProps> = ({ open }) => {
     const location = useLocation();
+    const { user } = useAuth();
+    const visibleMenuItems = menuItems.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
 
     return (
         <Drawer
