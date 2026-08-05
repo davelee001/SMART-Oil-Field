@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: smart_oil_field
+      POSTGRES_USER: smart_oil
+      POSTGRES_PASSWORD: smart_oil_dev
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - smart_oil_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smart_oil -d smart_oil_field"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_PORT: 4000
+      DATABASE_URL: postgresql://smart_oil:smart_oil_dev@postgres:5432/smart_oil_field?schema=public
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3001}
+      SESSION_SECRET: ${SESSION_SECRET:-development-session-secret-change-before-production}
+      SESSION_DAYS: 7
+      SESSION_SECURE_COOKIES: "false"
+      ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@smartoil.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMe123!}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  smart_oil_postgres:
