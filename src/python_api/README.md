@@ -73,8 +73,8 @@ python -m venv .venv
 
 ## Endpoints
 - GET `/health` — service health
-- POST `/token` — obtain JWT access token (login)
-- POST `/api/telemetry` — insert a telemetry record (**admin role, JWT Bearer token, API key, and OAuth2 token required**)
+- POST `http://localhost:4000/api/auth/login` — authenticate against the PostgreSQL PMS identity service and obtain a JWT
+- POST `/api/telemetry` — insert a telemetry record with a PMS JWT and an authorized role
 - GET `/api/telemetry` — list telemetry with optional filters
   - Query params: `device_id`, `ts_from`, `ts_to`, `limit`, `page`
 - GET `/api/telemetry/{id}` — fetch one record by id
@@ -101,14 +101,14 @@ python -m venv .venv
 # Health
 Invoke-RestMethod -Uri "http://127.0.0.1:8000/health"
 
-# Get JWT token (login)
-$login = @{ username="admin"; password="adminpass" }
-$tokenResp = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/token" -ContentType "application/x-www-form-urlencoded" -Body $login
-$token = $tokenResp.access_token
+# Get a JWT from the central PMS API
+$login = @{ email=$env:ADMIN_EMAIL; password=$env:ADMIN_PASSWORD } | ConvertTo-Json
+$tokenResp = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:4000/api/auth/login" -ContentType "application/json" -Body $login
+$token = $tokenResp.accessToken
 
 # Insert sample (JWT and API key required)
 $body = @{ device_id="well-004"; ts=[int][double]((Get-Date).ToFileTimeUtc()/10000000 - 11644473600); temperature=80.1; pressure=205.4; status="OK" } | ConvertTo-Json
-Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/telemetry" -ContentType "application/json" -Body $body -Headers @{ Authorization = "Bearer $token"; "x-api-key" = "demo-key-123" }
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/telemetry" -ContentType "application/json" -Body $body -Headers @{ Authorization = "Bearer $token" }
 
 # List
 Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/telemetry?device_id=well-004&limit=5"
@@ -132,14 +132,13 @@ Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/ml/predict" -Cont
 
 
 ## Security
-- JWT authentication is required for protected endpoints (e.g., POST `/api/telemetry`).
-- API key is also required for protected endpoints (header: `x-api-key`).
-- OAuth2 authentication is supported for advanced integrations (see code for demo provider URLs).
-- Role-based access control (RBAC) is enforced for sensitive endpoints (e.g., only `admin` can ingest telemetry).
+- JWT authentication is required for protected write endpoints. Tokens are issued by the PostgreSQL-backed Express PMS API.
+- The FastAPI service validates the same HS256 secret, issuer, audience, expiry, and PMS role claim as the central API.
+- Protected writes also call `AUTH_INTROSPECTION_URL` (default `http://localhost:4000/api/auth/me`) so account disabling, logout, role changes, and token-version revocation take effect immediately across services.
+- Role-based access control is enforced for telemetry ingestion, configuration changes, CSV uploads, oil-movement writes, and subscription mutations.
 - Rate limiting is enforced per user/endpoint (default: 10 requests per minute).
-- Obtain a token via `/token` using username/password (see example above).
-- Default users: `admin`/`adminpass`, `user`/`userpass` (for demo; replace in production).
-- Demo API keys: `demo-key-123` (admin), `demo-key-456` (user). Replace with secure keys in production.
+- Configure `JWT_SECRET`, `JWT_ISSUER`, and `JWT_AUDIENCE` identically for the Express and FastAPI services.
+- There are no hard-coded FastAPI users, passwords, or demo API keys.
 
 ## Notes
 - The database file is stored at `data/processed/oilfield.db`.
