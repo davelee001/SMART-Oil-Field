@@ -10,12 +10,14 @@ import {
     Box,
     Tabs,
     Tab,
+    IconButton,
+    InputAdornment,
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock authentication UI — replace with real API-backed auth (JWT/session).
 const Login: React.FC = () => {
     const navigate = useNavigate();
     const { login, register } = useAuth();
@@ -23,6 +25,7 @@ const Login: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -88,11 +91,28 @@ const Login: React.FC = () => {
                         />
                         <TextField
                             label="Password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             fullWidth
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            inputProps={{ minLength: 12 }}
+                            autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                            title={showPassword ? 'Hide password' : 'Show password'}
+                                            onClick={() => setShowPassword((visible) => !visible)}
+                                            onMouseDown={(event) => event.preventDefault()}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
                         />
                         <Button type="submit" variant="contained" size="large" disabled={submitting} sx={{ mt: 1 }}>
                             {submitting ? 'Please wait…' : tab === 'register' ? 'Create Account' : 'Sign In'}
