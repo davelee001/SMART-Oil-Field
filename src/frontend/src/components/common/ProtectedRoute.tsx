@@ -18,7 +18,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, roles }) => {
             <Box sx={{ minHeight: '50vh', display: 'grid', placeItems: 'center' }}>
                 <Box sx={{ textAlign: 'center' }}>
                     <CircularProgress size={32} />
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Restoring your session…</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Restoring your secure session…</Typography>
                 </Box>
             </Box>
         );
