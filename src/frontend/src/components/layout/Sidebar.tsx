@@ -23,6 +23,7 @@ import {
     Subscriptions as SubscriptionsIcon,
     Receipt as ReceiptIcon,
     ManageAccounts as ManageAccountsIcon,
+    AccountTree as ProjectsIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -35,6 +36,7 @@ interface SidebarProps {
 const menuItems: Array<{ text: string; icon: React.ReactNode; path: string; roles?: PmsRole[] }> = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'Projects', icon: <ProjectsIcon />, path: '/projects' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
     { text: 'Map View', icon: <MapIcon />, path: '/map' },
     { text: 'Data Upload', icon: <UploadIcon />, path: '/upload' },
