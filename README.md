@@ -2,6 +2,38 @@
 
 A SMART oil field digital platform combining IoT sensor data, real-time tracking, and blockchain verification for comprehensive oilfield operations management.
 
+## PMS Foundation (Phase 1)
+
+The operational PMS foundation is a monorepo composed of the React frontend, an Express API, shared TypeScript contracts, and a Prisma/PostgreSQL data layer. Existing FastAPI telemetry, oil movement, analytics, machine-learning, TypeScript gateway, and Aptos Move services remain in place as specialist services; Phase 1 does not remove or replace them.
+
+Authentication is now database-backed and uses bcrypt password hashing plus signed HS256 JWT access tokens. The browser receives the JWT in an HTTP-only, SameSite cookie and never stores credentials or tokens in local storage. API clients may use the returned token as `Authorization: Bearer <token>`. Every protected API request reloads the user from PostgreSQL to enforce current account status, role, and token revocation version.
+
+Supported PMS roles are:
+
+- Administrator
+- Project Manager
+- Monitoring and Evaluation Officer
+- Compliance Officer
+- Finance Officer
+- Supply Chain Officer
+- Department Head
+- Viewer
+
+Only Administrators can access `/admin/users` and `/api/admin/users` to create accounts, assign roles, and enable or disable users. Disabling an account or changing its role invalidates previously issued operational API tokens.
+
+### PMS setup
+
+1. Copy `.env.example` to `.env` and set a unique `JWT_SECRET` of at least 64 characters, plus a strong `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+2. Start PostgreSQL: `docker compose up -d postgres`.
+3. Install dependencies and generate Prisma: `npm install` then `npm run db:generate`.
+4. Apply database migrations: `npm run db:migrate` for development, or `npm run db:migrate:deploy` in deployment environments.
+5. Create or promote the initial administrator: `npm run db:seed`.
+6. Start the API with `npm run dev:api` and the frontend with `npm run dev:web`.
+
+The default local URLs are `http://localhost:3001` for the frontend and `http://localhost:4000` for the PMS API. PostgreSQL is exposed on host port `5433` by default to avoid conflicts; services inside Docker use port `5432`.
+
+See [docs/PMS_ROADMAP.md](docs/PMS_ROADMAP.md) for phase boundaries and [docs/MONOREPO_AUTH.md](docs/MONOREPO_AUTH.md) for authentication details.
+
 ## Overview
 
 This project integrates multiple technologies:
@@ -123,13 +155,13 @@ This project integrates multiple technologies:
 - **Modern Build System**: Webpack configuration with hot reloading and TypeScript support
 
 ### 👤 Account, Subscriptions & Payments (Frontend)
-- **User Authentication UI** (`/login`): Login/register form with tabbed UI; session stored via `src/frontend/src/utils/auth.ts`
+- **User Authentication UI** (`/login`): Login/register form backed by PostgreSQL, bcrypt, and JWT authentication
 - **Profile Management** (`/profile`): View/edit name, email, and Aptos wallet address; logout
 - **Subscription Management Dashboard** (`/subscriptions`): Plan cards (Basic/Pro/Enterprise), subscribe/cancel actions, current plan status
 - **Discount Code Redemption**: Promo code entry embedded in the Subscriptions page, applies a live discount to plan pricing
 - **Payment History** (`/payment-history`): Table of past subscription payments with status and linked Aptos Explorer transaction hash
 - Sidebar and Navbar updated with working navigation links (including a profile avatar) to all of the above
-- Note: these pages currently use mock/local-storage data — see [TS_BACKEND_IMPLEMENTATION.md](TS_BACKEND_IMPLEMENTATION.md) for backend integration status
+- Authentication and user administration use the PMS API. Subscription and payment demonstrations remain separate from identity and will be integrated in a later approved phase.
 
 ### Blockchain Features
 
