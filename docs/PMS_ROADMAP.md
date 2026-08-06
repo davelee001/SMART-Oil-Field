@@ -19,11 +19,14 @@ The PMS extends the existing SMART Oil Field platform without removing telemetry
 
 Phase 1 does not introduce projects, budgets, KPIs, compliance cases, suppliers, or training records.
 
-## Phase 2 — Project and portfolio management (approval required)
+## Phase 2 — Project management (implemented)
 
-- Projects, programmes, milestones, work plans, ownership, and department alignment
-- Project status workflows and portfolio views
-- Links from projects to existing wells, telemetry, and oil-movement assets
+- Dedicated project records with title, code, department, location, manager, dates, status, and progress
+- Normalized objectives, activities, milestones, deliverables, risks, and staff assignments
+- Role-protected project workspace and REST API
+- Project management remains separate from oil-batch supply-chain tracking
+
+Portfolio hierarchy, programme aggregation, project budgeting, KPI frameworks, and direct asset links remain future work and require separate approval.
 
 ## Phase 3 — Budget and finance controls (approval required)
 
