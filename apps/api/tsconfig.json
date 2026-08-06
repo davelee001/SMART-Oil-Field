@@ -8,7 +8,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node", "express-session"]
+    "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }
