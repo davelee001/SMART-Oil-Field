@@ -2,9 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert, Box, Button, Card, CardContent, Chip, FormControl, Grid, InputLabel, MenuItem,
     Select, Stack, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    TextField, Typography,
+    TextField, Typography, IconButton, InputAdornment,
 } from '@mui/material';
-import { PersonAddOutlined as AddUserIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import {
+    PersonAddOutlined as AddUserIcon, Refresh as RefreshIcon, Visibility, VisibilityOff,
+} from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { apiRequest, AppUser, PMS_ROLES, PmsRole, ROLE_LABELS } from '../utils/auth';
 
@@ -14,6 +16,7 @@ const AdminUsers: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [role, setRole] = useState<PmsRole>('VIEWER');
     const [creating, setCreating] = useState(false);
 
@@ -70,7 +73,32 @@ const AdminUsers: React.FC = () => {
                         <Grid container spacing={2} alignItems="center">
                             <Grid item xs={12} md={3}><TextField label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required fullWidth /></Grid>
                             <Grid item xs={12} md={3}><TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required fullWidth /></Grid>
-                            <Grid item xs={12} md={2}><TextField label="Temporary Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} inputProps={{ minLength: 8 }} required fullWidth /></Grid>
+                            <Grid item xs={12} md={2}>
+                                <TextField
+                                    label="Temporary Password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    inputProps={{ minLength: 12 }}
+                                    autoComplete="new-password"
+                                    required
+                                    fullWidth
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                                    onClick={() => setShowPassword((visible) => !visible)}
+                                                    onMouseDown={(event) => event.preventDefault()}
+                                                    edge="end"
+                                                >
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Grid>
                             <Grid item xs={12} md={2}>
                                 <FormControl fullWidth><InputLabel>Role</InputLabel><Select value={role} label="Role" onChange={(e) => setRole(e.target.value as PmsRole)}>
                                     {PMS_ROLES.map((item) => <MenuItem key={item} value={item}>{ROLE_LABELS[item]}</MenuItem>)}
