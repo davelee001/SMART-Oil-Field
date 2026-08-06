@@ -9,6 +9,7 @@ import { prisma } from '@smart-oil-field/database';
 import { ZodError } from 'zod';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
+import projectRoutes from './routes/projects';
 
 export const createApp = () => {
   const app = express();
@@ -32,6 +33,7 @@ export const createApp = () => {
   });
   app.use('/api/auth', authRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/projects', projectRoutes);
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof ZodError) return res.status(400).json({ message: 'Validation failed', issues: error.issues });
