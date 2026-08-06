@@ -2,13 +2,14 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '@smart-oil-field/database';
-import { publicUser, regenerateSession, requireAuth } from '../auth';
+import { publicUser, requireAuth } from '../auth';
+import { clearAccessTokenCookie, jwtConfiguration, setAccessTokenCookie, signAccessToken } from '../jwt';
 
 const router = Router();
 
 const credentialsSchema = z.object({
   email: z.string().trim().email().transform((value) => value.toLowerCase()),
-  password: z.string().min(8).max(128),
+  password: z.string().min(12).max(128),
 });
 
 const registerSchema = credentialsSchema.extend({
@@ -21,8 +22,21 @@ const profileSchema = z.object({
   walletAddress: z.string().trim().max(200).nullable().optional(),
 });
 
+const authenticationResponse = (user: Parameters<typeof publicUser>[0]) => {
+  const accessToken = signAccessToken(user);
+  return {
+    accessToken,
+    tokenType: 'Bearer' as const,
+    expiresIn: jwtConfiguration().ttlMinutes * 60,
+    user: publicUser(user),
+  };
+};
+
 router.post('/register', async (req, res, next) => {
   try {
+    if (process.env.ALLOW_PUBLIC_REGISTRATION === 'false') {
+      return res.status(403).json({ message: 'Public registration is disabled' });
+    }
     const input = registerSchema.parse(req.body);
     const existing = await prisma.user.findUnique({ where: { email: input.email } });
     if (existing) return res.status(409).json({ message: 'An account with this email already exists' });
@@ -36,10 +50,11 @@ router.post('/register', async (req, res, next) => {
         lastLoginAt: new Date(),
       },
     });
-    await regenerateSession(req, user.id);
-    res.status(201).json({ user: publicUser(user) });
+    const response = authenticationResponse(user);
+    setAccessTokenCookie(res, response.accessToken);
+    return res.status(201).json(response);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -52,19 +67,25 @@ router.post('/login', async (req, res, next) => {
     }
 
     const updated = await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-    await regenerateSession(req, updated.id);
-    res.json({ user: publicUser(updated) });
+    const response = authenticationResponse(updated);
+    setAccessTokenCookie(res, response.accessToken);
+    return res.json(response);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.post('/logout', (req, res, next) => {
-  req.session.destroy((error) => {
-    if (error) return next(error);
-    res.clearCookie('sof.sid');
-    res.status(204).send();
-  });
+router.post('/logout', requireAuth, async (req, res, next) => {
+  try {
+    await prisma.user.update({
+      where: { id: req.authUser!.id },
+      data: { tokenVersion: { increment: 1 } },
+    });
+    clearAccessTokenCookie(res);
+    return res.status(204).send();
+  } catch (error) {
+    return next(error);
+  }
 });
 
 router.get('/me', requireAuth, (req, res) => {
@@ -80,9 +101,9 @@ router.patch('/me', requireAuth, async (req, res, next) => {
       where: { id: req.authUser!.id },
       data: { name: input.name, email: input.email, walletAddress: input.walletAddress || null },
     });
-    res.json({ user: publicUser(user) });
+    return res.json({ user: publicUser(user) });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
