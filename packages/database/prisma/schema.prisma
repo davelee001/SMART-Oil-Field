@@ -18,6 +18,35 @@ enum Role {
   VIEWER
 }
 
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum WorkItemStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RiskStatus {
+  OPEN
+  MITIGATING
+  ACCEPTED
+  CLOSED
+}
+
 model User {
   id            String     @id @default(uuid()) @db.Uuid
   name          String
@@ -31,9 +60,136 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   auditEvents   AuditLog[] @relation("AuditActor")
+  managedProjects Project[] @relation("ProjectManager")
+  projectAssignments ProjectAssignment[]
+  assignedActivities ProjectActivity[] @relation("ActivityAssignee")
+  assignedDeliverables ProjectDeliverable[] @relation("DeliverableAssignee")
+  ownedRisks ProjectRisk[] @relation("RiskOwner")
 
   @@index([role])
   @@index([isActive])
+}
+
+model Project {
+  id            String              @id @default(uuid()) @db.Uuid
+  title         String
+  code          String              @unique
+  department    String
+  location      String
+  managerId     String              @db.Uuid
+  startDate     DateTime
+  endDate       DateTime
+  status        ProjectStatus       @default(PLANNED)
+  progress      Int                 @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  manager       User                @relation("ProjectManager", fields: [managerId], references: [id], onDelete: Restrict)
+  objectives    ProjectObjective[]
+  activities    ProjectActivity[]
+  milestones    ProjectMilestone[]
+  deliverables  ProjectDeliverable[]
+  risks         ProjectRisk[]
+  assignments   ProjectAssignment[]
+
+  @@index([department])
+  @@index([managerId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model ProjectObjective {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @db.Uuid
+  description String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectActivity {
+  id           String         @id @default(uuid()) @db.Uuid
+  projectId    String         @db.Uuid
+  title        String
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  status       WorkItemStatus @default(NOT_STARTED)
+  progress     Int            @default(0)
+  assignedToId String?        @db.Uuid
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedTo   User?          @relation("ActivityAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([assignedToId])
+}
+
+model ProjectMilestone {
+  id          String         @id @default(uuid()) @db.Uuid
+  projectId   String         @db.Uuid
+  title       String
+  description String?
+  dueDate     DateTime
+  status      WorkItemStatus @default(NOT_STARTED)
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, dueDate])
+}
+
+model ProjectDeliverable {
+  id           String         @id @default(uuid()) @db.Uuid
+  projectId    String         @db.Uuid
+  title        String
+  description  String?
+  dueDate      DateTime
+  status       WorkItemStatus @default(NOT_STARTED)
+  assignedToId String?        @db.Uuid
+  acceptedAt   DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedTo   User?          @relation("DeliverableAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, dueDate])
+  @@index([assignedToId])
+}
+
+model ProjectRisk {
+  id          String     @id @default(uuid()) @db.Uuid
+  projectId   String     @db.Uuid
+  title       String
+  description String
+  level       RiskLevel  @default(MEDIUM)
+  status      RiskStatus @default(OPEN)
+  mitigation  String?
+  ownerId     String?    @db.Uuid
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner       User?      @relation("RiskOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([ownerId])
+}
+
+model ProjectAssignment {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid
+  userId    String   @db.Uuid
+  role      String?
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
 }
 
 model AuditLog {
