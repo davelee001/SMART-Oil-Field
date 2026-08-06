@@ -34,6 +34,12 @@ The default local URLs are `http://localhost:3001` for the frontend and `http://
 
 See [docs/PMS_ROADMAP.md](docs/PMS_ROADMAP.md) for phase boundaries and [docs/MONOREPO_AUTH.md](docs/MONOREPO_AUTH.md) for authentication details.
 
+## PMS Project Management (Phase 2)
+
+Project management is implemented as a domain separate from oil-batch movement. The `/projects` workspace and `/api/projects` API manage project title, code, department, location, manager, dates, status, progress, objectives, activities, milestones, deliverables, risks, and assigned staff. Oil batches continue to represent physical supply-chain movement and are not treated as projects.
+
+All authenticated users can read project records. Administrators and Department Heads can manage every project. Project Managers can create projects assigned to themselves and manage projects for which they are the designated manager. Only Administrators can delete entire projects. See [docs/PMS_PROJECT_MANAGEMENT.md](docs/PMS_PROJECT_MANAGEMENT.md).
+
 ## Overview
 
 This project integrates multiple technologies:
