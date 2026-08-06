@@ -1,4 +1,17 @@
 ﻿import threading
+import asyncio
+import json
+import urllib.error
+import urllib.request
+
+from fastapi import Depends, FastAPI, HTTPException, status, Request, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+
+PMS_ROLES = {
+    "ADMINISTRATOR", "PROJECT_MANAGER", "ME_OFFICER", "COMPLIANCE_OFFICER",
+    "FINANCE_OFFICER", "SUPPLY_CHAIN_OFFICER", "DEPARTMENT_HEAD", "VIEWER",
+}
 
 # Simple in-memory rate limiting (per user/endpoint)
 RATE_LIMITS = {}
@@ -47,59 +60,7 @@ class ConnectionManager:
                 pass
 
 manager = ConnectionManager()
-# Role-based access control (RBAC)
-def require_role(role: str):
-    def checker(user=Depends(get_current_user)):
-        if user["role"] != role:
-            raise HTTPException(status_code=403, detail=f"Requires {role} role")
-        return user
-    return checker
-# API Key management (demo: in-memory, production: DB)
-API_KEYS = {"demo-key-123": "admin", "demo-key-456": "user"}
-
-from fastapi import Header
-
-def get_api_key(x_api_key: str = Header(...)):
-    if x_api_key not in API_KEYS:
-        raise HTTPException(status_code=401, detail="Invalid API key")
-    return API_KEYS[x_api_key]
-from fastapi import Depends, HTTPException, status, Request, BackgroundTasks
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
-
-
-# OAuth2 integration (using FastAPI's OAuth2PasswordBearer)
-from fastapi.security import OAuth2AuthorizationCodeBearer
-
-OAUTH2_CLIENT_ID = "demo-client-id"
-OAUTH2_CLIENT_SECRET = "demo-client-secret"
-OAUTH2_AUTH_URL = "https://demo-oauth-provider.com/auth"
-OAUTH2_TOKEN_URL = "https://demo-oauth-provider.com/token"
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
-oauth2_auth_code_scheme = OAuth2AuthorizationCodeBearer(
-    authorizationUrl=OAUTH2_AUTH_URL,
-    tokenUrl=OAUTH2_TOKEN_URL
-)
-
-# Dummy user store (replace with DB in production)
-fake_users_db = {
-    "admin": {"username": "admin", "password": "adminpass", "role": "admin"},
-    "user": {"username": "user", "password": "userpass", "role": "user"}
-}
-
-def authenticate_user(username: str, password: str):
-    user = fake_users_db.get(username)
-    if not user or user["password"] != password:
-        return None
-    return user
-
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="http://localhost:4000/api/auth/login")
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -108,25 +69,43 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        secret = os.environ.get("JWT_SECRET", "")
+        if len(secret) < 64:
+            raise HTTPException(status_code=503, detail="JWT authentication is not configured")
+        payload = jwt.decode(
+            token,
+            secret,
+            algorithms=["HS256"],
+            issuer=os.environ.get("JWT_ISSUER", "smart-oil-field-api"),
+            audience=os.environ.get("JWT_AUDIENCE", "smart-oil-field-services"),
+        )
+        if not payload.get("sub") or payload.get("type") != "access" or payload.get("role") not in PMS_ROLES:
             raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    user = fake_users_db.get(username)
-    if user is None:
-        raise credentials_exception
-    return user
+    except JWTError as error:
+        raise credentials_exception from error
 
-# Login endpoint to get JWT
-@app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    access_token = create_access_token(data={"sub": user["username"]})
-    return {"access_token": access_token, "token_type": "bearer"}
+    def introspect_user():
+        request = urllib.request.Request(
+            os.environ.get("AUTH_INTROSPECTION_URL", "http://localhost:4000/api/auth/me"),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            return json.loads(response.read().decode("utf-8"))["user"]
+
+    try:
+        user = await asyncio.to_thread(introspect_user)
+        if user.get("id") != payload["sub"] or user.get("role") != payload["role"] or not user.get("isActive"):
+            raise credentials_exception
+        return {**payload, "user": user}
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, KeyError, ValueError) as error:
+        raise credentials_exception from error
+
+def require_roles(*roles: str):
+    def checker(user=Depends(get_current_user)):
+        if user["role"] not in roles:
+            raise HTTPException(status_code=403, detail="Insufficient role permissions")
+        return user
+    return checker
 from pathlib import Path
 import os
 import sqlite3
@@ -144,7 +123,6 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 import re
 import uuid
-import json
 import hashlib
 from app.tasks import celery_app, export_telemetry_csv
 try:
@@ -511,12 +489,9 @@ async def websocket_telemetry(websocket: WebSocket):
 @app.post('/api/telemetry')
 async def ingest(
     payload: TelemetryIn,
-    user=Depends(require_role("admin")),
-    api_user=Depends(get_api_key),
-    oauth2_token: str = Depends(oauth2_auth_code_scheme)
+    user=Depends(require_roles("ADMINISTRATOR", "PROJECT_MANAGER", "ME_OFFICER")),
 ):
-    rate_limit(user["username"], "/api/telemetry")
-    # In production, validate oauth2_token with provider
+    rate_limit(user["sub"], "/api/telemetry")
     conn = get_conn()
     cur = conn.cursor()
     cur.execute('INSERT INTO telemetry (device_id, ts, temperature, pressure, status) VALUES (?, ?, ?, ?, ?)', (payload.device_id, payload.ts, payload.temperature, payload.pressure, payload.status))
@@ -571,7 +546,7 @@ async def ingest(
             INFLUX_WRITE.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
     except Exception:
         pass
-    return {'id': id_, 'api_user': api_user, 'oauth2_token': oauth2_token, 'anomaly_check': anomaly_result}
+    return {'id': id_, 'anomaly_check': anomaly_result}
 
 @app.get('/api/telemetry')
 def list(device_id: Optional[str] = None, ts_from: Optional[int] = None, ts_to: Optional[int] = None, limit: int = 100, page: int = 1):
@@ -767,7 +742,7 @@ class AnomalyConfig(BaseModel):
 ANOMALY_CONFIG = AnomalyConfig()
 
 @app.post('/api/ml/config')
-def update_anomaly_config(config: AnomalyConfig):
+def update_anomaly_config(config: AnomalyConfig, _user=Depends(require_roles("ADMINISTRATOR", "ME_OFFICER"))):
     """Update anomaly detection configuration"""
     global ANOMALY_CONFIG
     ANOMALY_CONFIG = config
@@ -2130,7 +2105,7 @@ def parse_timestamp(ts_str: str) -> Optional[int]:
         return None
 
 @app.post('/api/upload/validate-csv')
-async def validate_csv_upload(file: UploadFile = File(...)):
+async def validate_csv_upload(file: UploadFile = File(...), _user=Depends(require_roles("ADMINISTRATOR", "PROJECT_MANAGER", "ME_OFFICER"))):
     """Validate CSV file before upload"""
     if not file.filename.lower().endswith('.csv'):
         return {'error': 'Invalid file type. Only CSV files are allowed.'}
@@ -2163,7 +2138,8 @@ async def validate_csv_upload(file: UploadFile = File(...)):
 async def upload_telemetry_csv(
     file: UploadFile = File(...),
     skip_validation: bool = False,
-    batch_size: int = 1000
+    batch_size: int = 1000,
+    _user=Depends(require_roles("ADMINISTRATOR", "PROJECT_MANAGER", "ME_OFFICER")),
 ):
     """Upload telemetry data from CSV file"""
     import time
@@ -2318,7 +2294,7 @@ def get_upload_history(limit: int = 50):
     }
 
 @app.post('/api/oil/batches')
-def create_batch(payload: BatchCreate):
+def create_batch(payload: BatchCreate, _user=Depends(require_roles("ADMINISTRATOR", "PROJECT_MANAGER", "SUPPLY_CHAIN_OFFICER"))):
     conn = get_conn()
     cur = conn.cursor()
     batch_id = payload.batch_id or f"BATCH-{uuid.uuid4().hex[:8].upper()}"
@@ -2413,7 +2389,7 @@ def get_batch(batch_id: str):
     }
 
 @app.post('/api/oil/batches/{batch_id}/events')
-def add_event(batch_id: str, payload: EventCreate):
+def add_event(batch_id: str, payload: EventCreate, _user=Depends(require_roles("ADMINISTRATOR", "PROJECT_MANAGER", "SUPPLY_CHAIN_OFFICER"))):
     conn = get_conn()
     cur = conn.cursor()
     # Ensure batch exists
@@ -2523,7 +2499,7 @@ class SubscriptionCreate(BaseModel):
     duration_days: int = Field(ge=1, default=30)
 
 @app.post('/api/subscription')
-def create_subscription(payload: SubscriptionCreate):
+def create_subscription(payload: SubscriptionCreate, _user=Depends(require_roles("ADMINISTRATOR", "FINANCE_OFFICER"))):
     """Create or update a user subscription (demo endpoint - production uses blockchain)"""
     conn = get_conn()
     cur = conn.cursor()
@@ -2575,7 +2551,7 @@ def get_subscription(user_id: str):
     }
 
 @app.delete('/api/subscription/{user_id}')
-def cancel_subscription(user_id: str):
+def cancel_subscription(user_id: str, _user=Depends(require_roles("ADMINISTRATOR", "FINANCE_OFFICER"))):
     """Cancel a user subscription"""
     conn = get_conn()
     cur = conn.cursor()
