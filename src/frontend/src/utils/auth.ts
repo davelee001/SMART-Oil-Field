@@ -4,6 +4,7 @@ export const PMS_ROLES = [
     'COMPLIANCE_OFFICER',
     'ME_OFFICER',
     'FINANCE_OFFICER',
+    'SUPPLY_CHAIN_OFFICER',
     'DEPARTMENT_HEAD',
     'VIEWER',
 ] as const;
@@ -16,6 +17,7 @@ export const ROLE_LABELS: Record<PmsRole, string> = {
     COMPLIANCE_OFFICER: 'Compliance Officer',
     ME_OFFICER: 'M&E Officer',
     FINANCE_OFFICER: 'Finance Officer',
+    SUPPLY_CHAIN_OFFICER: 'Supply Chain Officer',
     DEPARTMENT_HEAD: 'Department Head',
     VIEWER: 'Viewer',
 };
