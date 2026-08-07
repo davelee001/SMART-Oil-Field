@@ -28,3 +28,11 @@ The dashboard calculates a weighted obligation score:
 - waived obligations: excluded
 
 An incomplete obligation is treated as overdue when its due date passes, even before a scheduled background job persists that state. Permit status is similarly derived as expiring or expired from its expiry date and renewal lead period.
+
+## Roles
+
+- **Administrator / Compliance Officer:** control the regulation register, permits, inspections, verification, closure, and escalation.
+- **Department Head / Project Manager:** create obligations assigned to themselves, raise findings, create corrective actions, update assigned records, and attach evidence.
+- **Other authenticated roles:** read dashboards, registers, workflow history, and regulatory exports.
+
+Only a compliance reviewer can mark obligations compliant, verify corrective actions, close non-conformities, or escalate findings.
