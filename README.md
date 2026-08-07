@@ -950,6 +950,7 @@ See module READMEs for usage examples:
 - Commitment and expenditure workflows with supporting-document references
 - Calculated approved allocation, actual expenditure, outstanding commitments, remaining balance, variance, and utilization
 - Auditable four-eyes approval controls for budgets and finance entries
+- Oil-sector compliance register with weighted scoring, permit expiry monitoring, inspection scheduling, evidence, corrective actions, escalation, and regulatory export
 
 ### Core Platform Features
 - Promotional Discount System: Custom codes with expiry and usage limits
