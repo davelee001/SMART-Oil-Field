@@ -18,6 +18,16 @@ A SMART Oil Field Performance Management System combining secure organizational 
 
 Existing subscription and blockchain-payment features are maintained separately and do not count as project budgeting or expenditure.
 
+### Current PMS verification baseline
+
+As of 7 August 2026:
+
+- 37 authentication, authorization, project, finance, and compliance tests pass across five test files.
+- Prisma generation and the shared, database, API, and frontend TypeScript checks pass.
+- The production frontend build passes; Webpack continues to report its existing bundle-size advisory.
+- Five PostgreSQL migrations are available, including `20260807142236_compliance_regulation` for Phase 5.
+- The Phase 5 migration has been applied successfully to the local PostgreSQL development database.
+
 ## PMS Foundation (Phase 1)
 
 The operational PMS foundation is a monorepo composed of the React frontend, an Express API, shared TypeScript contracts, and a Prisma/PostgreSQL data layer. Existing FastAPI telemetry, oil movement, analytics, machine-learning, TypeScript gateway, and Aptos Move services remain in place as specialist services; Phase 1 does not remove or replace them.
@@ -42,7 +52,7 @@ Only Administrators can access `/admin/users` and `/api/admin/users` to create a
 1. Copy `.env.example` to `.env` and set a unique `JWT_SECRET` of at least 64 characters, plus a strong `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
 2. Start PostgreSQL: `docker compose up -d postgres`.
 3. Install dependencies and generate Prisma: `npm install` then `npm run db:generate`.
-4. Apply database migrations: `npm run db:migrate` for development, or `npm run db:migrate:deploy` in deployment environments.
+4. Set `DATABASE_URL`, then apply all PostgreSQL migrations with `npm run db:migrate` for development or `npm run db:migrate:deploy` in controlled environments.
 5. Create or promote the initial administrator: `npm run db:seed`.
 6. Start the API with `npm run dev:api` and the frontend with `npm run dev:web`.
 
@@ -75,6 +85,8 @@ Finance Officers and Administrators review budgets and finance entries. Project 
 The `/compliance` workspace and `/api/compliance` API provide the oil-sector regulation register, obligations, licences and permits, inspections, secure evidence references, weighted compliance scoring, non-conformities, corrective actions, escalation, workflow history, and an authenticated regulatory CSV export.
 
 Compliance Officers and Administrators control master records, verification, closure, and escalation. Department Heads and Project Managers can contribute assigned obligations, findings, corrective actions, and evidence. Existing audit, telemetry, and blockchain records remain separate technical foundations and are not treated as a substitute for the compliance business module. See [docs/PMS_COMPLIANCE_REGULATION.md](docs/PMS_COMPLIANCE_REGULATION.md).
+
+The compliance dashboard is available at `/compliance`; its protected API is mounted at `/api/compliance`, and the authenticated regulatory-register export is `GET /api/compliance/reports/register.csv`.
 
 ## Overview
 
@@ -306,7 +318,7 @@ This project integrates multiple technologies:
 - `Profile` page for viewing/editing user details and wallet address.
 - `Subscriptions` page with plan cards, subscribe/cancel actions, and embedded discount code redemption.
 - `PaymentHistory` page listing past payments with Aptos Explorer transaction links.
-- `ProtectedRoute` guards operational pages including `/dashboard`, `/projects`, `/finance`, `/profile`, `/subscriptions`, `/payment-history`, and role-restricted `/admin/users`, while the landing page remains public.
+- `ProtectedRoute` guards operational pages including `/dashboard`, `/projects`, `/finance`, `/compliance`, `/profile`, `/subscriptions`, `/payment-history`, and role-restricted `/admin/users`, while the landing page remains public.
 
 ## Recent Updates (v0.8.0)
 
