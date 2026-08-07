@@ -99,6 +99,13 @@ model User {
   assignedActivities ProjectActivity[] @relation("ActivityAssignee")
   assignedDeliverables ProjectDeliverable[] @relation("DeliverableAssignee")
   ownedRisks ProjectRisk[] @relation("RiskOwner")
+  createdBudgets ProjectBudget[] @relation("BudgetCreator")
+  submittedBudgets ProjectBudget[] @relation("BudgetSubmitter")
+  reviewedBudgets ProjectBudget[] @relation("BudgetReviewer")
+  budgetApprovals BudgetApproval[]
+  createdFinanceEntries FinanceEntry[] @relation("FinanceEntryCreator")
+  reviewedFinanceEntries FinanceEntry[] @relation("FinanceEntryReviewer")
+  financeDocuments FinanceDocument[]
 
   @@index([role])
   @@index([isActive])
