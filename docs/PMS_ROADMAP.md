@@ -42,11 +42,13 @@ Portfolio hierarchy, programme aggregation, project budgeting, KPI frameworks, a
 - Automated KPI inputs from existing telemetry and analytics where appropriate
 - M&E review and approval workflow
 
-## Phase 5 — Compliance and regulation (approval required)
+## Phase 5 — Compliance and regulation (implemented)
 
-- Obligations, inspections, findings, corrective actions, evidence, and due dates
-- Compliance dashboards and auditable approvals
-- References to immutable blockchain records where regulatory provenance is required
+- Oil-sector regulation and policy register with jurisdictions, regulators, effective dates, and review dates
+- Obligations, licences, permits, inspections, evidence, responsible officers, and due dates
+- Weighted compliance scoring, non-conformities, corrective-action plans, escalation, and auditable verification
+- Authenticated regulatory-register export; future formal report templates remain Phase 9 work
+- Existing blockchain records may be linked as evidence without duplicating or expanding payment features
 
 ## Phase 6 — Supply chain and supplier performance (approval required)
 
