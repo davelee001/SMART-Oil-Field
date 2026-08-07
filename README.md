@@ -70,6 +70,12 @@ The `/finance` workspace and `/api/finance` API provide annual project budgets, 
 
 Finance Officers and Administrators review budgets and finance entries. Project Managers can prepare and submit budgets for projects they manage, Department Heads can manage project finance records, and other authenticated roles have reporting access. Four-eyes checks prevent users from approving their own submissions, closed reporting periods reject new entries, and allocation controls prevent approvals beyond an approved category ceiling. See [docs/PMS_BUDGETING_FINANCE.md](docs/PMS_BUDGETING_FINANCE.md).
 
+## PMS Compliance and Regulation (Phase 5)
+
+The `/compliance` workspace and `/api/compliance` API provide the oil-sector regulation register, obligations, licences and permits, inspections, secure evidence references, weighted compliance scoring, non-conformities, corrective actions, escalation, workflow history, and an authenticated regulatory CSV export.
+
+Compliance Officers and Administrators control master records, verification, closure, and escalation. Department Heads and Project Managers can contribute assigned obligations, findings, corrective actions, and evidence. Existing audit, telemetry, and blockchain records remain separate technical foundations and are not treated as a substitute for the compliance business module. See [docs/PMS_COMPLIANCE_REGULATION.md](docs/PMS_COMPLIANCE_REGULATION.md).
+
 ## Overview
 
 This project integrates multiple technologies:
