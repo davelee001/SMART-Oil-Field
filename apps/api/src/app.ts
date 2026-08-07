@@ -37,6 +37,7 @@ export const createApp = () => {
   app.use('/api/admin', adminRoutes);
   app.use('/api/projects', projectRoutes);
   app.use('/api/finance', financeRoutes);
+  app.use('/api/compliance', complianceRoutes);
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof ZodError) return res.status(400).json({ message: 'Validation failed', issues: error.issues });
