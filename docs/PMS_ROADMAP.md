@@ -28,33 +28,45 @@ Phase 1 does not introduce projects, budgets, KPIs, compliance cases, suppliers,
 
 Portfolio hierarchy, programme aggregation, project budgeting, KPI frameworks, and direct asset links remain future work and require separate approval.
 
-## Phase 3 — Budget and finance controls (approval required)
+## Phase 4 — Budgeting and finance (implemented)
 
-- Project budgets, funding sources, commitments, expenditure, and variance reporting
-- Finance Officer approval workflows
-- Reconciliation links to existing subscription and blockchain payment records
+- Annual project budgets, category allocations, and funding sources
+- Approved allocation, commitments, actual expenditure, remaining balance, variance, and utilization reporting
+- Financial reporting periods and secure supporting-document references
+- Finance Officer and Administrator review workflows with four-eyes approval controls
+- Deliberate separation from subscription billing and blockchain payment records
 
-## Phase 4 — KPI and M&E (approval required)
+## Phase 7 — KPI and performance dashboards (approval required)
 
 - Results frameworks, indicators, baselines, targets, reporting periods, and evidence
 - Automated KPI inputs from existing telemetry and analytics where appropriate
 - M&E review and approval workflow
 
-## Phase 5 — Compliance and risk (approval required)
+## Phase 5 — Compliance and regulation (approval required)
 
 - Obligations, inspections, findings, corrective actions, evidence, and due dates
 - Compliance dashboards and auditable approvals
 - References to immutable blockchain records where regulatory provenance is required
 
-## Phase 6 — Suppliers and supply chain (approval required)
+## Phase 6 — Supply chain and supplier performance (approval required)
 
 - Supplier registry, qualification, contracts, purchase requests, delivery tracking, and performance
 - Connections to existing oil-movement provenance without duplicating blockchain records
 
-## Phase 7 — Training and competency (approval required)
+## Phase 8 — Training and capacity building (approval required)
 
 - Competency profiles, course catalogue, attendance, certifications, and expiry reminders
 - Role and department-based training requirements
+
+## Phase 9 — Reporting and analytics (approval required)
+
+- Formal project, quarterly, annual, finance, compliance, supplier, training, department, and executive reports
+- Approval, sign-off, and controlled report templates
+
+## Phase 10 — Finalization and deployment (approval required)
+
+- Full-system automated testing, security validation, CI/CD, production deployment, backup and restoration testing
+- User and administrator manuals plus live-environment acceptance
 
 ## Cross-cutting constraints
 
