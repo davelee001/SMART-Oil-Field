@@ -131,6 +131,7 @@ model Project {
   deliverables  ProjectDeliverable[]
   risks         ProjectRisk[]
   assignments   ProjectAssignment[]
+  budgets       ProjectBudget[]
 
   @@index([department])
   @@index([managerId])
