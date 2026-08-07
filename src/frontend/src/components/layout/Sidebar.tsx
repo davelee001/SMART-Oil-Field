@@ -24,6 +24,7 @@ import {
     Receipt as ReceiptIcon,
     ManageAccounts as ManageAccountsIcon,
     AccountTree as ProjectsIcon,
+    AccountBalanceWallet as FinanceIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
