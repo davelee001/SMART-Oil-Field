@@ -382,6 +382,214 @@ model BudgetApproval {
   @@index([actorId])
 }
 
+model ComplianceRegulation {
+  id            String                   @id @default(uuid()) @db.Uuid
+  code          String                   @unique
+  title         String
+  type          RegulationType
+  jurisdiction  String
+  regulator     String
+  description   String
+  effectiveDate DateTime
+  reviewDate    DateTime?
+  status        ComplianceRegisterStatus @default(DRAFT)
+  createdById   String                   @db.Uuid
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  createdBy     User                     @relation("RegulationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  obligations   ComplianceObligation[]
+  permits       CompliancePermit[]
+  inspections   ComplianceInspection[]
+
+  @@index([type, status])
+  @@index([reviewDate])
+}
+
+model ComplianceObligation {
+  id                   String                     @id @default(uuid()) @db.Uuid
+  regulationId         String                     @db.Uuid
+  projectId            String?                    @db.Uuid
+  reference            String
+  title                String
+  requirement          String
+  department           String
+  responsibleOfficerId String                     @db.Uuid
+  dueDate              DateTime
+  frequency            String?
+  weight               Int                        @default(1)
+  status               ComplianceObligationStatus @default(NOT_STARTED)
+  completedAt          DateTime?
+  verifiedById         String?                    @db.Uuid
+  verifiedAt           DateTime?
+  verificationComment  String?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  regulation           ComplianceRegulation       @relation(fields: [regulationId], references: [id], onDelete: Restrict)
+  project              Project?                   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  responsibleOfficer   User                       @relation("ObligationOfficer", fields: [responsibleOfficerId], references: [id], onDelete: Restrict)
+  verifiedBy           User?                      @relation("ObligationVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  evidence             ComplianceEvidence[]
+  nonConformities      NonConformity[]
+
+  @@unique([regulationId, reference])
+  @@index([department, status])
+  @@index([responsibleOfficerId, dueDate])
+  @@index([projectId])
+}
+
+model CompliancePermit {
+  id                   String                @id @default(uuid()) @db.Uuid
+  regulationId         String?               @db.Uuid
+  projectId            String?               @db.Uuid
+  permitNumber         String                @unique
+  title                String
+  permitType           String
+  issuingAuthority     String
+  holder               String
+  issueDate            DateTime
+  expiryDate           DateTime
+  status               PermitStatus          @default(DRAFT)
+  renewalLeadDays      Int                   @default(90)
+  conditions           String?
+  responsibleOfficerId String                @db.Uuid
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  regulation           ComplianceRegulation? @relation(fields: [regulationId], references: [id], onDelete: SetNull)
+  project              Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  responsibleOfficer   User                  @relation("PermitOfficer", fields: [responsibleOfficerId], references: [id], onDelete: Restrict)
+  evidence             ComplianceEvidence[]
+
+  @@index([status, expiryDate])
+  @@index([responsibleOfficerId])
+  @@index([projectId])
+}
+
+model ComplianceInspection {
+  id                   String                @id @default(uuid()) @db.Uuid
+  regulationId         String?               @db.Uuid
+  projectId            String?               @db.Uuid
+  reference            String                @unique
+  title                String
+  inspector            String
+  location             String
+  scheduledDate        DateTime
+  completedDate        DateTime?
+  status               InspectionStatus      @default(SCHEDULED)
+  outcome              InspectionOutcome     @default(NOT_ASSESSED)
+  score                Int?
+  notes                String?
+  responsibleOfficerId String                @db.Uuid
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  regulation           ComplianceRegulation? @relation(fields: [regulationId], references: [id], onDelete: SetNull)
+  project              Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  responsibleOfficer   User                  @relation("InspectionOfficer", fields: [responsibleOfficerId], references: [id], onDelete: Restrict)
+  nonConformities      NonConformity[]
+  evidence             ComplianceEvidence[]
+
+  @@index([status, scheduledDate])
+  @@index([responsibleOfficerId])
+  @@index([projectId])
+}
+
+model NonConformity {
+  id                   String                @id @default(uuid()) @db.Uuid
+  obligationId         String?               @db.Uuid
+  inspectionId         String?               @db.Uuid
+  projectId            String?               @db.Uuid
+  reference            String                @unique
+  title                String
+  description          String
+  severity             NonConformitySeverity @default(MEDIUM)
+  status               NonConformityStatus   @default(OPEN)
+  detectedAt           DateTime
+  dueDate              DateTime
+  responsibleOfficerId String                @db.Uuid
+  rootCause            String?
+  escalationLevel      EscalationLevel       @default(NONE)
+  escalatedAt          DateTime?
+  closedAt             DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  obligation           ComplianceObligation? @relation(fields: [obligationId], references: [id], onDelete: SetNull)
+  inspection           ComplianceInspection? @relation(fields: [inspectionId], references: [id], onDelete: SetNull)
+  project              Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  responsibleOfficer   User                  @relation("NonConformityOfficer", fields: [responsibleOfficerId], references: [id], onDelete: Restrict)
+  correctiveActions    CorrectiveAction[]
+  evidence             ComplianceEvidence[]
+
+  @@index([severity, status])
+  @@index([responsibleOfficerId, dueDate])
+  @@index([projectId])
+}
+
+model CorrectiveAction {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  nonConformityId      String                 @db.Uuid
+  title                String
+  description          String
+  responsibleOfficerId String                 @db.Uuid
+  dueDate              DateTime
+  status               CorrectiveActionStatus @default(PLANNED)
+  progress             Int                    @default(0)
+  completionNotes      String?
+  verifiedById         String?                @db.Uuid
+  verifiedAt           DateTime?
+  verificationNotes    String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  nonConformity        NonConformity          @relation(fields: [nonConformityId], references: [id], onDelete: Cascade)
+  responsibleOfficer   User                   @relation("CorrectiveActionOfficer", fields: [responsibleOfficerId], references: [id], onDelete: Restrict)
+  verifiedBy           User?                  @relation("CorrectiveActionVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  evidence             ComplianceEvidence[]
+
+  @@index([nonConformityId, status])
+  @@index([responsibleOfficerId, dueDate])
+}
+
+model ComplianceEvidence {
+  id                 String                @id @default(uuid()) @db.Uuid
+  obligationId       String?               @db.Uuid
+  permitId           String?               @db.Uuid
+  inspectionId       String?               @db.Uuid
+  nonConformityId    String?               @db.Uuid
+  correctiveActionId String?               @db.Uuid
+  name               String
+  url                String
+  mimeType           String?
+  notes              String?
+  uploadedById       String                @db.Uuid
+  createdAt          DateTime              @default(now())
+  obligation         ComplianceObligation? @relation(fields: [obligationId], references: [id], onDelete: Cascade)
+  permit             CompliancePermit?     @relation(fields: [permitId], references: [id], onDelete: Cascade)
+  inspection         ComplianceInspection? @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  nonConformity      NonConformity?        @relation(fields: [nonConformityId], references: [id], onDelete: Cascade)
+  correctiveAction   CorrectiveAction?     @relation(fields: [correctiveActionId], references: [id], onDelete: Cascade)
+  uploadedBy         User                  @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([obligationId])
+  @@index([permitId])
+  @@index([inspectionId])
+  @@index([nonConformityId])
+  @@index([correctiveActionId])
+}
+
+model ComplianceWorkflowEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  entityType String
+  entityId   String   @db.Uuid
+  action     String
+  fromStatus String?
+  toStatus   String?
+  comment    String?
+  actorId    String   @db.Uuid
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId])
+}
+
 model ProjectObjective {
   id          String   @id @default(uuid()) @db.Uuid
   projectId   String   @db.Uuid
