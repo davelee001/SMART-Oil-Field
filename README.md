@@ -990,7 +990,6 @@ See module READMEs for usage examples:
 ## Future Enhancements
 
 ### PMS Roadmap
-- [ ] **Phase 5 — Compliance and Regulation**: Obligations, licences, permits, inspections, evidence, non-conformities, and corrective actions
 - [ ] **Phase 6 — Supplier Performance**: Supplier registration, qualification, contracts, deliveries, HSE/local-content indicators, and performance scoring
 - [ ] **Phase 7 — KPI Engine**: Configurable indicators, baselines, targets, actuals, evidence, weighting, verification, and reporting periods
 - [ ] **Phase 8 — Training and Capacity Building**: Programmes, participants, assessments, certificates, costs, effectiveness, and skills gaps
