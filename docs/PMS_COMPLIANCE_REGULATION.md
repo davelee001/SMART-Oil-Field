@@ -40,3 +40,21 @@ Only a compliance reviewer can mark obligations compliant, verify corrective act
 ## Evidence safety
 
 Evidence records store an HTTPS repository URL, name, MIME type, notes, uploader, timestamp, and a single parent record. Binary documents are not stored in local storage or an unaudited application directory. The database migration enforces the single-parent invariant.
+
+## API
+
+The authenticated API is mounted at `/api/compliance`:
+
+- `GET /overview`, `/register`, and `/options`
+- `POST/PATCH /regulations`
+- `POST/PATCH /obligations`
+- `POST/PATCH /permits`
+- `POST/PATCH /inspections`
+- `POST/PATCH /non-conformities`
+- `POST /non-conformities/:id/escalate`
+- `POST /non-conformities/:id/actions`
+- `PATCH /corrective-actions/:id`
+- `POST /evidence`
+- `GET /reports/register.csv`
+
+The React workspace is `/compliance`.
