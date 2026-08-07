@@ -1,6 +1,22 @@
 # SMART-Oil-Field
 
-A SMART oil field digital platform combining IoT sensor data, real-time tracking, and blockchain verification for comprehensive oilfield operations management.
+A SMART Oil Field Performance Management System combining secure organizational workflows with IoT telemetry, oil-movement tracking, analytics, machine learning, and blockchain provenance. PostgreSQL is the PMS system of record; specialist operational services retain their existing responsibilities.
+
+## PMS delivery status
+
+| Phase | Module | Status |
+|---|---|---|
+| 1 | PostgreSQL identity, authentication, RBAC, and user administration | Implemented |
+| 2 | Projects, objectives, activities, milestones, deliverables, risks, and staff assignments | Implemented |
+| 4 | Annual project budgeting, allocations, commitments, expenditure, periods, evidence, and approvals | Implemented |
+| 5 | Oil-sector compliance and regulation register | Planned |
+| 6 | Supply chain and supplier performance | Planned; existing oil-movement tracking remains available |
+| 7 | Configurable KPI and performance engine | Planned; existing operational analytics remain available |
+| 8 | Staff training and capacity building | Planned |
+| 9 | Formal PMS reporting and analytics | Planned; existing technical exports remain available |
+| 10 | Full-system testing, finalization, and production deployment | Planned |
+
+Existing subscription and blockchain-payment features are maintained separately and do not count as project budgeting or expenditure.
 
 ## PMS Foundation (Phase 1)
 
@@ -29,6 +45,14 @@ Only Administrators can access `/admin/users` and `/api/admin/users` to create a
 4. Apply database migrations: `npm run db:migrate` for development, or `npm run db:migrate:deploy` in deployment environments.
 5. Create or promote the initial administrator: `npm run db:seed`.
 6. Start the API with `npm run dev:api` and the frontend with `npm run dev:web`.
+
+Validate the PMS workspace with:
+
+```bash
+npm test
+npm run typecheck
+npm run build
+```
 
 The default local URLs are `http://localhost:3001` for the frontend and `http://localhost:4000` for the PMS API. PostgreSQL is exposed on host port `5433` by default to avoid conflicts; services inside Docker use port `5432`.
 
@@ -60,6 +84,9 @@ This project integrates multiple technologies:
 
 | Category | Features |
 |----------|----------|
+| PMS Identity | PostgreSQL users, bcrypt passwords, JWT HTTP-only sessions, eight organizational roles, route protection, and administrator user management |
+| Project Management | Projects, objectives, activities, milestones, deliverables, risks, progress, and assigned staff |
+| Budgeting & Finance | Annual budgets, categories, funding sources, periods, commitments, expenditure, calculated balances, document references, and approval workflows |
 | Telemetry | Real-time sensor data ingestion, WebSocket streaming, querying, statistics, CSV export, async tasks |
 | Oil Tracking | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
 | Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
@@ -268,11 +295,11 @@ This project integrates multiple technologies:
 - `Home` (`Home.tsx`): Clean, modern public landing page showcasing SMART Oil Field features, architecture preview, pricing teasers, live metrics, FAQ accordion, and newsletter subscription.
 - `Navbar`: Dedicated top navigation with dark/light mode toggle and top-right **Sign In** and **Sign Up** action buttons for seamless onboarding.
 - `Sidebar`: Clean navigation menu without intrusive visual clutter or lock icons, offering direct links to public and operational areas.
-- `Login` page with login/register tabs and session storage authentication.
+- `Login` page with PostgreSQL-backed registration/login, bcrypt password verification, and JWT authentication through an HTTP-only cookie.
 - `Profile` page for viewing/editing user details and wallet address.
 - `Subscriptions` page with plan cards, subscribe/cancel actions, and embedded discount code redemption.
 - `PaymentHistory` page listing past payments with Aptos Explorer transaction links.
-- `ProtectedRoute` wrapper guarding `/dashboard`, `/profile`, `/subscriptions`, and `/payment-history` while keeping public landing page `/` open to everyone.
+- `ProtectedRoute` guards operational pages including `/dashboard`, `/projects`, `/finance`, `/profile`, `/subscriptions`, `/payment-history`, and role-restricted `/admin/users`, while the landing page remains public.
 
 ## Recent Updates (v0.8.0)
 
@@ -907,6 +934,16 @@ See module READMEs for usage examples:
 
 ## Completed Features
 
+### PMS Management Features
+- Persistent PostgreSQL user accounts with bcrypt password hashing and JWT authentication
+- Role-based access for Administrator, Project Manager, Monitoring and Evaluation Officer, Compliance Officer, Finance Officer, Supply Chain Officer, Department Head, and Viewer
+- Administrator account, role, and active-status management
+- Project planning with objectives, activities, milestones, deliverables, risks, progress, and staff assignments
+- Annual project budgets with category allocations, funding sources, and financial reporting periods
+- Commitment and expenditure workflows with supporting-document references
+- Calculated approved allocation, actual expenditure, outstanding commitments, remaining balance, variance, and utilization
+- Auditable four-eyes approval controls for budgets and finance entries
+
 ### Core Platform Features
 - Promotional Discount System: Custom codes with expiry and usage limits
 - Referral Rewards: 10% APT rewards for referrers with comprehensive tracking
@@ -939,10 +976,18 @@ See module READMEs for usage examples:
 - Connection Pooling: SQLAlchemy QueuePool for improved concurrency
 - Rate Limiting: Per-user and per-endpoint rate limiting
 - JWT Authentication: Secure API access with token-based auth
-- Role-Based Access Control: Admin, operator, and viewer roles
+- Role-Based Access Control: eight PMS-specific organizational roles with backend and frontend enforcement
 - Async Task Processing: Celery-based background job processing
 
 ## Future Enhancements
+
+### PMS Roadmap
+- [ ] **Phase 5 — Compliance and Regulation**: Obligations, licences, permits, inspections, evidence, non-conformities, and corrective actions
+- [ ] **Phase 6 — Supplier Performance**: Supplier registration, qualification, contracts, deliveries, HSE/local-content indicators, and performance scoring
+- [ ] **Phase 7 — KPI Engine**: Configurable indicators, baselines, targets, actuals, evidence, weighting, verification, and reporting periods
+- [ ] **Phase 8 — Training and Capacity Building**: Programmes, participants, assessments, certificates, costs, effectiveness, and skills gaps
+- [ ] **Phase 9 — Formal PMS Reports**: Project, quarterly, annual, finance, compliance, supplier, training, departmental, and executive reports
+- [ ] **Phase 10 — Production Readiness**: End-to-end/security testing, CI/CD, backups, deployment validation, and user/administrator manuals
 
 ### Platform Enhancements
 - [ ] **Mobile App**: React Native app for field operators with offline capabilities
