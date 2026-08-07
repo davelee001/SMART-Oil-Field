@@ -25,6 +25,7 @@ import {
     ManageAccounts as ManageAccountsIcon,
     AccountTree as ProjectsIcon,
     AccountBalanceWallet as FinanceIcon,
+    Policy as ComplianceIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
