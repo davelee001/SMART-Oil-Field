@@ -10,6 +10,7 @@ import { ZodError } from 'zod';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import projectRoutes from './routes/projects';
+import financeRoutes from './routes/finance';
 
 export const createApp = () => {
   const app = express();
