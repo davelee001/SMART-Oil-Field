@@ -9,7 +9,7 @@ A SMART Oil Field Performance Management System combining secure organizational 
 | 1 | PostgreSQL identity, authentication, RBAC, and user administration | Implemented |
 | 2 | Projects, objectives, activities, milestones, deliverables, risks, and staff assignments | Implemented |
 | 4 | Annual project budgeting, allocations, commitments, expenditure, periods, evidence, and approvals | Implemented |
-| 5 | Oil-sector compliance and regulation register | Planned |
+| 5 | Oil-sector compliance and regulation register | Implemented |
 | 6 | Supply chain and supplier performance | Planned; existing oil-movement tracking remains available |
 | 7 | Configurable KPI and performance engine | Planned; existing operational analytics remain available |
 | 8 | Staff training and capacity building | Planned |
