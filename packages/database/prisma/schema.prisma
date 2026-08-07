@@ -47,6 +47,40 @@ enum RiskStatus {
   CLOSED
 }
 
+enum BudgetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CLOSED
+}
+
+enum FinancialPeriodStatus {
+  OPEN
+  CLOSED
+}
+
+enum FinanceEntryType {
+  COMMITMENT
+  EXPENDITURE
+}
+
+enum FinanceRecordStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum FinanceApprovalAction {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CLOSED
+  REOPENED
+}
+
 model User {
   id            String     @id @default(uuid()) @db.Uuid
   name          String
