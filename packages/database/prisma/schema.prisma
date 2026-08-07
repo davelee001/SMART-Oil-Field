@@ -81,57 +81,151 @@ enum FinanceApprovalAction {
   REOPENED
 }
 
+enum RegulationType {
+  LAW
+  REGULATION
+  POLICY
+  STANDARD
+  GUIDELINE
+  LICENCE_REQUIREMENT
+}
+
+enum ComplianceRegisterStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum ComplianceObligationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLIANT
+  NON_COMPLIANT
+  OVERDUE
+  WAIVED
+}
+
+enum PermitStatus {
+  DRAFT
+  ACTIVE
+  EXPIRING
+  EXPIRED
+  SUSPENDED
+  REVOKED
+}
+
+enum InspectionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum InspectionOutcome {
+  NOT_ASSESSED
+  COMPLIANT
+  PARTIALLY_COMPLIANT
+  NON_COMPLIANT
+}
+
+enum NonConformitySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum NonConformityStatus {
+  OPEN
+  INVESTIGATING
+  ACTION_IN_PROGRESS
+  PENDING_VERIFICATION
+  CLOSED
+  ESCALATED
+}
+
+enum CorrectiveActionStatus {
+  PLANNED
+  IN_PROGRESS
+  PENDING_VERIFICATION
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+enum EscalationLevel {
+  NONE
+  DEPARTMENT_HEAD
+  EXECUTIVE
+  REGULATOR
+}
+
 model User {
-  id            String     @id @default(uuid()) @db.Uuid
-  name          String
-  email         String     @unique
-  passwordHash  String
-  role          Role       @default(VIEWER)
-  walletAddress String?
-  isActive      Boolean    @default(true)
-  tokenVersion  Int        @default(0)
-  lastLoginAt   DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  auditEvents   AuditLog[] @relation("AuditActor")
-  managedProjects Project[] @relation("ProjectManager")
-  projectAssignments ProjectAssignment[]
-  assignedActivities ProjectActivity[] @relation("ActivityAssignee")
-  assignedDeliverables ProjectDeliverable[] @relation("DeliverableAssignee")
-  ownedRisks ProjectRisk[] @relation("RiskOwner")
-  createdBudgets ProjectBudget[] @relation("BudgetCreator")
-  submittedBudgets ProjectBudget[] @relation("BudgetSubmitter")
-  reviewedBudgets ProjectBudget[] @relation("BudgetReviewer")
-  budgetApprovals BudgetApproval[]
-  createdFinanceEntries FinanceEntry[] @relation("FinanceEntryCreator")
-  reviewedFinanceEntries FinanceEntry[] @relation("FinanceEntryReviewer")
-  financeDocuments FinanceDocument[]
+  id                           String                    @id @default(uuid()) @db.Uuid
+  name                         String
+  email                        String                    @unique
+  passwordHash                 String
+  role                         Role                      @default(VIEWER)
+  walletAddress                String?
+  isActive                     Boolean                   @default(true)
+  tokenVersion                 Int                       @default(0)
+  lastLoginAt                  DateTime?
+  createdAt                    DateTime                  @default(now())
+  updatedAt                    DateTime                  @updatedAt
+  auditEvents                  AuditLog[]                @relation("AuditActor")
+  managedProjects              Project[]                 @relation("ProjectManager")
+  projectAssignments           ProjectAssignment[]
+  assignedActivities           ProjectActivity[]         @relation("ActivityAssignee")
+  assignedDeliverables         ProjectDeliverable[]      @relation("DeliverableAssignee")
+  ownedRisks                   ProjectRisk[]             @relation("RiskOwner")
+  createdBudgets               ProjectBudget[]           @relation("BudgetCreator")
+  submittedBudgets             ProjectBudget[]           @relation("BudgetSubmitter")
+  reviewedBudgets              ProjectBudget[]           @relation("BudgetReviewer")
+  budgetApprovals              BudgetApproval[]
+  createdFinanceEntries        FinanceEntry[]            @relation("FinanceEntryCreator")
+  reviewedFinanceEntries       FinanceEntry[]            @relation("FinanceEntryReviewer")
+  financeDocuments             FinanceDocument[]
+  createdRegulations           ComplianceRegulation[]    @relation("RegulationCreator")
+  responsibleObligations       ComplianceObligation[]    @relation("ObligationOfficer")
+  verifiedObligations          ComplianceObligation[]    @relation("ObligationVerifier")
+  responsiblePermits           CompliancePermit[]        @relation("PermitOfficer")
+  responsibleInspections       ComplianceInspection[]    @relation("InspectionOfficer")
+  responsibleNonConformities   NonConformity[]           @relation("NonConformityOfficer")
+  responsibleCorrectiveActions CorrectiveAction[]        @relation("CorrectiveActionOfficer")
+  verifiedCorrectiveActions    CorrectiveAction[]        @relation("CorrectiveActionVerifier")
+  complianceEvidence           ComplianceEvidence[]
+  complianceEvents             ComplianceWorkflowEvent[]
 
   @@index([role])
   @@index([isActive])
 }
 
 model Project {
-  id            String              @id @default(uuid()) @db.Uuid
-  title         String
-  code          String              @unique
-  department    String
-  location      String
-  managerId     String              @db.Uuid
-  startDate     DateTime
-  endDate       DateTime
-  status        ProjectStatus       @default(PLANNED)
-  progress      Int                 @default(0)
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  manager       User                @relation("ProjectManager", fields: [managerId], references: [id], onDelete: Restrict)
-  objectives    ProjectObjective[]
-  activities    ProjectActivity[]
-  milestones    ProjectMilestone[]
-  deliverables  ProjectDeliverable[]
-  risks         ProjectRisk[]
-  assignments   ProjectAssignment[]
-  budgets       ProjectBudget[]
+  id                    String                 @id @default(uuid()) @db.Uuid
+  title                 String
+  code                  String                 @unique
+  department            String
+  location              String
+  managerId             String                 @db.Uuid
+  startDate             DateTime
+  endDate               DateTime
+  status                ProjectStatus          @default(PLANNED)
+  progress              Int                    @default(0)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  manager               User                   @relation("ProjectManager", fields: [managerId], references: [id], onDelete: Restrict)
+  objectives            ProjectObjective[]
+  activities            ProjectActivity[]
+  milestones            ProjectMilestone[]
+  deliverables          ProjectDeliverable[]
+  risks                 ProjectRisk[]
+  assignments           ProjectAssignment[]
+  budgets               ProjectBudget[]
+  complianceObligations ComplianceObligation[]
+  compliancePermits     CompliancePermit[]
+  complianceInspections ComplianceInspection[]
+  nonConformities       NonConformity[]
 
   @@index([department])
   @@index([managerId])
