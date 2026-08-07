@@ -111,6 +111,14 @@ const AppContent: React.FC = () => {
                                 }
                             />
                             <Route
+                                path="/finance"
+                                element={
+                                    <ProtectedRoute>
+                                        <Finance />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
                                 path="/admin/users"
                                 element={
                                     <ProtectedRoute roles={['ADMINISTRATOR']}>
