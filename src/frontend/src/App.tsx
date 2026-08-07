@@ -13,6 +13,7 @@ import PaymentHistory from './pages/PaymentHistory';
 import AdminUsers from './pages/AdminUsers';
 import Projects from './pages/Projects';
 import Finance from './pages/Finance';
+import Compliance from './pages/Compliance';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/common/ProtectedRoute';
