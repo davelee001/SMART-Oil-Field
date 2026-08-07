@@ -36,3 +36,7 @@ An incomplete obligation is treated as overdue when its due date passes, even be
 - **Other authenticated roles:** read dashboards, registers, workflow history, and regulatory exports.
 
 Only a compliance reviewer can mark obligations compliant, verify corrective actions, close non-conformities, or escalate findings.
+
+## Evidence safety
+
+Evidence records store an HTTPS repository URL, name, MIME type, notes, uploader, timestamp, and a single parent record. Binary documents are not stored in local storage or an unaudited application directory. The database migration enforces the single-parent invariant.
