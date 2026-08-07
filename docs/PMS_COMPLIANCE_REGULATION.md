@@ -58,3 +58,30 @@ The authenticated API is mounted at `/api/compliance`:
 - `GET /reports/register.csv`
 
 The React workspace is `/compliance`.
+
+## Database migration
+
+Apply the migration in development:
+
+```bash
+npm run db:generate
+npm run db:migrate
+```
+
+For a controlled deployment:
+
+```bash
+npm run db:migrate:deploy
+```
+
+The Phase 5 migration is `packages/database/prisma/migrations/20260807142236_compliance_regulation/migration.sql`.
+
+## Verification
+
+```bash
+npm test
+npm run typecheck
+npm run build
+```
+
+Compliance integration tests cover read access, manager-only master-data changes, contributor ownership, reviewer verification, permit validation, escalation, closure authorization, evidence URL safety, and regulatory CSV export.
