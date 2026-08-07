@@ -93,6 +93,7 @@ This project integrates multiple technologies:
 | PMS Identity | PostgreSQL users, bcrypt passwords, JWT HTTP-only sessions, eight organizational roles, route protection, and administrator user management |
 | Project Management | Projects, objectives, activities, milestones, deliverables, risks, progress, and assigned staff |
 | Budgeting & Finance | Annual budgets, categories, funding sources, periods, commitments, expenditure, calculated balances, document references, and approval workflows |
+| Compliance & Regulation | Regulations, policies, obligations, permits, inspections, evidence, scoring, findings, corrective actions, escalation, and regulatory export |
 | Telemetry | Real-time sensor data ingestion, WebSocket streaming, querying, statistics, CSV export, async tasks |
 | Oil Tracking | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
 | Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
