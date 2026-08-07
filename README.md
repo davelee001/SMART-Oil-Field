@@ -40,6 +40,12 @@ Project management is implemented as a domain separate from oil-batch movement. 
 
 All authenticated users can read project records. Administrators and Department Heads can manage every project. Project Managers can create projects assigned to themselves and manage projects for which they are the designated manager. Only Administrators can delete entire projects. See [docs/PMS_PROJECT_MANAGEMENT.md](docs/PMS_PROJECT_MANAGEMENT.md).
 
+## PMS Budgeting and Finance (Phase 4)
+
+The `/finance` workspace and `/api/finance` API provide annual project budgets, category allocations, funding sources, financial reporting periods, commitments, actual expenditure, supporting-document references, and auditable submission/approval workflows. Balances, variance, outstanding commitments, and utilization are calculated from approved finance records rather than subscription payments.
+
+Finance Officers and Administrators review budgets and finance entries. Project Managers can prepare and submit budgets for projects they manage, Department Heads can manage project finance records, and other authenticated roles have reporting access. Four-eyes checks prevent users from approving their own submissions, closed reporting periods reject new entries, and allocation controls prevent approvals beyond an approved category ceiling. See [docs/PMS_BUDGETING_FINANCE.md](docs/PMS_BUDGETING_FINANCE.md).
+
 ## Overview
 
 This project integrates multiple technologies:
