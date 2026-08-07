@@ -268,80 +268,80 @@ model ProjectBudget {
 }
 
 model BudgetCategory {
-  id              String          @id @default(uuid()) @db.Uuid
-  budgetId        String          @db.Uuid
-  code            String
-  name            String
-  description     String?
-  proposedAmount  Decimal         @db.Decimal(18, 2)
-  approvedAmount  Decimal         @default(0) @db.Decimal(18, 2)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  budget          ProjectBudget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  entries         FinanceEntry[]
+  id             String         @id @default(uuid()) @db.Uuid
+  budgetId       String         @db.Uuid
+  code           String
+  name           String
+  description    String?
+  proposedAmount Decimal        @db.Decimal(18, 2)
+  approvedAmount Decimal        @default(0) @db.Decimal(18, 2)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  budget         ProjectBudget  @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  entries        FinanceEntry[]
 
   @@unique([budgetId, code])
   @@index([budgetId])
 }
 
 model BudgetFundingSource {
-  id          String        @id @default(uuid()) @db.Uuid
-  budgetId    String        @db.Uuid
-  name        String
-  reference   String?
-  amount      Decimal       @db.Decimal(18, 2)
-  notes       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  budget      ProjectBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  id        String        @id @default(uuid()) @db.Uuid
+  budgetId  String        @db.Uuid
+  name      String
+  reference String?
+  amount    Decimal       @db.Decimal(18, 2)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  budget    ProjectBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
 
   @@index([budgetId])
 }
 
 model FinancialReportingPeriod {
-  id          String                  @id @default(uuid()) @db.Uuid
-  budgetId    String                  @db.Uuid
-  name        String
-  startDate   DateTime
-  endDate     DateTime
-  status      FinancialPeriodStatus   @default(OPEN)
-  createdAt   DateTime                @default(now())
-  updatedAt   DateTime                @updatedAt
-  budget      ProjectBudget           @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  entries     FinanceEntry[]
+  id        String                @id @default(uuid()) @db.Uuid
+  budgetId  String                @db.Uuid
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    FinancialPeriodStatus @default(OPEN)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+  budget    ProjectBudget         @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  entries   FinanceEntry[]
 
   @@unique([budgetId, name])
   @@index([budgetId, startDate, endDate])
 }
 
 model FinanceEntry {
-  id                   String               @id @default(uuid()) @db.Uuid
-  budgetId             String               @db.Uuid
-  categoryId           String               @db.Uuid
-  periodId             String?              @db.Uuid
-  type                 FinanceEntryType
-  description          String
-  reference            String
-  amount               Decimal              @db.Decimal(18, 2)
-  transactionDate      DateTime
-  counterparty         String?
-  status               FinanceRecordStatus  @default(DRAFT)
-  sourceCommitmentId   String?              @db.Uuid
-  createdById          String               @db.Uuid
-  reviewedById         String?              @db.Uuid
-  submittedAt          DateTime?
-  reviewedAt           DateTime?
-  reviewComment        String?
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  budget               ProjectBudget        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  category             BudgetCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  period               FinancialReportingPeriod? @relation(fields: [periodId], references: [id], onDelete: SetNull)
-  sourceCommitment     FinanceEntry?         @relation("CommitmentRealizations", fields: [sourceCommitmentId], references: [id], onDelete: SetNull)
-  realizations         FinanceEntry[]        @relation("CommitmentRealizations")
-  createdBy            User                 @relation("FinanceEntryCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  reviewedBy           User?                @relation("FinanceEntryReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-  documents            FinanceDocument[]
+  id                 String                    @id @default(uuid()) @db.Uuid
+  budgetId           String                    @db.Uuid
+  categoryId         String                    @db.Uuid
+  periodId           String?                   @db.Uuid
+  type               FinanceEntryType
+  description        String
+  reference          String
+  amount             Decimal                   @db.Decimal(18, 2)
+  transactionDate    DateTime
+  counterparty       String?
+  status             FinanceRecordStatus       @default(DRAFT)
+  sourceCommitmentId String?                   @db.Uuid
+  createdById        String                    @db.Uuid
+  reviewedById       String?                   @db.Uuid
+  submittedAt        DateTime?
+  reviewedAt         DateTime?
+  reviewComment      String?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  budget             ProjectBudget             @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category           BudgetCategory            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  period             FinancialReportingPeriod? @relation(fields: [periodId], references: [id], onDelete: SetNull)
+  sourceCommitment   FinanceEntry?             @relation("CommitmentRealizations", fields: [sourceCommitmentId], references: [id], onDelete: SetNull)
+  realizations       FinanceEntry[]            @relation("CommitmentRealizations")
+  createdBy          User                      @relation("FinanceEntryCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reviewedBy         User?                     @relation("FinanceEntryReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  documents          FinanceDocument[]
 
   @@unique([budgetId, reference])
   @@index([budgetId, type, status])
