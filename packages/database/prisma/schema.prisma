@@ -352,17 +352,17 @@ model FinanceEntry {
 }
 
 model FinanceDocument {
-  id           String         @id @default(uuid()) @db.Uuid
-  budgetId     String         @db.Uuid
-  entryId      String?        @db.Uuid
+  id           String        @id @default(uuid()) @db.Uuid
+  budgetId     String        @db.Uuid
+  entryId      String?       @db.Uuid
   name         String
   url          String
   mimeType     String?
-  uploadedById String         @db.Uuid
-  createdAt    DateTime       @default(now())
-  budget       ProjectBudget  @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  entry        FinanceEntry?  @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  uploadedBy   User           @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  uploadedById String        @db.Uuid
+  createdAt    DateTime      @default(now())
+  budget       ProjectBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  entry        FinanceEntry? @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  uploadedBy   User          @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
 
   @@index([budgetId])
   @@index([entryId])
