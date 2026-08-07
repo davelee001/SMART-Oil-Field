@@ -38,6 +38,7 @@ const menuItems: Array<{ text: string; icon: React.ReactNode; path: string; role
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Projects', icon: <ProjectsIcon />, path: '/projects' },
+    { text: 'Budgeting & Finance', icon: <FinanceIcon />, path: '/finance' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
     { text: 'Map View', icon: <MapIcon />, path: '/map' },
     { text: 'Data Upload', icon: <UploadIcon />, path: '/upload' },
