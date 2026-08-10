@@ -339,6 +339,8 @@ router.post('/data-sources', async (req, res, next) => {
   try {
     if (!isManager(req.authUser!.role)) return res.status(403).json({ message: 'Only M&E Officers and Administrators can configure KPI data sources' });
     const input = dataSourceSchema.parse(req.body);
+    const indicator = await prisma.kpiIndicator.findUnique({ where: { id: input.indicatorId } });
+    if (!indicator || indicator.status !== KpiIndicatorStatus.ACTIVE) return res.status(409).json({ message: 'Operational sources require an active KPI' });
     const source = await prisma.kpiDataSource.create({ data: { ...input, configuration: input.configuration ?? Prisma.JsonNull } });
     await workflow(req.authUser!.id, 'KpiDataSource', source.id, 'CONFIGURED', null, source.sourceType);
     return res.status(201).json({ source });
