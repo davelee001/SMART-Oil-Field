@@ -19,6 +19,14 @@ All authenticated PMS roles have reporting access. Administrators and Supply Cha
 
 The API rejects self-approval of a purchase request. It also rejects qualification decisions made by the user who registered the supplier. PostgreSQL check constraints provide a second line of defense for procurement self-approval, scores, percentages, monetary values, date ranges, and evidence ownership.
 
+## Controlled workflow states
+
+- Qualification: `NOT_STARTED` → `UNDER_REVIEW` → `APPROVED` or `REJECTED`; an approved record becomes effectively `EXPIRED` after its expiry date.
+- Purchase request: `DRAFT` → `SUBMITTED` → `APPROVED` or `REJECTED`, followed by ordering and delivery states.
+- Delivery: `SCHEDULED` → `IN_TRANSIT` → `DELIVERED` → `ACCEPTED` or `REJECTED`; overdue open deliveries are reported as late.
+- Contract: active contracts are reported as expiring during their configured renewal lead period and expired after their end date.
+- Performance: suppliers scoring below 70 percent are surfaced as below standard on the supply-chain dashboard.
+
 ## Routes
 
 - Frontend workspace: `/supply-chain`

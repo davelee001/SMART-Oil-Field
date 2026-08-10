@@ -22,7 +22,7 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 As of 10 August 2026:
 
-- 47 authentication, authorization, project, finance, compliance, and supply-chain tests pass across six test files.
+- 48 authentication, authorization, project, finance, compliance, and supply-chain tests pass across six test files.
 - Prisma generation and the shared, database, API, and frontend TypeScript checks pass.
 - The production frontend build passes; Webpack continues to report its existing bundle-size advisory.
 - Six PostgreSQL migrations are available, including `20260810075831_supplier_performance` for Phase 6.
