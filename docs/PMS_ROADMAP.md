@@ -50,10 +50,14 @@ Portfolio hierarchy, programme aggregation, project budgeting, KPI frameworks, a
 - Authenticated regulatory-register export; future formal report templates remain Phase 9 work
 - Existing blockchain records may be linked as evidence without duplicating or expanding payment features
 
-## Phase 6 — Supply chain and supplier performance (approval required)
+## Phase 6 — Supply chain and supplier performance (implemented)
 
-- Supplier registry, qualification, contracts, purchase requests, delivery tracking, and performance
-- Connections to existing oil-movement provenance without duplicating blockchain records
+- Supplier registry with upstream, midstream, downstream, and cross-sector classification
+- Qualification scoring, expiry monitoring, secure evidence, and four-eyes decisions
+- Project-linked supplier contracts, purchase requests, approval controls, and delivery acceptance
+- Quality, delivery, HSE, local-content, and cost performance scoring with auditable workflow history
+- Authenticated supplier-register export and operational dashboard alerts
+- Existing oil-movement and blockchain provenance remain unchanged and are not duplicated
 
 ## Phase 8 — Training and capacity building (approval required)
 
