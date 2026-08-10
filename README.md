@@ -136,6 +136,7 @@ This project integrates multiple technologies:
 | Compliance & Regulation | Regulations, policies, obligations, permits, inspections, evidence, scoring, findings, corrective actions, escalation, and regulatory export |
 | Supply Chain | Supplier registry, qualification, contracts, purchase requests, delivery acceptance, evidence, expiry alerts, five-dimension performance scoring, and supplier export |
 | KPI Performance | Results frameworks, impact/outcome/output hierarchy, baselines, period targets, actuals, evidence, weighted achievement, M&E verification, controlled operational connectors, and performance export |
+| Training & Capacity | Staff departments, competency profiles, courses, requirements, sessions, attendance, assessments, certifications, expiry, effectiveness, costs, evidence, approvals, and compliance export |
 | Telemetry | Real-time sensor data ingestion, WebSocket streaming, querying, statistics, CSV export, async tasks |
 | Oil Tracking | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
 | Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
