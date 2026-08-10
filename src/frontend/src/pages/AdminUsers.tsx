@@ -38,7 +38,7 @@ const AdminUsers: React.FC = () => {
         setCreating(true);
         try {
             const result = await apiRequest<{ user: AppUser }>('/api/admin/users', {
-                method: 'POST', body: JSON.stringify({ name, email, password, role }),
+                method: 'POST', body: JSON.stringify({ name, email, password, role, department: department || null }),
             });
             setUsers((current) => [...current, result.user].sort((a, b) => a.name.localeCompare(b.name)));
             setName(''); setEmail(''); setPassword(''); setRole('VIEWER');
