@@ -15,6 +15,7 @@ const AdminUsers: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [department, setDepartment] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [role, setRole] = useState<PmsRole>('VIEWER');
