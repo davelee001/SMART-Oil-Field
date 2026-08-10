@@ -72,7 +72,7 @@ const measurementSchema = z.object({
   indicatorId: uuid, periodId: uuid, actualValue: numeric, measuredAt: z.coerce.date(), narrative: optionalText(5000),
   disaggregation: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])).nullable().optional(),
   sourceType: z.enum([KpiSourceType.MANUAL, KpiSourceType.FINANCE, KpiSourceType.COMPLIANCE, KpiSourceType.SUPPLY_CHAIN]).default(KpiSourceType.MANUAL), sourceReference: optionalText(1000),
-});
+}).refine((value) => value.sourceType === KpiSourceType.MANUAL || Boolean(value.sourceReference), { message: 'Integrated measurements require a source reference', path: ['sourceReference'] });
 const dataSourceSchema = z.object({
   indicatorId: uuid, name: z.string().trim().min(2).max(200), sourceType: z.enum([KpiSourceType.TELEMETRY, KpiSourceType.ANALYTICS]),
   endpoint: sourceEndpoint, valuePath: z.string().trim().min(1).max(500), aggregation: z.nativeEnum(KpiAggregation).default(KpiAggregation.VALUE),
