@@ -10,7 +10,7 @@ A SMART Oil Field Performance Management System combining secure organizational 
 | 2 | Projects, objectives, activities, milestones, deliverables, risks, and staff assignments | Implemented |
 | 4 | Annual project budgeting, allocations, commitments, expenditure, periods, evidence, and approvals | Implemented |
 | 5 | Oil-sector compliance and regulation register | Implemented |
-| 6 | Supply chain and supplier performance | Planned; existing oil-movement tracking remains available |
+| 6 | Supply chain and supplier performance | Implemented; existing oil-movement tracking remains available |
 | 7 | Configurable KPI and performance engine | Planned; existing operational analytics remain available |
 | 8 | Staff training and capacity building | Planned |
 | 9 | Formal PMS reporting and analytics | Planned; existing technical exports remain available |
@@ -20,13 +20,13 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 ### Current PMS verification baseline
 
-As of 7 August 2026:
+As of 10 August 2026:
 
-- 37 authentication, authorization, project, finance, and compliance tests pass across five test files.
+- 47 authentication, authorization, project, finance, compliance, and supply-chain tests pass across six test files.
 - Prisma generation and the shared, database, API, and frontend TypeScript checks pass.
 - The production frontend build passes; Webpack continues to report its existing bundle-size advisory.
-- Five PostgreSQL migrations are available, including `20260807142236_compliance_regulation` for Phase 5.
-- The Phase 5 migration has been applied successfully to the local PostgreSQL development database.
+- Six PostgreSQL migrations are available, including `20260810075831_supplier_performance` for Phase 6.
+- The Phase 6 migration has been applied successfully to the local PostgreSQL development database.
 
 ## PMS Foundation (Phase 1)
 
@@ -88,6 +88,14 @@ Compliance Officers and Administrators control master records, verification, clo
 
 The compliance dashboard is available at `/compliance`; its protected API is mounted at `/api/compliance`, and the authenticated regulatory-register export is `GET /api/compliance/reports/register.csv`.
 
+## PMS Supply Chain and Supplier Performance (Phase 6)
+
+The `/supply-chain` workspace and `/api/supply-chain` API provide an oil-sector supplier register, upstream/midstream/downstream classification, qualification, contracts, purchase requests, delivery acceptance, secure evidence references, expiry alerts, workflow history, and supplier-performance scoring across quality, delivery, HSE, local content, and cost.
+
+Supply Chain Officers and Administrators control suppliers, qualification decisions, contracts, and performance reviews. Project Managers and Department Heads can prepare procurement requests and record deliveries. Four-eyes controls prevent supplier registrants from deciding their own qualification and prevent requesters from approving their own purchase requests. Existing oil-batch movement and blockchain provenance remain unchanged specialist services; PMS projects can link to supplier contracts and requests without duplicating those records. See [docs/PMS_SUPPLY_CHAIN.md](docs/PMS_SUPPLY_CHAIN.md).
+
+The authenticated supplier CSV export is `GET /api/supply-chain/reports/suppliers.csv`.
+
 ## Overview
 
 This project integrates multiple technologies:
@@ -106,6 +114,7 @@ This project integrates multiple technologies:
 | Project Management | Projects, objectives, activities, milestones, deliverables, risks, progress, and assigned staff |
 | Budgeting & Finance | Annual budgets, categories, funding sources, periods, commitments, expenditure, calculated balances, document references, and approval workflows |
 | Compliance & Regulation | Regulations, policies, obligations, permits, inspections, evidence, scoring, findings, corrective actions, escalation, and regulatory export |
+| Supply Chain | Supplier registry, qualification, contracts, purchase requests, delivery acceptance, evidence, expiry alerts, five-dimension performance scoring, and supplier export |
 | Telemetry | Real-time sensor data ingestion, WebSocket streaming, querying, statistics, CSV export, async tasks |
 | Oil Tracking | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
 | Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
