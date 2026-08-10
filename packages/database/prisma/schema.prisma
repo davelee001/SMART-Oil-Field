@@ -394,6 +394,20 @@ model User {
   verifiedKpiMeasurements      KpiMeasurement[]            @relation("KpiMeasurementVerifier")
   kpiEvidence                  KpiEvidence[]
   kpiWorkflowEvents            KpiWorkflowEvent[]
+  competencyProfiles           StaffCompetency[]           @relation("StaffCompetencyUser")
+  competencyAssessments        StaffCompetency[]           @relation("StaffCompetencyAssessor")
+  coordinatedTrainingSessions  TrainingSession[]           @relation("TrainingCoordinator")
+  submittedTrainingSessions    TrainingSession[]           @relation("TrainingSessionSubmitter")
+  reviewedTrainingSessions     TrainingSession[]           @relation("TrainingSessionReviewer")
+  trainingEnrollments          TrainingEnrollment[]        @relation("TrainingParticipant")
+  trainingNominations          TrainingEnrollment[]        @relation("TrainingNominator")
+  recordedAttendance           TrainingAttendance[]        @relation("AttendanceRecorder")
+  conductedAssessments         TrainingAssessment[]        @relation("TrainingAssessor")
+  staffCertifications          StaffCertification[]        @relation("CertificationHolder")
+  issuedCertifications         StaffCertification[]        @relation("CertificationIssuer")
+  verifiedCertifications       StaffCertification[]        @relation("CertificationVerifier")
+  trainingEvidence             TrainingEvidence[]
+  trainingWorkflowEvents       TrainingWorkflowEvent[]
 
   @@index([role])
   @@index([isActive])
