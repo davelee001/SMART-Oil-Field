@@ -16,6 +16,7 @@ import Finance from './pages/Finance';
 import Compliance from './pages/Compliance';
 import SupplyChain from './pages/SupplyChain';
 import KpiPerformance from './pages/KpiPerformance';
+import Training from './pages/Training';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/common/ProtectedRoute';
