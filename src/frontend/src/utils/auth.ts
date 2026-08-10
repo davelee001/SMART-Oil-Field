@@ -26,6 +26,7 @@ export interface AppUser {
     id: string;
     name: string;
     email: string;
+    department: string | null;
     role: PmsRole;
     walletAddress: string | null;
     isActive: boolean;
