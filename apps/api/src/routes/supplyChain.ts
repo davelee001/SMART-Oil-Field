@@ -318,6 +318,7 @@ router.get('/reports/suppliers.csv', async (_req, res, next) => {
     const rows = suppliers.map((supplier) => [supplier.supplierCode, supplier.legalName, supplier.sector, supplier.status, supplier.country,
       Number(supplier.localContentPercentage), supplier.qualifications[0] ? effectiveQualificationStatus(supplier.qualifications[0]) : '',
       supplier.performanceReviews.length ? average(supplier.performanceReviews.map((item) => Number(item.overallScore))) : ''].map(escape).join(','));
+    res.set('Cache-Control', 'private, no-store');
     res.type('text/csv').attachment('supplier-performance-register.csv');
     return res.send(['Supplier Code,Legal Name,Sector,Status,Country,Local Content %,Qualification,Performance Score', ...rows].join('\n'));
   } catch (error) { return next(error); }
