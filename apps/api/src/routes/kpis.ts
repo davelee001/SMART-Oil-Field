@@ -151,6 +151,7 @@ router.get('/overview', async (req, res, next) => {
     return res.json({ summary: {
       frameworks: frameworks.length, activeIndicators: active.length, openPeriods: periods.filter((item) => item.status === KpiPeriodStatus.OPEN).length,
       overduePeriods: periods.filter((item) => item.dueDate < new Date() && !([KpiPeriodStatus.APPROVED, KpiPeriodStatus.CLOSED] as KpiPeriodStatus[]).includes(item.status)).length,
+      pendingVerification: indicators.reduce((count, item) => count + item.measurements.filter((measurement) => measurement.status === KpiMeasurementStatus.SUBMITTED).length, 0),
       reportingRate: active.length ? round(reported.length / active.length * 100) : 0, portfolioScore,
       onTrack: performance.filter((item) => item.health === 'ON_TRACK').length, atRisk: performance.filter((item) => item.health === 'AT_RISK').length,
       offTrack: performance.filter((item) => item.health === 'OFF_TRACK').length, notReported: performance.filter((item) => item.health === 'NOT_REPORTED').length,
