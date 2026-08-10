@@ -441,6 +441,7 @@ model Project {
   supplierContracts     SupplierContract[]
   purchaseRequests      PurchaseRequest[]
   resultsFrameworks     ResultsFramework[]
+  trainingSessions      TrainingSession[]
 
   @@index([department])
   @@index([managerId])
