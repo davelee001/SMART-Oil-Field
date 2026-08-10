@@ -129,6 +129,7 @@ router.get('/overview', async (_req, res, next) => {
       pendingRequests: requests.filter((item) => ([PurchaseRequestStatus.SUBMITTED, PurchaseRequestStatus.APPROVED] as PurchaseRequestStatus[]).includes(item.status)).length,
       lateDeliveries: deliveries.filter((item) => item.status === DeliveryStatus.LATE || (item.scheduledDate < new Date() && !([DeliveryStatus.ACCEPTED, DeliveryStatus.REJECTED] as DeliveryStatus[]).includes(item.status))).length,
       averagePerformance: reviews.length ? average(reviews.map((item) => Number(item.overallScore))) : 0,
+      belowStandardSuppliers: new Set(reviews.filter((item) => Number(item.overallScore) < 70).map((item) => item.supplierId)).size,
     } });
   } catch (error) { return next(error); }
 });
