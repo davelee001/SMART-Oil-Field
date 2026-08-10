@@ -13,6 +13,7 @@ import projectRoutes from './routes/projects';
 import financeRoutes from './routes/finance';
 import complianceRoutes from './routes/compliance';
 import supplyChainRoutes from './routes/supplyChain';
+import kpiRoutes from './routes/kpis';
 
 export const createApp = () => {
   const app = express();
@@ -40,6 +41,7 @@ export const createApp = () => {
   app.use('/api/finance', financeRoutes);
   app.use('/api/compliance', complianceRoutes);
   app.use('/api/supply-chain', supplyChainRoutes);
+  app.use('/api/kpis', kpiRoutes);
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof ZodError) return res.status(400).json({ message: 'Validation failed', issues: error.issues });
