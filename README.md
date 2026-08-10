@@ -116,6 +116,27 @@ Administrators and Department Heads govern the catalogue, competency assessments
 
 The dashboard reports workforce compliance, skills gaps, upcoming sessions, completion, training hours, expiring certifications, effectiveness, and cost. The authenticated compliance export is `GET /api/training/reports/compliance.csv`. See [docs/PMS_TRAINING_CAPACITY.md](docs/PMS_TRAINING_CAPACITY.md).
 
+### Phase 8 operator quick start
+
+| Capability | Location | Authorized roles |
+|---|---|---|
+| Training dashboard and register | `/training` | All authenticated users can view |
+| Courses, competencies, requirements, and staff assessments | `/training` and `/api/training` | Administrator and Department Head |
+| Session planning, nominations, attendance, and assessments | `/training` and `/api/training` | Administrator, Department Head, and responsible Project Manager |
+| Session approval and certificate verification | `/api/training/*/decision` and `/api/training/certifications/:id/verify` | Administrator and Department Head, with four-eyes separation |
+| Workforce compliance export | `/api/training/reports/compliance.csv` | All authenticated users |
+
+For an existing installation, apply the Phase 8 schema and verify the complete PMS workspace:
+
+```bash
+npm run db:migrate:deploy
+npm test
+npm run typecheck
+npm run build
+```
+
+The migration is `20260810092541_training_capacity_building`. Production evidence references must use HTTPS, completed enrollments require at least 75 percent attendance plus a post-training assessment, and certificates issued from a course inherit its configured validity when an explicit expiry is not supplied.
+
 ## Overview
 
 This project integrates multiple technologies:
