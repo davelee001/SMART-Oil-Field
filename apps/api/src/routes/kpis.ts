@@ -227,6 +227,10 @@ router.patch('/indicators/:id', async (req, res, next) => {
     const current = await prisma.kpiIndicator.findUnique({ where: { id: req.params.id } });
     if (!current) return res.status(404).json({ message: 'KPI not found' });
     const parsed = indicatorSchema.omit({ frameworkId: true }).partial().parse(req.body);
+    if (parsed.baselineDate) {
+      const framework = await prisma.resultsFramework.findUnique({ where: { id: current.frameworkId } });
+      if (!framework || parsed.baselineDate < framework.startDate || parsed.baselineDate > framework.endDate) return res.status(400).json({ message: 'Baseline date must fall within the results framework' });
+    }
     const indicator = await prisma.kpiIndicator.update({ where: { id: current.id }, data: { ...parsed, disaggregation: parsed.disaggregation === null ? Prisma.JsonNull : parsed.disaggregation }, include: indicatorInclude });
     await workflow(req.authUser!.id, 'KpiIndicator', indicator.id, 'UPDATED', current.status, indicator.status);
     return res.json({ indicator });
