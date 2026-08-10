@@ -287,6 +287,59 @@ enum KpiAggregation {
   COUNT
 }
 
+enum TrainingCourseStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+enum TrainingDeliveryMode {
+  CLASSROOM
+  VIRTUAL
+  BLENDED
+  ON_THE_JOB
+}
+
+enum TrainingSessionStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TrainingEnrollmentStatus {
+  NOMINATED
+  ENROLLED
+  ATTENDED
+  COMPLETED
+  FAILED
+  NO_SHOW
+  CANCELLED
+}
+
+enum TrainingAttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+  PARTIAL
+}
+
+enum TrainingAssessmentType {
+  PRE_TRAINING
+  POST_TRAINING
+  FOLLOW_UP
+}
+
+enum CertificationStatus {
+  ACTIVE
+  EXPIRING
+  EXPIRED
+  REVOKED
+}
+
 model User {
   id                           String                      @id @default(uuid()) @db.Uuid
   name                         String
