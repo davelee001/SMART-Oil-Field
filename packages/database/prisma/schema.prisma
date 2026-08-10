@@ -161,41 +161,102 @@ enum EscalationLevel {
   REGULATOR
 }
 
+enum SupplierSector {
+  UPSTREAM
+  MIDSTREAM
+  DOWNSTREAM
+  CROSS_SECTOR
+}
+
+enum SupplierStatus {
+  DRAFT
+  PENDING_QUALIFICATION
+  QUALIFIED
+  SUSPENDED
+  BLACKLISTED
+  INACTIVE
+}
+
+enum QualificationStatus {
+  NOT_STARTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum SupplierContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  SUSPENDED
+  TERMINATED
+}
+
+enum PurchaseRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ORDERED
+  PARTIALLY_DELIVERED
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  SCHEDULED
+  IN_TRANSIT
+  DELIVERED
+  ACCEPTED
+  REJECTED
+  LATE
+}
+
 model User {
-  id                           String                    @id @default(uuid()) @db.Uuid
+  id                           String                      @id @default(uuid()) @db.Uuid
   name                         String
-  email                        String                    @unique
+  email                        String                      @unique
   passwordHash                 String
-  role                         Role                      @default(VIEWER)
+  role                         Role                        @default(VIEWER)
   walletAddress                String?
-  isActive                     Boolean                   @default(true)
-  tokenVersion                 Int                       @default(0)
+  isActive                     Boolean                     @default(true)
+  tokenVersion                 Int                         @default(0)
   lastLoginAt                  DateTime?
-  createdAt                    DateTime                  @default(now())
-  updatedAt                    DateTime                  @updatedAt
-  auditEvents                  AuditLog[]                @relation("AuditActor")
-  managedProjects              Project[]                 @relation("ProjectManager")
+  createdAt                    DateTime                    @default(now())
+  updatedAt                    DateTime                    @updatedAt
+  auditEvents                  AuditLog[]                  @relation("AuditActor")
+  managedProjects              Project[]                   @relation("ProjectManager")
   projectAssignments           ProjectAssignment[]
-  assignedActivities           ProjectActivity[]         @relation("ActivityAssignee")
-  assignedDeliverables         ProjectDeliverable[]      @relation("DeliverableAssignee")
-  ownedRisks                   ProjectRisk[]             @relation("RiskOwner")
-  createdBudgets               ProjectBudget[]           @relation("BudgetCreator")
-  submittedBudgets             ProjectBudget[]           @relation("BudgetSubmitter")
-  reviewedBudgets              ProjectBudget[]           @relation("BudgetReviewer")
+  assignedActivities           ProjectActivity[]           @relation("ActivityAssignee")
+  assignedDeliverables         ProjectDeliverable[]        @relation("DeliverableAssignee")
+  ownedRisks                   ProjectRisk[]               @relation("RiskOwner")
+  createdBudgets               ProjectBudget[]             @relation("BudgetCreator")
+  submittedBudgets             ProjectBudget[]             @relation("BudgetSubmitter")
+  reviewedBudgets              ProjectBudget[]             @relation("BudgetReviewer")
   budgetApprovals              BudgetApproval[]
-  createdFinanceEntries        FinanceEntry[]            @relation("FinanceEntryCreator")
-  reviewedFinanceEntries       FinanceEntry[]            @relation("FinanceEntryReviewer")
+  createdFinanceEntries        FinanceEntry[]              @relation("FinanceEntryCreator")
+  reviewedFinanceEntries       FinanceEntry[]              @relation("FinanceEntryReviewer")
   financeDocuments             FinanceDocument[]
-  createdRegulations           ComplianceRegulation[]    @relation("RegulationCreator")
-  responsibleObligations       ComplianceObligation[]    @relation("ObligationOfficer")
-  verifiedObligations          ComplianceObligation[]    @relation("ObligationVerifier")
-  responsiblePermits           CompliancePermit[]        @relation("PermitOfficer")
-  responsibleInspections       ComplianceInspection[]    @relation("InspectionOfficer")
-  responsibleNonConformities   NonConformity[]           @relation("NonConformityOfficer")
-  responsibleCorrectiveActions CorrectiveAction[]        @relation("CorrectiveActionOfficer")
-  verifiedCorrectiveActions    CorrectiveAction[]        @relation("CorrectiveActionVerifier")
+  createdRegulations           ComplianceRegulation[]      @relation("RegulationCreator")
+  responsibleObligations       ComplianceObligation[]      @relation("ObligationOfficer")
+  verifiedObligations          ComplianceObligation[]      @relation("ObligationVerifier")
+  responsiblePermits           CompliancePermit[]          @relation("PermitOfficer")
+  responsibleInspections       ComplianceInspection[]      @relation("InspectionOfficer")
+  responsibleNonConformities   NonConformity[]             @relation("NonConformityOfficer")
+  responsibleCorrectiveActions CorrectiveAction[]          @relation("CorrectiveActionOfficer")
+  verifiedCorrectiveActions    CorrectiveAction[]          @relation("CorrectiveActionVerifier")
   complianceEvidence           ComplianceEvidence[]
   complianceEvents             ComplianceWorkflowEvent[]
+  createdSuppliers             Supplier[]                  @relation("SupplierCreator")
+  reviewedQualifications       SupplierQualification[]     @relation("QualificationReviewer")
+  managedSupplierContracts     SupplierContract[]          @relation("SupplierContractOfficer")
+  createdPurchaseRequests      PurchaseRequest[]           @relation("PurchaseRequestCreator")
+  reviewedPurchaseRequests     PurchaseRequest[]           @relation("PurchaseRequestReviewer")
+  acceptedDeliveries           SupplierDelivery[]          @relation("DeliveryAcceptor")
+  supplierPerformanceReviews   SupplierPerformanceReview[] @relation("SupplierReviewAuthor")
+  supplierEvidence             SupplierEvidence[]
+  supplierWorkflowEvents       SupplierWorkflowEvent[]
 
   @@index([role])
   @@index([isActive])
@@ -226,6 +287,8 @@ model Project {
   compliancePermits     CompliancePermit[]
   complianceInspections ComplianceInspection[]
   nonConformities       NonConformity[]
+  supplierContracts     SupplierContract[]
+  purchaseRequests      PurchaseRequest[]
 
   @@index([department])
   @@index([managerId])
@@ -575,6 +638,228 @@ model ComplianceEvidence {
 }
 
 model ComplianceWorkflowEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  entityType String
+  entityId   String   @db.Uuid
+  action     String
+  fromStatus String?
+  toStatus   String?
+  comment    String?
+  actorId    String   @db.Uuid
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId])
+}
+
+model Supplier {
+  id                     String                      @id @default(uuid()) @db.Uuid
+  supplierCode           String                      @unique
+  legalName              String
+  tradingName            String?
+  registrationNumber     String?                     @unique
+  taxNumber              String?
+  sector                 SupplierSector
+  categories             String[]
+  country                String
+  address                String?
+  contactName            String
+  contactEmail           String
+  contactPhone           String?
+  status                 SupplierStatus              @default(DRAFT)
+  localContentPercentage Decimal                     @default(0) @db.Decimal(5, 2)
+  hseCertification       String?
+  notes                  String?
+  createdById            String                      @db.Uuid
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+  createdBy              User                        @relation("SupplierCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  qualifications         SupplierQualification[]
+  contracts              SupplierContract[]
+  purchaseRequests       PurchaseRequest[]
+  deliveries             SupplierDelivery[]
+  performanceReviews     SupplierPerformanceReview[]
+  evidence               SupplierEvidence[]
+
+  @@index([legalName])
+  @@index([sector, status])
+  @@index([createdById])
+}
+
+model SupplierQualification {
+  id                String              @id @default(uuid()) @db.Uuid
+  supplierId        String              @db.Uuid
+  reference         String              @unique
+  submittedAt       DateTime?
+  reviewedAt        DateTime?
+  expiresAt         DateTime?
+  status            QualificationStatus @default(NOT_STARTED)
+  technicalScore    Int?
+  financialScore    Int?
+  hseScore          Int?
+  localContentScore Int?
+  overallScore      Decimal?            @db.Decimal(5, 2)
+  reviewerId        String?             @db.Uuid
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  supplier          Supplier            @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  reviewer          User?               @relation("QualificationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  evidence          SupplierEvidence[]
+
+  @@index([supplierId, status])
+  @@index([expiresAt])
+}
+
+model SupplierContract {
+  id                   String                      @id @default(uuid()) @db.Uuid
+  supplierId           String                      @db.Uuid
+  projectId            String?                     @db.Uuid
+  contractNumber       String                      @unique
+  title                String
+  description          String?
+  startDate            DateTime
+  endDate              DateTime
+  currency             String                      @default("USD")
+  value                Decimal                     @db.Decimal(18, 2)
+  status               SupplierContractStatus      @default(DRAFT)
+  renewalLeadDays      Int                         @default(90)
+  responsibleOfficerId String                      @db.Uuid
+  signedAt             DateTime?
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+  supplier             Supplier                    @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  project              Project?                    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  responsibleOfficer   User                        @relation("SupplierContractOfficer", fields: [responsibleOfficerId], references: [id], onDelete: Restrict)
+  purchaseRequests     PurchaseRequest[]
+  deliveries           SupplierDelivery[]
+  performanceReviews   SupplierPerformanceReview[]
+  evidence             SupplierEvidence[]
+
+  @@index([supplierId, status])
+  @@index([projectId])
+  @@index([endDate])
+}
+
+model PurchaseRequest {
+  id              String                @id @default(uuid()) @db.Uuid
+  requestNumber   String                @unique
+  supplierId      String?               @db.Uuid
+  contractId      String?               @db.Uuid
+  projectId       String?               @db.Uuid
+  title           String
+  description     String
+  requiredBy      DateTime
+  currency        String                @default("USD")
+  estimatedAmount Decimal               @db.Decimal(18, 2)
+  status          PurchaseRequestStatus @default(DRAFT)
+  createdById     String                @db.Uuid
+  reviewedById    String?               @db.Uuid
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  reviewComment   String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  supplier        Supplier?             @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  contract        SupplierContract?     @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  project         Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdBy       User                  @relation("PurchaseRequestCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reviewedBy      User?                 @relation("PurchaseRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  deliveries      SupplierDelivery[]
+  evidence        SupplierEvidence[]
+
+  @@index([supplierId, status])
+  @@index([projectId])
+  @@index([createdById])
+  @@index([requiredBy])
+}
+
+model SupplierDelivery {
+  id                String             @id @default(uuid()) @db.Uuid
+  supplierId        String             @db.Uuid
+  contractId        String?            @db.Uuid
+  purchaseRequestId String?            @db.Uuid
+  deliveryNumber    String             @unique
+  scheduledDate     DateTime
+  actualDate        DateTime?
+  location          String
+  items             String
+  status            DeliveryStatus     @default(SCHEDULED)
+  qualityScore      Int?
+  hseScore          Int?
+  acceptedById      String?            @db.Uuid
+  acceptanceNotes   String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  supplier          Supplier           @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  contract          SupplierContract?  @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  purchaseRequest   PurchaseRequest?   @relation(fields: [purchaseRequestId], references: [id], onDelete: SetNull)
+  acceptedBy        User?              @relation("DeliveryAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
+  evidence          SupplierEvidence[]
+
+  @@index([supplierId, status])
+  @@index([contractId])
+  @@index([purchaseRequestId])
+  @@index([scheduledDate])
+}
+
+model SupplierPerformanceReview {
+  id                String             @id @default(uuid()) @db.Uuid
+  supplierId        String             @db.Uuid
+  contractId        String?            @db.Uuid
+  periodStart       DateTime
+  periodEnd         DateTime
+  qualityScore      Int
+  deliveryScore     Int
+  hseScore          Int
+  localContentScore Int
+  costScore         Int
+  overallScore      Decimal            @db.Decimal(5, 2)
+  comments          String?
+  reviewerId        String             @db.Uuid
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  supplier          Supplier           @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  contract          SupplierContract?  @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  reviewer          User               @relation("SupplierReviewAuthor", fields: [reviewerId], references: [id], onDelete: Restrict)
+  evidence          SupplierEvidence[]
+
+  @@index([supplierId, periodEnd])
+  @@index([contractId])
+}
+
+model SupplierEvidence {
+  id                String                     @id @default(uuid()) @db.Uuid
+  supplierId        String?                    @db.Uuid
+  qualificationId   String?                    @db.Uuid
+  contractId        String?                    @db.Uuid
+  purchaseRequestId String?                    @db.Uuid
+  deliveryId        String?                    @db.Uuid
+  reviewId          String?                    @db.Uuid
+  name              String
+  url               String
+  mimeType          String?
+  notes             String?
+  uploadedById      String                     @db.Uuid
+  createdAt         DateTime                   @default(now())
+  supplier          Supplier?                  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  qualification     SupplierQualification?     @relation(fields: [qualificationId], references: [id], onDelete: Cascade)
+  contract          SupplierContract?          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  purchaseRequest   PurchaseRequest?           @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  delivery          SupplierDelivery?          @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  review            SupplierPerformanceReview? @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  uploadedBy        User                       @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([supplierId])
+  @@index([qualificationId])
+  @@index([contractId])
+  @@index([purchaseRequestId])
+  @@index([deliveryId])
+  @@index([reviewId])
+}
+
+model SupplierWorkflowEvent {
   id         String   @id @default(uuid()) @db.Uuid
   entityType String
   entityId   String   @db.Uuid
