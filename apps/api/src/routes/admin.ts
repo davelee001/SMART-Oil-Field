@@ -13,6 +13,7 @@ const roleSchema = z.enum(PMS_ROLES);
 const createSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().transform((value) => value.toLowerCase()),
+  department: z.string().trim().min(2).max(160).nullable().optional(),
   password: z.string().min(12).max(128),
   role: roleSchema,
 });
