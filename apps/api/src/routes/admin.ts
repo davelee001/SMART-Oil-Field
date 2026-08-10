@@ -19,6 +19,7 @@ const createSchema = z.object({
 });
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
+  department: z.string().trim().min(2).max(160).nullable().optional(),
   role: roleSchema.optional(),
   isActive: z.boolean().optional(),
 }).refine((value) => Object.keys(value).length > 0, 'At least one change is required');
