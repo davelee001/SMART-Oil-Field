@@ -17,7 +17,7 @@ const dateLabel = (value: string) => new Date(value).toLocaleDateString();
 const money = (value: string, currency = 'USD') => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(Number(value));
 const color = (status: string) => ['QUALIFIED', 'ACTIVE', 'APPROVED', 'ACCEPTED', 'DELIVERED'].includes(status) ? 'success' : ['BLACKLISTED', 'REJECTED', 'EXPIRED', 'TERMINATED'].includes(status) ? 'error' : ['PENDING_QUALIFICATION', 'UNDER_REVIEW', 'SUBMITTED', 'EXPIRING', 'LATE'].includes(status) ? 'warning' : 'default';
 const emptyRegister: SupplyRegister = { suppliers: [], contracts: [], requests: [], deliveries: [], reviews: [], events: [] };
-const emptySummary: SupplySummary = { totalSuppliers: 0, qualifiedSuppliers: 0, pendingQualifications: 0, expiringQualifications: 0, activeContracts: 0, expiringContracts: 0, pendingRequests: 0, lateDeliveries: 0, averagePerformance: 0 };
+const emptySummary: SupplySummary = { totalSuppliers: 0, qualifiedSuppliers: 0, pendingQualifications: 0, expiringQualifications: 0, activeContracts: 0, expiringContracts: 0, pendingRequests: 0, lateDeliveries: 0, averagePerformance: 0, belowStandardSuppliers: 0 };
 const initialForm = {
     supplierCode: '', legalName: '', tradingName: '', registrationNumber: '', taxNumber: '', sector: 'UPSTREAM', categories: '', country: '', address: '', contactName: '', contactEmail: '', contactPhone: '', localContentPercentage: '0', hseCertification: '', notes: '',
     supplierId: '', reference: '', expiresAt: '', contractId: '', projectId: '', contractNumber: '', title: '', description: '', startDate: '', endDate: '', currency: 'USD', value: '', renewalLeadDays: '90', responsibleOfficerId: '', signedAt: '',
@@ -81,7 +81,7 @@ const SupplyChain: React.FC = () => {
     const matches = (...values: unknown[]) => !query || values.some((value) => String(value || '').toLowerCase().includes(query));
     const cards = [
         ['Suppliers', summary.totalSuppliers, <Business />], ['Qualified', summary.qualifiedSuppliers, <Star />], ['Active contracts', summary.activeContracts, <Work />],
-        ['Pending requests', summary.pendingRequests, <RequestQuote />], ['Late deliveries', summary.lateDeliveries, <LocalShipping />], ['Average score', `${summary.averagePerformance}%`, <Star />],
+        ['Pending requests', summary.pendingRequests, <RequestQuote />], ['Late deliveries', summary.lateDeliveries, <LocalShipping />], ['Below standard', summary.belowStandardSuppliers, <Star />],
     ] as const;
 
     return <Box sx={{ width: '100%' }}>
