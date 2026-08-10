@@ -11,7 +11,7 @@ A SMART Oil Field Performance Management System combining secure organizational 
 | 4 | Annual project budgeting, allocations, commitments, expenditure, periods, evidence, and approvals | Implemented |
 | 5 | Oil-sector compliance and regulation register | Implemented |
 | 6 | Supply chain and supplier performance | Implemented; existing oil-movement tracking remains available |
-| 7 | Configurable KPI and performance engine | Planned; existing operational analytics remain available |
+| 7 | Configurable KPI and performance engine | Implemented; existing operational analytics remain available |
 | 8 | Staff training and capacity building | Planned |
 | 9 | Formal PMS reporting and analytics | Planned; existing technical exports remain available |
 | 10 | Full-system testing, finalization, and production deployment | Planned |
@@ -22,11 +22,11 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 As of 10 August 2026:
 
-- 48 authentication, authorization, project, finance, compliance, and supply-chain tests pass across six test files.
+- 61 authentication, authorization, project, finance, compliance, supply-chain, and KPI tests pass across seven test files.
 - Prisma generation and the shared, database, API, and frontend TypeScript checks pass.
 - The production frontend build passes; Webpack continues to report its existing bundle-size advisory.
-- Six PostgreSQL migrations are available, including `20260810075831_supplier_performance` for Phase 6.
-- The Phase 6 migration has been applied successfully to the local PostgreSQL development database.
+- Seven PostgreSQL migrations are available, including `20260810083222_kpi_performance_engine` for Phase 7.
+- The Phase 7 migration has been applied successfully to the local PostgreSQL development database.
 
 ## PMS Foundation (Phase 1)
 
@@ -96,6 +96,14 @@ Supply Chain Officers and Administrators control suppliers, qualification decisi
 
 The authenticated supplier CSV export is `GET /api/supply-chain/reports/suppliers.csv`.
 
+## PMS KPI and Performance Engine (Phase 7)
+
+The `/performance` workspace and `/api/kpis` API provide project-linked results frameworks, impact/outcome/output hierarchies, configurable KPI definitions, baselines, final and period targets, reporting periods, actuals, secure evidence, M&E verification, workflow history, weighted portfolio scoring, reporting completeness, and an authenticated performance export.
+
+Administrators and Monitoring and Evaluation Officers govern definitions, targets, connectors, verification, and period approval. Assigned Project Managers and Department Heads report project results. Four-eyes controls prevent self-verification and self-approval, while period completeness rules require verified results for every active KPI. Approved telemetry and analytics paths may be synchronized through `OPERATIONAL_API_URL`; synced values still require independent verification. Existing analytics APIs remain unchanged. See [docs/PMS_KPI_PERFORMANCE.md](docs/PMS_KPI_PERFORMANCE.md).
+
+The authenticated KPI CSV export is `GET /api/kpis/reports/performance.csv`.
+
 ## Overview
 
 This project integrates multiple technologies:
@@ -115,6 +123,7 @@ This project integrates multiple technologies:
 | Budgeting & Finance | Annual budgets, categories, funding sources, periods, commitments, expenditure, calculated balances, document references, and approval workflows |
 | Compliance & Regulation | Regulations, policies, obligations, permits, inspections, evidence, scoring, findings, corrective actions, escalation, and regulatory export |
 | Supply Chain | Supplier registry, qualification, contracts, purchase requests, delivery acceptance, evidence, expiry alerts, five-dimension performance scoring, and supplier export |
+| KPI Performance | Results frameworks, impact/outcome/output hierarchy, baselines, period targets, actuals, evidence, weighted achievement, M&E verification, controlled operational connectors, and performance export |
 | Telemetry | Real-time sensor data ingestion, WebSocket streaming, querying, statistics, CSV export, async tasks |
 | Oil Tracking | Dual-mode (DB + Blockchain), 7 lifecycle stages, GPS tracking, quality monitoring |
 | Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
@@ -971,6 +980,7 @@ See module READMEs for usage examples:
 - Oil-sector supplier registration, qualification, contracts, purchase requests, delivery acceptance, and secure evidence
 - Five-dimension supplier performance scoring across quality, delivery, HSE, local content, and cost
 - Four-eyes supplier-qualification and procurement approvals with expiry, late-delivery, and below-standard alerts
+- Results frameworks, KPI baselines and targets, reporting periods, verified actuals, evidence, direction-aware achievement, and weighted portfolio performance
 - Commitment and expenditure workflows with supporting-document references
 - Calculated approved allocation, actual expenditure, outstanding commitments, remaining balance, variance, and utilization
 - Auditable four-eyes approval controls for budgets and finance entries
@@ -1015,7 +1025,7 @@ See module READMEs for usage examples:
 
 ### PMS Roadmap
 - [x] **Phase 6 — Supplier Performance**: Supplier registration, qualification, contracts, purchase requests, deliveries, HSE/local-content indicators, performance scoring, workflow controls, and authenticated export
-- [ ] **Phase 7 — KPI Engine**: Configurable indicators, baselines, targets, actuals, evidence, weighting, verification, and reporting periods
+- [x] **Phase 7 — KPI Engine**: Results frameworks, configurable indicators, baselines, targets, actuals, evidence, weighting, verification, reporting periods, controlled operational connectors, and authenticated export
 - [ ] **Phase 8 — Training and Capacity Building**: Programmes, participants, assessments, certificates, costs, effectiveness, and skills gaps
 - [ ] **Phase 9 — Formal PMS Reports**: Project, quarterly, annual, finance, compliance, supplier, training, departmental, and executive reports
 - [ ] **Phase 10 — Production Readiness**: End-to-end/security testing, CI/CD, backups, deployment validation, and user/administrator manuals
