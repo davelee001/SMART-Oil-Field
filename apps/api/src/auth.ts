@@ -8,6 +8,7 @@ export const publicUser = (user: User): SessionUser => ({
   id: user.id,
   name: user.name,
   email: user.email,
+  department: user.department,
   role: user.role as PmsRole,
   walletAddress: user.walletAddress,
   isActive: user.isActive,
