@@ -99,6 +99,11 @@ describe('supply-chain and supplier-performance HTTP integration', () => {
     });
     expect(response.status).toBe(201); expect(prismaMock.supplier.create).toHaveBeenCalledOnce();
   });
+  it('prevents direct qualification through a supplier profile update', async () => {
+    user = { ...user, role: Role.SUPPLY_CHAIN_OFFICER };
+    const response = await (await login()).patch(`/api/supply-chain/suppliers/${supplierId}`).send({ status: 'QUALIFIED' });
+    expect(response.status).toBe(400); expect(prismaMock.supplier.update).not.toHaveBeenCalled();
+  });
   it('prevents supplier registrants from deciding their own qualification', async () => {
     user = { ...user, role: Role.SUPPLY_CHAIN_OFFICER };
     prismaMock.supplierQualification.findUnique.mockResolvedValue({ ...qualification, supplier: { ...supplier, createdById: userId } });
