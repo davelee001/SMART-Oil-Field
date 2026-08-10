@@ -22,7 +22,7 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 As of 10 August 2026:
 
-- 61 authentication, authorization, project, finance, compliance, supply-chain, and KPI tests pass across seven test files.
+- 66 authentication, authorization, project, finance, compliance, supply-chain, and KPI tests pass across seven test files.
 - Prisma generation and the shared, database, API, and frontend TypeScript checks pass.
 - The production frontend build passes; Webpack continues to report its existing bundle-size advisory.
 - Seven PostgreSQL migrations are available, including `20260810083222_kpi_performance_engine` for Phase 7.
@@ -100,7 +100,7 @@ The authenticated supplier CSV export is `GET /api/supply-chain/reports/supplier
 
 The `/performance` workspace and `/api/kpis` API provide project-linked results frameworks, impact/outcome/output hierarchies, configurable KPI definitions, baselines, final and period targets, reporting periods, actuals, secure evidence, M&E verification, workflow history, weighted portfolio scoring, reporting completeness, and an authenticated performance export.
 
-Administrators and Monitoring and Evaluation Officers govern definitions, targets, connectors, verification, and period approval. Assigned Project Managers and Department Heads report project results. Four-eyes controls prevent self-verification and self-approval, while period completeness rules require verified results for every active KPI. Approved telemetry and analytics paths may be synchronized through `OPERATIONAL_API_URL`; synced values still require independent verification. Existing analytics APIs remain unchanged. See [docs/PMS_KPI_PERFORMANCE.md](docs/PMS_KPI_PERFORMANCE.md).
+Administrators and Monitoring and Evaluation Officers govern definitions, targets, connectors, verification, and period approval. Assigned Project Managers and Department Heads report project results. Four-eyes controls prevent self-verification and self-approval, while period completeness rules require verified results for every active KPI. The dashboard surfaces pending verification alongside reporting gaps and overdue periods. Approved telemetry and analytics paths may be synchronized through `OPERATIONAL_API_URL`; synced values still require independent verification. Existing analytics APIs remain unchanged. See [docs/PMS_KPI_PERFORMANCE.md](docs/PMS_KPI_PERFORMANCE.md).
 
 The authenticated KPI CSV export is `GET /api/kpis/reports/performance.csv`.
 
