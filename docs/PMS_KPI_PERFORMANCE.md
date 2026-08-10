@@ -27,6 +27,13 @@ Achievement is classified as:
 
 The portfolio score is the weighted average of reported active indicators, capped at 100 percent per indicator for portfolio aggregation. The dashboard separately displays reporting completeness so missing results cannot be hidden by high-performing KPIs.
 
+### Calculation examples
+
+- Increase KPI: an actual of 80 against a target of 100 produces 80 percent achievement.
+- Decrease KPI: an actual of 8 against a maximum target of 10 produces 100 percent achievement because the target was surpassed.
+- Maintain KPI: an actual of 110 against a target of 100 with a tolerance of 5 produces 95 percent achievement; the first five points of variance are tolerated.
+- Portfolio: indicator achievement is multiplied by its configured weight, then divided by the total weight of reported indicators. Reporting rate remains a separate control.
+
 ## Workflow and access control
 
 All authenticated users have reporting access. Administrators and Monitoring and Evaluation Officers manage frameworks, results, KPI definitions, targets, periods, operational connectors, verification, and period approval. Assigned Project Managers and Department Heads can report actuals and attach evidence within their authorized project scope.
