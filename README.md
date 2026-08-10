@@ -25,8 +25,8 @@ As of 10 August 2026:
 - 81 authentication, authorization, project, finance, compliance, supply-chain, KPI, and training tests pass across eight test files.
 - Prisma generation and the shared, database, API, and frontend TypeScript checks pass.
 - The production frontend build passes; Webpack continues to report its existing bundle-size advisory.
-- Seven PostgreSQL migrations are available, including `20260810083222_kpi_performance_engine` for Phase 7.
-- The Phase 7 migration has been applied successfully to the local PostgreSQL development database.
+- Eight PostgreSQL migrations are available, including `20260810092541_training_capacity_building` for Phase 8.
+- The Phase 8 migration has been applied successfully to the local PostgreSQL development database.
 
 ## PMS Foundation (Phase 1)
 
