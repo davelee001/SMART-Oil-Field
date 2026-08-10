@@ -253,6 +253,7 @@ router.put('/targets', async (req, res, next) => {
     const input = targetSchema.parse(req.body);
     const [indicator, period] = await Promise.all([prisma.kpiIndicator.findUnique({ where: { id: input.indicatorId } }), prisma.kpiReportingPeriod.findUnique({ where: { id: input.periodId } })]);
     if (!indicator || !period || indicator.frameworkId !== period.frameworkId) return res.status(400).json({ message: 'Indicator and reporting period must belong to the same framework' });
+    if (indicator.status !== KpiIndicatorStatus.ACTIVE) return res.status(409).json({ message: 'Targets can only be set for active KPIs' });
     if (period.status !== KpiPeriodStatus.OPEN) return res.status(409).json({ message: 'Targets can only be set for open reporting periods' });
     const target = await prisma.kpiTarget.upsert({ where: { indicatorId_periodId: { indicatorId: input.indicatorId, periodId: input.periodId } }, create: input, update: { targetValue: input.targetValue, notes: input.notes } });
     await workflow(req.authUser!.id, 'KpiTarget', target.id, 'SET', null, String(target.targetValue));
