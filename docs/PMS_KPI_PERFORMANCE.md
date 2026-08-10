@@ -95,3 +95,11 @@ npm run build
 ```
 
 Phase 7 integration coverage includes RBAC, project-scoped reporting, calculation, measurement dates, independent verification, reporting completeness, period approval, connector allow-listing, secure evidence, and export authentication.
+
+## Connector troubleshooting
+
+- Confirm the Python operational API is reachable from the process running the PMS API, not only from the browser.
+- Use `OPERATIONAL_API_URL` for a locally running PMS API and `DOCKER_OPERATIONAL_API_URL` for the Compose container.
+- Keep connector endpoints relative and inside the approved telemetry, analytics, or aggregation route families.
+- Confirm the JSON value path resolves to one or more numeric values; array fields are aggregated automatically.
+- Review the connector's last error in the KPI workspace. Failed synchronization does not create a measurement or bypass verification.
