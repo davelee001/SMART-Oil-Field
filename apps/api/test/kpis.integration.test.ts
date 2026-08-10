@@ -55,6 +55,11 @@ describe('KPI and performance HTTP integration', () => {
     const response = await (await login()).get('/api/kpis/overview');
     expect(response.status).toBe(200); expect(response.body.summary.portfolioScore).toBe(80); expect(response.body.summary.atRisk).toBe(1);
   });
+  it('reports the independent verification workload', async () => {
+    prismaMock.kpiIndicator.findMany.mockResolvedValue([{ ...indicator, measurements: [measurement, { ...measurement, id: 'submitted-result', status: KpiMeasurementStatus.SUBMITTED }] }]);
+    const response = await (await login()).get('/api/kpis/overview');
+    expect(response.status).toBe(200); expect(response.body.summary.pendingVerification).toBe(1);
+  });
   it('prevents viewers from creating results frameworks', async () => {
     const response = await (await login()).post('/api/kpis/frameworks').send({}); expect(response.status).toBe(403);
   });
