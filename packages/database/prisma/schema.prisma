@@ -1235,6 +1235,277 @@ model KpiWorkflowEvent {
   @@index([actorId])
 }
 
+model TrainingCompetency {
+  id             String                @id @default(uuid()) @db.Uuid
+  code           String                @unique
+  name           String
+  category       String
+  description    String
+  isActive       Boolean               @default(true)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  staff          StaffCompetency[]
+  courses        CourseCompetency[]
+  requirements   TrainingRequirement[]
+  certifications StaffCertification[]
+
+  @@index([category, isActive])
+}
+
+model StaffCompetency {
+  id           String             @id @default(uuid()) @db.Uuid
+  userId       String             @db.Uuid
+  competencyId String             @db.Uuid
+  currentLevel Int                @default(0)
+  targetLevel  Int                @default(1)
+  assessedAt   DateTime?
+  assessedById String?            @db.Uuid
+  notes        String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  user         User               @relation("StaffCompetencyUser", fields: [userId], references: [id], onDelete: Cascade)
+  competency   TrainingCompetency @relation(fields: [competencyId], references: [id], onDelete: Cascade)
+  assessedBy   User?              @relation("StaffCompetencyAssessor", fields: [assessedById], references: [id], onDelete: SetNull)
+  evidence     TrainingEvidence[]
+
+  @@unique([userId, competencyId])
+  @@index([competencyId, currentLevel])
+  @@index([assessedById])
+}
+
+model TrainingCourse {
+  id             String                @id @default(uuid()) @db.Uuid
+  code           String                @unique
+  title          String
+  category       String
+  description    String
+  provider       String?
+  deliveryMode   TrainingDeliveryMode
+  durationHours  Decimal               @db.Decimal(8, 2)
+  validityMonths Int?
+  mandatory      Boolean               @default(false)
+  defaultCost    Decimal               @default(0) @db.Decimal(18, 2)
+  currency       String                @default("USD")
+  status         TrainingCourseStatus  @default(DRAFT)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  competencies   CourseCompetency[]
+  requirements   TrainingRequirement[]
+  sessions       TrainingSession[]
+  certifications StaffCertification[]
+
+  @@index([category, status])
+  @@index([mandatory])
+}
+
+model CourseCompetency {
+  id           String             @id @default(uuid()) @db.Uuid
+  courseId     String             @db.Uuid
+  competencyId String             @db.Uuid
+  targetLevel  Int                @default(1)
+  course       TrainingCourse     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  competency   TrainingCompetency @relation(fields: [competencyId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, competencyId])
+  @@index([competencyId])
+}
+
+model TrainingRequirement {
+  id            String              @id @default(uuid()) @db.Uuid
+  name          String
+  role          Role?
+  department    String?
+  courseId      String?             @db.Uuid
+  competencyId  String?             @db.Uuid
+  requiredLevel Int?
+  dueWithinDays Int                 @default(365)
+  renewalMonths Int?
+  isActive      Boolean             @default(true)
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  course        TrainingCourse?     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  competency    TrainingCompetency? @relation(fields: [competencyId], references: [id], onDelete: Cascade)
+
+  @@index([role, isActive])
+  @@index([department, isActive])
+  @@index([courseId])
+  @@index([competencyId])
+}
+
+model TrainingSession {
+  id            String                @id @default(uuid()) @db.Uuid
+  courseId      String                @db.Uuid
+  projectId     String?               @db.Uuid
+  sessionCode   String                @unique
+  title         String
+  startDate     DateTime
+  endDate       DateTime
+  location      String
+  instructor    String
+  capacity      Int
+  plannedCost   Decimal               @default(0) @db.Decimal(18, 2)
+  actualCost    Decimal               @default(0) @db.Decimal(18, 2)
+  currency      String                @default("USD")
+  status        TrainingSessionStatus @default(DRAFT)
+  coordinatorId String                @db.Uuid
+  submittedById String?               @db.Uuid
+  reviewedById  String?               @db.Uuid
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  reviewComment String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  course        TrainingCourse        @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  project       Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  coordinator   User                  @relation("TrainingCoordinator", fields: [coordinatorId], references: [id], onDelete: Restrict)
+  submittedBy   User?                 @relation("TrainingSessionSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  reviewedBy    User?                 @relation("TrainingSessionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  enrollments   TrainingEnrollment[]
+  evidence      TrainingEvidence[]
+
+  @@index([courseId, status])
+  @@index([projectId])
+  @@index([coordinatorId])
+  @@index([startDate, endDate])
+}
+
+model TrainingEnrollment {
+  id                   String                   @id @default(uuid()) @db.Uuid
+  sessionId            String                   @db.Uuid
+  userId               String                   @db.Uuid
+  nominatedById        String                   @db.Uuid
+  status               TrainingEnrollmentStatus @default(NOMINATED)
+  attendancePercentage Decimal                  @default(0) @db.Decimal(5, 2)
+  completedAt          DateTime?
+  feedback             String?
+  effectivenessScore   Int?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  session              TrainingSession          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user                 User                     @relation("TrainingParticipant", fields: [userId], references: [id], onDelete: Cascade)
+  nominatedBy          User                     @relation("TrainingNominator", fields: [nominatedById], references: [id], onDelete: Restrict)
+  attendance           TrainingAttendance[]
+  assessments          TrainingAssessment[]
+  certifications       StaffCertification[]
+  evidence             TrainingEvidence[]
+
+  @@unique([sessionId, userId])
+  @@index([userId, status])
+  @@index([nominatedById])
+}
+
+model TrainingAttendance {
+  id           String                   @id @default(uuid()) @db.Uuid
+  enrollmentId String                   @db.Uuid
+  sessionDate  DateTime
+  status       TrainingAttendanceStatus
+  hours        Decimal                  @default(0) @db.Decimal(6, 2)
+  notes        String?
+  recordedById String                   @db.Uuid
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  enrollment   TrainingEnrollment       @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  recordedBy   User                     @relation("AttendanceRecorder", fields: [recordedById], references: [id], onDelete: Restrict)
+
+  @@unique([enrollmentId, sessionDate])
+  @@index([recordedById])
+}
+
+model TrainingAssessment {
+  id           String                 @id @default(uuid()) @db.Uuid
+  enrollmentId String                 @db.Uuid
+  type         TrainingAssessmentType
+  score        Decimal                @db.Decimal(8, 2)
+  maximumScore Decimal                @default(100) @db.Decimal(8, 2)
+  assessedAt   DateTime
+  assessorId   String                 @db.Uuid
+  notes        String?
+  createdAt    DateTime               @default(now())
+  enrollment   TrainingEnrollment     @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  assessor     User                   @relation("TrainingAssessor", fields: [assessorId], references: [id], onDelete: Restrict)
+  evidence     TrainingEvidence[]
+
+  @@unique([enrollmentId, type])
+  @@index([assessorId])
+}
+
+model StaffCertification {
+  id                String              @id @default(uuid()) @db.Uuid
+  userId            String              @db.Uuid
+  courseId          String?             @db.Uuid
+  competencyId      String?             @db.Uuid
+  enrollmentId      String?             @db.Uuid
+  certificateNumber String              @unique
+  title             String
+  issuer            String
+  issuedAt          DateTime
+  expiresAt         DateTime?
+  status            CertificationStatus @default(ACTIVE)
+  issuedById        String              @db.Uuid
+  verifiedById      String?             @db.Uuid
+  verifiedAt        DateTime?
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  user              User                @relation("CertificationHolder", fields: [userId], references: [id], onDelete: Cascade)
+  course            TrainingCourse?     @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  competency        TrainingCompetency? @relation(fields: [competencyId], references: [id], onDelete: SetNull)
+  enrollment        TrainingEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  issuedBy          User                @relation("CertificationIssuer", fields: [issuedById], references: [id], onDelete: Restrict)
+  verifiedBy        User?               @relation("CertificationVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  evidence          TrainingEvidence[]
+
+  @@index([userId, status])
+  @@index([expiresAt])
+  @@index([courseId])
+  @@index([competencyId])
+  @@index([issuedById])
+}
+
+model TrainingEvidence {
+  id                String              @id @default(uuid()) @db.Uuid
+  staffCompetencyId String?             @db.Uuid
+  sessionId         String?             @db.Uuid
+  enrollmentId      String?             @db.Uuid
+  assessmentId      String?             @db.Uuid
+  certificationId   String?             @db.Uuid
+  name              String
+  url               String
+  mimeType          String?
+  notes             String?
+  uploadedById      String              @db.Uuid
+  createdAt         DateTime            @default(now())
+  staffCompetency   StaffCompetency?    @relation(fields: [staffCompetencyId], references: [id], onDelete: Cascade)
+  session           TrainingSession?    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  enrollment        TrainingEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  assessment        TrainingAssessment? @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  certification     StaffCertification? @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+  uploadedBy        User                @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([staffCompetencyId])
+  @@index([sessionId])
+  @@index([enrollmentId])
+  @@index([assessmentId])
+  @@index([certificationId])
+}
+
+model TrainingWorkflowEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  entityType String
+  entityId   String   @db.Uuid
+  action     String
+  fromStatus String?
+  toStatus   String?
+  comment    String?
+  actorId    String   @db.Uuid
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId])
+}
+
 model ProjectObjective {
   id          String   @id @default(uuid()) @db.Uuid
   projectId   String   @db.Uuid
