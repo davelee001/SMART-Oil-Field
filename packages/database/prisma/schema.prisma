@@ -213,6 +213,80 @@ enum DeliveryStatus {
   LATE
 }
 
+enum ResultsFrameworkStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum ResultLevelType {
+  IMPACT
+  OUTCOME
+  OUTPUT
+}
+
+enum KpiIndicatorStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum KpiDirection {
+  INCREASE
+  DECREASE
+  MAINTAIN
+}
+
+enum KpiDataType {
+  NUMBER
+  PERCENTAGE
+  CURRENCY
+  COUNT
+  BOOLEAN
+}
+
+enum KpiFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+  AD_HOC
+}
+
+enum KpiPeriodStatus {
+  OPEN
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CLOSED
+}
+
+enum KpiMeasurementStatus {
+  DRAFT
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+enum KpiSourceType {
+  MANUAL
+  TELEMETRY
+  ANALYTICS
+  FINANCE
+  COMPLIANCE
+  SUPPLY_CHAIN
+}
+
+enum KpiAggregation {
+  VALUE
+  AVERAGE
+  SUM
+  MINIMUM
+  MAXIMUM
+  COUNT
+}
+
 model User {
   id                           String                      @id @default(uuid()) @db.Uuid
   name                         String
@@ -257,6 +331,15 @@ model User {
   supplierPerformanceReviews   SupplierPerformanceReview[] @relation("SupplierReviewAuthor")
   supplierEvidence             SupplierEvidence[]
   supplierWorkflowEvents       SupplierWorkflowEvent[]
+  ownedResultsFrameworks       ResultsFramework[]          @relation("ResultsFrameworkOwner")
+  ownedKpiIndicators           KpiIndicator[]              @relation("KpiIndicatorOwner")
+  createdKpiPeriods            KpiReportingPeriod[]        @relation("KpiPeriodCreator")
+  submittedKpiPeriods          KpiReportingPeriod[]        @relation("KpiPeriodSubmitter")
+  reviewedKpiPeriods           KpiReportingPeriod[]        @relation("KpiPeriodReviewer")
+  createdKpiMeasurements       KpiMeasurement[]            @relation("KpiMeasurementCreator")
+  verifiedKpiMeasurements      KpiMeasurement[]            @relation("KpiMeasurementVerifier")
+  kpiEvidence                  KpiEvidence[]
+  kpiWorkflowEvents            KpiWorkflowEvent[]
 
   @@index([role])
   @@index([isActive])
@@ -289,6 +372,7 @@ model Project {
   nonConformities       NonConformity[]
   supplierContracts     SupplierContract[]
   purchaseRequests      PurchaseRequest[]
+  resultsFrameworks     ResultsFramework[]
 
   @@index([department])
   @@index([managerId])
@@ -860,6 +944,213 @@ model SupplierEvidence {
 }
 
 model SupplierWorkflowEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  entityType String
+  entityId   String   @db.Uuid
+  action     String
+  fromStatus String?
+  toStatus   String?
+  comment    String?
+  actorId    String   @db.Uuid
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId])
+}
+
+model ResultsFramework {
+  id           String                 @id @default(uuid()) @db.Uuid
+  projectId    String                 @db.Uuid
+  code         String                 @unique
+  name         String
+  description  String?
+  startDate    DateTime
+  endDate      DateTime
+  status       ResultsFrameworkStatus @default(DRAFT)
+  ownerId      String                 @db.Uuid
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  project      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner        User                   @relation("ResultsFrameworkOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  resultLevels ResultLevel[]
+  indicators   KpiIndicator[]
+  periods      KpiReportingPeriod[]
+
+  @@index([projectId, status])
+  @@index([ownerId])
+  @@index([startDate, endDate])
+}
+
+model ResultLevel {
+  id          String           @id @default(uuid()) @db.Uuid
+  frameworkId String           @db.Uuid
+  parentId    String?          @db.Uuid
+  code        String
+  type        ResultLevelType
+  title       String
+  description String?
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  framework   ResultsFramework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  parent      ResultLevel?     @relation("ResultLevelHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    ResultLevel[]    @relation("ResultLevelHierarchy")
+  indicators  KpiIndicator[]
+
+  @@unique([frameworkId, code])
+  @@index([frameworkId, type, sortOrder])
+  @@index([parentId])
+}
+
+model KpiIndicator {
+  id                String             @id @default(uuid()) @db.Uuid
+  frameworkId       String             @db.Uuid
+  resultLevelId     String?            @db.Uuid
+  code              String             @unique
+  name              String
+  description       String
+  unit              String
+  dataType          KpiDataType        @default(NUMBER)
+  direction         KpiDirection       @default(INCREASE)
+  frequency         KpiFrequency       @default(QUARTERLY)
+  baselineValue     Decimal            @db.Decimal(20, 4)
+  baselineDate      DateTime
+  finalTargetValue  Decimal            @db.Decimal(20, 4)
+  weight            Int                @default(1)
+  tolerance         Decimal            @default(0) @db.Decimal(20, 4)
+  disaggregation    Json?
+  formula           String?
+  sourceDescription String?
+  status            KpiIndicatorStatus @default(DRAFT)
+  ownerId           String             @db.Uuid
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  framework         ResultsFramework   @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  resultLevel       ResultLevel?       @relation(fields: [resultLevelId], references: [id], onDelete: SetNull)
+  owner             User               @relation("KpiIndicatorOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  targets           KpiTarget[]
+  measurements      KpiMeasurement[]
+  dataSources       KpiDataSource[]
+  evidence          KpiEvidence[]
+
+  @@index([frameworkId, status])
+  @@index([resultLevelId])
+  @@index([ownerId])
+}
+
+model KpiReportingPeriod {
+  id            String           @id @default(uuid()) @db.Uuid
+  frameworkId   String           @db.Uuid
+  name          String
+  startDate     DateTime
+  endDate       DateTime
+  dueDate       DateTime
+  status        KpiPeriodStatus  @default(OPEN)
+  createdById   String           @db.Uuid
+  submittedById String?          @db.Uuid
+  reviewedById  String?          @db.Uuid
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  reviewComment String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  framework     ResultsFramework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  createdBy     User             @relation("KpiPeriodCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  submittedBy   User?            @relation("KpiPeriodSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  reviewedBy    User?            @relation("KpiPeriodReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  targets       KpiTarget[]
+  measurements  KpiMeasurement[]
+
+  @@unique([frameworkId, name])
+  @@index([frameworkId, status])
+  @@index([startDate, endDate])
+}
+
+model KpiTarget {
+  id          String             @id @default(uuid()) @db.Uuid
+  indicatorId String             @db.Uuid
+  periodId    String             @db.Uuid
+  targetValue Decimal            @db.Decimal(20, 4)
+  notes       String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  indicator   KpiIndicator       @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+  period      KpiReportingPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@unique([indicatorId, periodId])
+  @@index([periodId])
+}
+
+model KpiMeasurement {
+  id                  String               @id @default(uuid()) @db.Uuid
+  indicatorId         String               @db.Uuid
+  periodId            String               @db.Uuid
+  actualValue         Decimal              @db.Decimal(20, 4)
+  measuredAt          DateTime
+  narrative           String?
+  disaggregation      Json?
+  sourceType          KpiSourceType        @default(MANUAL)
+  sourceReference     String?
+  status              KpiMeasurementStatus @default(DRAFT)
+  createdById         String               @db.Uuid
+  verifiedById        String?              @db.Uuid
+  submittedAt         DateTime?
+  verifiedAt          DateTime?
+  verificationComment String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  indicator           KpiIndicator         @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+  period              KpiReportingPeriod   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  createdBy           User                 @relation("KpiMeasurementCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  verifiedBy          User?                @relation("KpiMeasurementVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  evidence            KpiEvidence[]
+
+  @@index([indicatorId, periodId, status])
+  @@index([createdById])
+  @@index([measuredAt])
+}
+
+model KpiDataSource {
+  id            String         @id @default(uuid()) @db.Uuid
+  indicatorId   String         @db.Uuid
+  name          String
+  sourceType    KpiSourceType
+  endpoint      String?
+  valuePath     String?
+  aggregation   KpiAggregation @default(VALUE)
+  configuration Json?
+  isActive      Boolean        @default(true)
+  lastSyncedAt  DateTime?
+  lastValue     Decimal?       @db.Decimal(20, 4)
+  lastError     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  indicator     KpiIndicator   @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+
+  @@index([indicatorId, isActive])
+  @@index([sourceType])
+}
+
+model KpiEvidence {
+  id            String          @id @default(uuid()) @db.Uuid
+  indicatorId   String?         @db.Uuid
+  measurementId String?         @db.Uuid
+  name          String
+  url           String
+  mimeType      String?
+  notes         String?
+  uploadedById  String          @db.Uuid
+  createdAt     DateTime        @default(now())
+  indicator     KpiIndicator?   @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+  measurement   KpiMeasurement? @relation(fields: [measurementId], references: [id], onDelete: Cascade)
+  uploadedBy    User            @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([indicatorId])
+  @@index([measurementId])
+}
+
+model KpiWorkflowEvent {
   id         String   @id @default(uuid()) @db.Uuid
   entityType String
   entityId   String   @db.Uuid
