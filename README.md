@@ -49,7 +49,7 @@ Only Administrators can access `/admin/users` and `/api/admin/users` to create a
 
 ### PMS setup
 
-1. Copy `.env.example` to `.env` and set a unique `JWT_SECRET` of at least 64 characters, plus a strong `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+1. Copy `.env.example` to `.env` and set a unique `JWT_SECRET` of at least 64 characters, plus a strong `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Set `OPERATIONAL_API_URL` for a locally running PMS API and `DOCKER_OPERATIONAL_API_URL` for the Compose API when KPI connectors need telemetry or analytics data.
 2. Start PostgreSQL: `docker compose up -d postgres`.
 3. Install dependencies and generate Prisma: `npm install` then `npm run db:generate`.
 4. Set `DATABASE_URL`, then apply all PostgreSQL migrations with `npm run db:migrate` for development or `npm run db:migrate:deploy` in controlled environments.
@@ -65,6 +65,8 @@ npm run build
 ```
 
 The default local URLs are `http://localhost:3001` for the frontend and `http://localhost:4000` for the PMS API. PostgreSQL is exposed on host port `5433` by default to avoid conflicts; services inside Docker use port `5432`.
+
+The KPI connector defaults are `http://localhost:8000` for a locally running PMS API and `http://host.docker.internal:8000` for the Compose API. Connector definitions accept only relative `/api/telemetry`, `/api/analytics`, or `/api/aggregation` paths; synchronized values enter the normal verification workflow rather than becoming approved results automatically.
 
 See [docs/PMS_ROADMAP.md](docs/PMS_ROADMAP.md) for phase boundaries and [docs/MONOREPO_AUTH.md](docs/MONOREPO_AUTH.md) for authentication details.
 
@@ -101,6 +103,8 @@ The authenticated supplier CSV export is `GET /api/supply-chain/reports/supplier
 The `/performance` workspace and `/api/kpis` API provide project-linked results frameworks, impact/outcome/output hierarchies, configurable KPI definitions, baselines, final and period targets, reporting periods, actuals, secure evidence, M&E verification, workflow history, weighted portfolio scoring, reporting completeness, and an authenticated performance export.
 
 Administrators and Monitoring and Evaluation Officers govern definitions, targets, connectors, verification, and period approval. Assigned Project Managers and Department Heads report project results. Four-eyes controls prevent self-verification and self-approval, while period completeness rules require verified results for every active KPI. The dashboard surfaces pending verification alongside reporting gaps and overdue periods. Approved telemetry and analytics paths may be synchronized through `OPERATIONAL_API_URL`; synced values still require independent verification. Existing analytics APIs remain unchanged. See [docs/PMS_KPI_PERFORMANCE.md](docs/PMS_KPI_PERFORMANCE.md).
+
+Verified KPI achievement is classified as on track at 90 percent or above, at risk from 70 to 89.9 percent, and off track below 70 percent. Indicators without verified measurements remain explicitly not reported and reduce the reporting-completeness rate.
 
 The authenticated KPI CSV export is `GET /api/kpis/reports/performance.csv`.
 
