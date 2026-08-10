@@ -79,6 +79,11 @@ describe('KPI and performance HTTP integration', () => {
     const response = await (await login()).post('/api/kpis/measurements').send({ indicatorId, periodId, actualValue: 75, measuredAt: '2026-04-20' });
     expect(response.status).toBe(400);
   });
+  it('requires provenance for integrated KPI results', async () => {
+    user = { ...user, role: Role.PROJECT_MANAGER };
+    const response = await (await login()).post('/api/kpis/measurements').send({ indicatorId, periodId, actualValue: 75, measuredAt: '2026-03-15', sourceType: 'FINANCE' });
+    expect(response.status).toBe(400); expect(prismaMock.kpiMeasurement.create).not.toHaveBeenCalled();
+  });
   it('prevents reporters from verifying their own KPI result', async () => {
     user = { ...user, role: Role.ME_OFFICER }; prismaMock.kpiMeasurement.findUnique.mockResolvedValue({ ...measurement, status: KpiMeasurementStatus.SUBMITTED, createdById: userId });
     const response = await (await login()).post(`/api/kpis/measurements/${measurementId}/decision`).send({ status: 'VERIFIED' });
