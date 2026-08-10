@@ -62,10 +62,14 @@ Portfolio hierarchy, programme aggregation, and direct asset links remain future
 - Authenticated supplier-register export and operational dashboard alerts
 - Existing oil-movement and blockchain provenance remain unchanged and are not duplicated
 
-## Phase 8 — Training and capacity building (approval required)
+## Phase 8 — Training and capacity building (implemented)
 
-- Competency profiles, course catalogue, attendance, certifications, and expiry reminders
-- Role and department-based training requirements
+- Persistent staff departments, competency profiles, target proficiency, and skills-gap analysis
+- Course catalogue, competency mappings, role/department requirements, delivery modes, validity, and cost controls
+- Project-linked sessions, capacity limits, nominations, proportional attendance, assessments, and completion rules
+- Four-eyes session approval and certificate verification with workflow and audit history
+- Certification expiry, role/department compliance, learning-effectiveness, training-hour, and cost analytics
+- Secure evidence references and authenticated workforce-compliance export
 
 ## Phase 9 — Reporting and analytics (approval required)
 
