@@ -968,6 +968,9 @@ See module READMEs for usage examples:
 - Administrator account, role, and active-status management
 - Project planning with objectives, activities, milestones, deliverables, risks, progress, and staff assignments
 - Annual project budgets with category allocations, funding sources, and financial reporting periods
+- Oil-sector supplier registration, qualification, contracts, purchase requests, delivery acceptance, and secure evidence
+- Five-dimension supplier performance scoring across quality, delivery, HSE, local content, and cost
+- Four-eyes supplier-qualification and procurement approvals with expiry, late-delivery, and below-standard alerts
 - Commitment and expenditure workflows with supporting-document references
 - Calculated approved allocation, actual expenditure, outstanding commitments, remaining balance, variance, and utilization
 - Auditable four-eyes approval controls for budgets and finance entries
@@ -1011,7 +1014,7 @@ See module READMEs for usage examples:
 ## Future Enhancements
 
 ### PMS Roadmap
-- [ ] **Phase 6 — Supplier Performance**: Supplier registration, qualification, contracts, deliveries, HSE/local-content indicators, and performance scoring
+- [x] **Phase 6 — Supplier Performance**: Supplier registration, qualification, contracts, purchase requests, deliveries, HSE/local-content indicators, performance scoring, workflow controls, and authenticated export
 - [ ] **Phase 7 — KPI Engine**: Configurable indicators, baselines, targets, actuals, evidence, weighting, verification, and reporting periods
 - [ ] **Phase 8 — Training and Capacity Building**: Programmes, participants, assessments, certificates, costs, effectiveness, and skills gaps
 - [ ] **Phase 9 — Formal PMS Reports**: Project, quarterly, annual, finance, compliance, supplier, training, departmental, and executive reports
