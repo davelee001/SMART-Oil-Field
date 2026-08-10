@@ -12,7 +12,7 @@ A SMART Oil Field Performance Management System combining secure organizational 
 | 5 | Oil-sector compliance and regulation register | Implemented |
 | 6 | Supply chain and supplier performance | Implemented; existing oil-movement tracking remains available |
 | 7 | Configurable KPI and performance engine | Implemented; existing operational analytics remain available |
-| 8 | Staff training and capacity building | Planned |
+| 8 | Staff training and capacity building | Implemented |
 | 9 | Formal PMS reporting and analytics | Planned; existing technical exports remain available |
 | 10 | Full-system testing, finalization, and production deployment | Planned |
 
