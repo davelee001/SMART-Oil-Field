@@ -108,6 +108,14 @@ Verified KPI achievement is classified as on track at 90 percent or above, at ri
 
 The authenticated KPI CSV export is `GET /api/kpis/reports/performance.csv`.
 
+## PMS Training and Capacity Building (Phase 8)
+
+The `/training` workspace and `/api/training` API provide persistent staff departments, competency profiles, a governed course catalogue, course competency outcomes, role/department requirements, project-linked sessions, participant nominations, capacity controls, proportional attendance, assessments, completion, independently verified certifications, expiry monitoring, secure evidence, and auditable workflow history.
+
+Administrators and Department Heads govern the catalogue, competency assessments, requirements, approvals, and certifications. Project Managers coordinate their own sessions and may link only projects they manage. Four-eyes controls prevent session self-approval and certificate self-verification. Completion requires at least 75 percent attendance and a post-training assessment; course-linked certificate expiry is derived automatically when the course defines a validity period.
+
+The dashboard reports workforce compliance, skills gaps, upcoming sessions, completion, training hours, expiring certifications, effectiveness, and cost. The authenticated compliance export is `GET /api/training/reports/compliance.csv`. See [docs/PMS_TRAINING_CAPACITY.md](docs/PMS_TRAINING_CAPACITY.md).
+
 ## Overview
 
 This project integrates multiple technologies:
