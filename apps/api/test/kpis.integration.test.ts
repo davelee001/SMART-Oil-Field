@@ -68,6 +68,12 @@ describe('KPI and performance HTTP integration', () => {
     const response = await (await login()).post('/api/kpis/measurements').send({ indicatorId, periodId, actualValue: 75, measuredAt: '2026-03-15' });
     expect(response.status).toBe(201); expect(prismaMock.kpiMeasurement.create).toHaveBeenCalledOnce();
   });
+  it('prevents targets from being added to archived KPIs', async () => {
+    user = { ...user, role: Role.ME_OFFICER };
+    prismaMock.kpiIndicator.findUnique.mockResolvedValue({ ...indicator, status: KpiIndicatorStatus.ARCHIVED });
+    const response = await (await login()).put('/api/kpis/targets').send({ indicatorId, periodId, targetValue: 90 });
+    expect(response.status).toBe(409); expect(prismaMock.kpiTarget.upsert).not.toHaveBeenCalled();
+  });
   it('rejects measurements outside the reporting period', async () => {
     user = { ...user, role: Role.PROJECT_MANAGER };
     const response = await (await login()).post('/api/kpis/measurements').send({ indicatorId, periodId, actualValue: 75, measuredAt: '2026-04-20' });
