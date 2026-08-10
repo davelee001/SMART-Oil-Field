@@ -26,7 +26,7 @@ Phase 1 does not introduce projects, budgets, KPIs, compliance cases, suppliers,
 - Role-protected project workspace and REST API
 - Project management remains separate from oil-batch supply-chain tracking
 
-Portfolio hierarchy, programme aggregation, project budgeting, KPI frameworks, and direct asset links remain future work and require separate approval.
+Portfolio hierarchy, programme aggregation, and direct asset links remain future work and require separate approval.
 
 ## Phase 4 — Budgeting and finance (implemented)
 
@@ -36,11 +36,14 @@ Portfolio hierarchy, programme aggregation, project budgeting, KPI frameworks, a
 - Finance Officer and Administrator review workflows with four-eyes approval controls
 - Deliberate separation from subscription billing and blockchain payment records
 
-## Phase 7 — KPI and performance dashboards (approval required)
+## Phase 7 — KPI and performance dashboards (implemented)
 
-- Results frameworks, indicators, baselines, targets, reporting periods, and evidence
-- Automated KPI inputs from existing telemetry and analytics where appropriate
-- M&E review and approval workflow
+- Project-linked results frameworks with impact, outcome, and output hierarchies
+- Configurable indicators, baselines, final and period targets, direction, weighting, frequency, formula notes, and disaggregation dimensions
+- Governed reporting periods, actual measurements, secure evidence, completeness checks, and auditable M&E verification
+- Direction-aware achievement, weighted portfolio performance, reporting rate, and on-track/at-risk/off-track classification
+- Allow-listed automated inputs from existing telemetry and analytics endpoints with sync status and error reporting
+- Authenticated KPI performance export without replacing existing operational analytics
 
 ## Phase 5 — Compliance and regulation (implemented)
 
