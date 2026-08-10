@@ -41,14 +41,14 @@ const AdminUsers: React.FC = () => {
                 method: 'POST', body: JSON.stringify({ name, email, password, role, department: department || null }),
             });
             setUsers((current) => [...current, result.user].sort((a, b) => a.name.localeCompare(b.name)));
-            setName(''); setEmail(''); setPassword(''); setRole('VIEWER');
+            setName(''); setEmail(''); setDepartment(''); setPassword(''); setRole('VIEWER');
             toast.success('User created');
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Could not create user');
         } finally { setCreating(false); }
     };
 
-    const updateUser = async (id: string, changes: { role?: PmsRole; isActive?: boolean }) => {
+    const updateUser = async (id: string, changes: { role?: PmsRole; isActive?: boolean; department?: string | null }) => {
         try {
             const result = await apiRequest<{ user: AppUser }>(`/api/admin/users/${id}`, {
                 method: 'PATCH', body: JSON.stringify(changes),
@@ -72,8 +72,9 @@ const AdminUsers: React.FC = () => {
                     <Typography variant="h6" sx={{ mb: 2 }}>Add user</Typography>
                     <Box component="form" onSubmit={createUser}>
                         <Grid container spacing={2} alignItems="center">
-                            <Grid item xs={12} md={3}><TextField label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required fullWidth /></Grid>
-                            <Grid item xs={12} md={3}><TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required fullWidth /></Grid>
+                            <Grid item xs={12} md={2}><TextField label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required fullWidth /></Grid>
+                            <Grid item xs={12} md={2}><TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required fullWidth /></Grid>
+                            <Grid item xs={12} md={2}><TextField label="Department" value={department} onChange={(e) => setDepartment(e.target.value)} fullWidth /></Grid>
                             <Grid item xs={12} md={2}>
                                 <TextField
                                     label="Temporary Password"
@@ -120,11 +121,12 @@ const AdminUsers: React.FC = () => {
                     {loading && users.length === 0 ? <Alert severity="info">Loading users…</Alert> : (
                         <TableContainer>
                             <Table size="small">
-                                <TableHead><TableRow><TableCell>User</TableCell><TableCell>Role</TableCell><TableCell>Status</TableCell><TableCell>Last login</TableCell></TableRow></TableHead>
+                                <TableHead><TableRow><TableCell>User</TableCell><TableCell>Department</TableCell><TableCell>Role</TableCell><TableCell>Status</TableCell><TableCell>Last login</TableCell></TableRow></TableHead>
                                 <TableBody>
                                     {users.map((user) => (
                                         <TableRow key={user.id} hover>
                                             <TableCell><Typography variant="body2" fontWeight={700}>{user.name}</Typography><Typography variant="caption" color="text.secondary">{user.email}</Typography></TableCell>
+                                            <TableCell><TextField size="small" value={user.department || ''} placeholder="Unassigned" onChange={(e) => setUsers((current) => current.map((item) => item.id === user.id ? { ...item, department: e.target.value || null } : item))} onBlur={(e) => void updateUser(user.id, { department: e.target.value.trim() || null })} /></TableCell>
                                             <TableCell>
                                                 <FormControl size="small" sx={{ minWidth: 190 }}><Select value={user.role} onChange={(e) => void updateUser(user.id, { role: e.target.value as PmsRole })}>
                                                     {PMS_ROLES.map((item) => <MenuItem key={item} value={item}>{ROLE_LABELS[item]}</MenuItem>)}
