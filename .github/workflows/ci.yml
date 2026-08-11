@@ -1,0 +1,57 @@
+name: PMS release validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pms-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: smart_oil_field_test
+          POSTGRES_USER: smart_oil
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smart_oil -d smart_oil_field_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://smart_oil:ci-only-password@localhost:5432/smart_oil_field_test?schema=public
+      JWT_SECRET: ci-only-jwt-secret-that-is-longer-than-sixty-four-characters-and-never-used-in-production
+      ADMIN_EMAIL: ci-administrator@example.com
+      ADMIN_PASSWORD: CI-Only-Administrator-Password-123!
+      ALLOW_PUBLIC_REGISTRATION: "false"
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run db:generate
+      - run: npm run db:migrate:deploy
+      - run: npm run db:seed
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+      - run: docker build -f apps/api/Dockerfile -t smart-oil-field-api:ci .
+      - run: docker build -f src/frontend/Dockerfile -t smart-oil-field-web:ci .
