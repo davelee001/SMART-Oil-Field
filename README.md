@@ -1070,7 +1070,7 @@ See module READMEs for usage examples:
 - [x] **Phase 6 — Supplier Performance**: Supplier registration, qualification, contracts, purchase requests, deliveries, HSE/local-content indicators, performance scoring, workflow controls, and authenticated export
 - [x] **Phase 7 — KPI Engine**: Results frameworks, configurable indicators, baselines, targets, actuals, evidence, weighting, verification, reporting periods, controlled operational connectors, and authenticated export
 - [x] **Phase 8 — Training and Capacity Building**: Competencies, courses, requirements, sessions, participants, attendance, assessments, verified certificates, costs, effectiveness, and skills gaps
-- [ ] **Phase 9 — Formal PMS Reports**: Project, quarterly, annual, finance, compliance, supplier, training, departmental, and executive reports
+- [x] **Phase 9 — Formal PMS Reports**: Controlled project, quarterly, annual, finance, compliance, supplier, training, departmental, and executive reports with approval, sign-off, immutable versions, and formal outputs
 - [ ] **Phase 10 — Production Readiness**: End-to-end/security testing, CI/CD, backups, deployment validation, and user/administrator manuals
 
 ### Platform Enhancements
