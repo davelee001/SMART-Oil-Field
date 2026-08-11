@@ -145,6 +145,22 @@ Each report retains its project or department scope, reporting period, point-in-
 
 Approved formal outputs are available as print-ready A4 HTML, generated PDF, generated Excel workbooks, and authenticated CSV evidence exports. Every output identifies its reference, version, approver, signatory, and integrity checksum. See [docs/PMS_FORMAL_REPORTING.md](docs/PMS_FORMAL_REPORTING.md).
 
+### Phase 9 quick start
+
+Set `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`, then install the reporting schema and controlled templates before starting the application:
+
+```bash
+npm run db:generate
+npm run db:migrate:deploy
+npm run db:seed
+npm run dev:api
+npm run dev:web
+```
+
+Sign in with the seeded administrator and open `/reports`. Administrators can maintain templates and archive published records; Project Managers and Department Heads can prepare reports for their authorized scope; M&E and relevant domain officers provide independent review; and Administrators or Department Heads provide final sign-off. The API prevents an author from approving or signing the same report.
+
+The controlled lifecycle is `DRAFT → SUBMITTED → APPROVED → SIGNED → PUBLISHED → ARCHIVED`. A rejection preserves the submitted version and requires a new immutable revision. Before distributing an export, verify that its displayed SHA-256 checksum matches the stored report version.
+
 ## Overview
 
 This project integrates multiple technologies:
