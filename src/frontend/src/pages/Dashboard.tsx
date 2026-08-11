@@ -31,7 +31,7 @@ import {
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import { createWorkbook, saveWorkbook, styleWorksheet } from '../utils/excel';
 
 import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
