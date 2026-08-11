@@ -18,6 +18,8 @@
     "db:migrate:deploy": "npm run migrate:deploy --workspace=@smart-oil-field/database",
     "db:seed": "npm run seed --workspace=@smart-oil-field/database",
     "docker:up": "docker compose up --build",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "release:check": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release-check.ps1 -SkipDocker",
+    "release:check:containers": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release-check.ps1"
   }
 }
