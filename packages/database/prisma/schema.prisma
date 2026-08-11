@@ -340,6 +340,36 @@ enum CertificationStatus {
   REVOKED
 }
 
+enum FormalReportType {
+  PROJECT
+  QUARTERLY
+  ANNUAL
+  FINANCE
+  COMPLIANCE
+  SUPPLIER
+  TRAINING
+  DEPARTMENT
+  EXECUTIVE
+}
+
+enum ReportTemplateStatus {
+  DRAFT
+  SUBMITTED
+  ACTIVE
+  REJECTED
+  RETIRED
+}
+
+enum FormalReportStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  SIGNED
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id                           String                      @id @default(uuid()) @db.Uuid
   name                         String
