@@ -4,7 +4,7 @@ This guide covers automated backups and restore procedures for the SMART Oilfiel
 
 ## Overview
 
-The backup system covers:
+The PostgreSQL operational database is the PMS system of record. Use `scripts/backup-postgres.ps1` and `scripts/restore-postgres.ps1` for checksum-verified PMS recovery. The legacy backup process additionally covers specialist stores:
 - SQLite database (`oilfield.db`)
 - DuckDB warehouse (`oilfield_wh.duckdb`)
 - Parquet files (ETL outputs)
