@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                                     borderLeft: '3px solid transparent',
                                     '&.Mui-selected': {
                                         borderColor: 'primary.main',
-                                        backgroundColor: (theme) =>
+                                        backgroundColor: (theme: Theme) =>
                                             theme.palette.mode === 'dark'
                                                 ? 'rgba(112, 167, 204, 0.14)'
                                                 : 'rgba(23, 63, 95, 0.09)',
