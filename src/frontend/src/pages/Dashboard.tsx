@@ -170,7 +170,7 @@ const Dashboard: React.FC = () => {
         toast.success(`Exported ${filteredWells.length} well(s) to PDF`);
     };
 
-    const handleExportExcel = () => {
+    const handleExportExcel = async () => {
         if (filteredWells.length === 0) {
             toast.warning('No wells match the current filters — nothing to export');
             return;
