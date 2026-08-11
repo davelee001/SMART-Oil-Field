@@ -5,7 +5,6 @@ import {
 } from '@mui/material';
 import { Add, Archive, Article, AttachFile, FactCheck, PictureAsPdf, Refresh, TableView } from '@mui/icons-material';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import { apiRequest, PMS_ROLES, ROLE_LABELS } from '../utils/auth';
