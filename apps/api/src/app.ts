@@ -32,14 +32,20 @@ export const createApp = () => {
   app.use(cookieParser());
   if (process.env.NODE_ENV !== 'test') app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-  app.get('/health', async (_req, res, next) => {
+  app.get('/health/live', (_req, res) => res.json({ status: 'ok', service: 'smart-oil-field-api' }));
+  const readiness = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
-      return res.json({ status: 'ok', service: 'smart-oil-field-api' });
+      return res.json({ status: 'ready', service: 'smart-oil-field-api', database: 'available' });
     } catch (error) {
       return next(error);
     }
-  });
+  };
+  app.get('/health', readiness);
+  app.get('/health/ready', readiness);
+  const authenticationRateLimiter = createAuthenticationRateLimiter();
+  app.use('/api/auth/login', authenticationRateLimiter);
+  app.use('/api/auth/register', authenticationRateLimiter);
   app.use('/api/auth', authRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/projects', projectRoutes);
@@ -49,6 +55,8 @@ export const createApp = () => {
   app.use('/api/kpis', kpiRoutes);
   app.use('/api/training', trainingRoutes);
   app.use('/api/reports', reportRoutes);
+
+  app.use((req, res) => res.status(404).json({ message: 'Route not found', requestId: res.locals.requestId }));
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof ZodError) return res.status(400).json({ message: 'Validation failed', issues: error.issues });
