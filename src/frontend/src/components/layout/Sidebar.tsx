@@ -113,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                                                 : 'rgba(23, 63, 95, 0.09)',
                                     },
                                     '&:hover': {
-                                        backgroundColor: (theme) =>
+                                        backgroundColor: (theme: Theme) =>
                                             theme.palette.mode === 'dark'
                                                 ? 'rgba(255, 255, 255, 0.08)'
                                                 : 'rgba(30, 60, 114, 0.08)',
