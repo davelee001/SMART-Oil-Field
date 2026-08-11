@@ -161,6 +161,14 @@ Sign in with the seeded administrator and open `/reports`. Administrators can ma
 
 The controlled lifecycle is `DRAFT → SUBMITTED → APPROVED → SIGNED → PUBLISHED → ARCHIVED`. A rejection preserves the submitted version and requires a new immutable revision. Before distributing an export, verify that its displayed SHA-256 checksum matches the stored report version.
 
+## PMS Production Readiness (Phase 10)
+
+Phase 10 adds a GitHub Actions release gate, high/critical production dependency auditing, API and frontend container builds, a private PostgreSQL production topology, one-shot migration and seed execution, health-gated startup, API request correlation, authentication throttling, strict production configuration validation, graceful shutdown, and hardened Nginx delivery. The vulnerable legacy Excel package was replaced with ExcelJS, jsPDF and React Router were upgraded, and both dashboard and controlled-report exports remain available.
+
+Run the local release gate with `npm run release:check`; include clean container builds with `npm run release:check:containers`. Deploy with `docker compose -f docker-compose.production.yml up -d`, then execute `scripts/smoke-test.ps1` against the public HTTPS endpoint. PostgreSQL backup and restore use `scripts/backup-postgres.ps1` and `scripts/restore-postgres.ps1`, including SHA-256 verification and explicit destructive-restore confirmation.
+
+Repository validation cannot substitute for infrastructure acceptance. TLS, DNS, monitoring, off-host backup transfer, timed restore drills, specialist-service connectivity, and business sign-off must be completed in the target environment using [the deployment runbook](docs/DEPLOYMENT_RUNBOOK.md) and [production acceptance record](docs/PRODUCTION_ACCEPTANCE.md). User operations are documented in [the user manual](docs/USER_MANUAL.md), and privileged procedures are documented in [the administrator manual](docs/ADMINISTRATOR_MANUAL.md).
+
 ## Overview
 
 This project integrates multiple technologies:
