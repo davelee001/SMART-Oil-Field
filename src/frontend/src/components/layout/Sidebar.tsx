@@ -29,6 +29,7 @@ import {
     LocalShipping as SupplyChainIcon,
     TrackChanges as PerformanceIcon,
     School as TrainingIcon,
+    Assessment as ReportsIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -47,6 +48,7 @@ const menuItems: Array<{ text: string; icon: React.ReactNode; path: string; role
     { text: 'Suppliers & Supply Chain', icon: <SupplyChainIcon />, path: '/supply-chain' },
     { text: 'KPI Performance', icon: <PerformanceIcon />, path: '/performance' },
     { text: 'Training & Capacity', icon: <TrainingIcon />, path: '/training' },
+    { text: 'Formal Reports', icon: <ReportsIcon />, path: '/reports' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
     { text: 'Map View', icon: <MapIcon />, path: '/map' },
     { text: 'Data Upload', icon: <UploadIcon />, path: '/upload' },
