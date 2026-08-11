@@ -483,6 +483,7 @@ model Project {
   purchaseRequests      PurchaseRequest[]
   resultsFrameworks     ResultsFramework[]
   trainingSessions      TrainingSession[]
+  formalReports         FormalReport[]
 
   @@index([department])
   @@index([managerId])
@@ -1544,6 +1545,132 @@ model TrainingWorkflowEvent {
   actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
 
   @@index([entityType, entityId, createdAt])
+  @@index([actorId])
+}
+
+model FormalReportTemplate {
+  id            String               @id @default(uuid()) @db.Uuid
+  code          String               @unique
+  name          String
+  type          FormalReportType
+  description   String
+  sections      Json
+  allowedRoles  Role[]
+  isSystem      Boolean              @default(false)
+  status        ReportTemplateStatus @default(DRAFT)
+  version       Int                  @default(1)
+  createdById   String               @db.Uuid
+  submittedById String?              @db.Uuid
+  reviewedById  String?              @db.Uuid
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  reviewComment String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  createdBy     User                 @relation("ReportTemplateCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  submittedBy   User?                @relation("ReportTemplateSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  reviewedBy    User?                @relation("ReportTemplateReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reports       FormalReport[]
+
+  @@index([type, status])
+  @@index([createdById])
+}
+
+model FormalReport {
+  id             String                 @id @default(uuid()) @db.Uuid
+  reference      String                 @unique
+  title          String
+  type           FormalReportType
+  templateId     String                 @db.Uuid
+  projectId      String?                @db.Uuid
+  department     String?
+  periodStart    DateTime
+  periodEnd      DateTime
+  status         FormalReportStatus     @default(DRAFT)
+  currentVersion Int                    @default(1)
+  ownerId        String                 @db.Uuid
+  submittedById  String?                @db.Uuid
+  reviewedById   String?                @db.Uuid
+  signedById     String?                @db.Uuid
+  publishedById  String?                @db.Uuid
+  submittedAt    DateTime?
+  reviewedAt     DateTime?
+  signedAt       DateTime?
+  publishedAt    DateTime?
+  archivedAt     DateTime?
+  reviewComment  String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  template       FormalReportTemplate   @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  project        Project?               @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  owner          User                   @relation("FormalReportOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  submittedBy    User?                  @relation("FormalReportSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  reviewedBy     User?                  @relation("FormalReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  signedBy       User?                  @relation("FormalReportSignatory", fields: [signedById], references: [id], onDelete: SetNull)
+  publishedBy    User?                  @relation("FormalReportPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  versions       FormalReportVersion[]
+  evidence       FormalReportEvidence[]
+
+  @@index([type, status])
+  @@index([projectId, periodStart, periodEnd])
+  @@index([department, periodStart, periodEnd])
+  @@index([ownerId])
+}
+
+model FormalReportVersion {
+  id               String                 @id @default(uuid()) @db.Uuid
+  reportId         String                 @db.Uuid
+  version          Int
+  executiveSummary String
+  findings         String
+  recommendations  String
+  content          Json
+  sourceSnapshot   Json
+  checksum         String
+  createdById      String                 @db.Uuid
+  createdAt        DateTime               @default(now())
+  report           FormalReport           @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  createdBy        User                   @relation("ReportVersionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  evidence         FormalReportEvidence[]
+
+  @@unique([reportId, version])
+  @@index([createdById, createdAt])
+  @@index([checksum])
+}
+
+model FormalReportEvidence {
+  id           String               @id @default(uuid()) @db.Uuid
+  reportId     String               @db.Uuid
+  versionId    String?              @db.Uuid
+  name         String
+  url          String
+  mimeType     String?
+  notes        String?
+  uploadedById String               @db.Uuid
+  createdAt    DateTime             @default(now())
+  report       FormalReport         @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  version      FormalReportVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
+  uploadedBy   User                 @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+  @@index([versionId])
+  @@index([uploadedById])
+}
+
+model FormalReportWorkflowEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  reportId   String?  @db.Uuid
+  templateId String?  @db.Uuid
+  action     String
+  fromStatus String?
+  toStatus   String?
+  comment    String?
+  actorId    String   @db.Uuid
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+  @@index([templateId, createdAt])
   @@index([actorId])
 }
 
