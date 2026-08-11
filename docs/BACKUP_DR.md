@@ -12,6 +12,17 @@ The PostgreSQL operational database is the PMS system of record. Use `scripts/ba
 
 Backups are stored in `data/backups/` with timestamps.
 
+## PostgreSQL PMS backup
+
+```powershell
+$env:DATABASE_URL = '<secret PostgreSQL URL>'
+.\scripts\backup-postgres.ps1 -RetentionDays 35
+.\scripts\restore-postgres.ps1 -BackupPath '<dump path>' -ListOnly
+.\scripts\restore-postgres.ps1 -BackupPath '<dump path>' -ConfirmRestore
+```
+
+Every PostgreSQL backup includes a custom-format dump, SHA-256 sidecar, and JSON manifest. Restore refuses to continue if the checksum is absent or invalid and requires explicit destructive confirmation. Run restore drills against an isolated database, never directly against a live database.
+
 ## Backup Script
 
 Run the backup script from the repo root:
