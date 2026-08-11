@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { PrismaClient, Role } from '@prisma/client';
+import { FormalReportType, PrismaClient, ReportTemplateStatus, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -16,7 +16,7 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(password, 12);
 
-  await prisma.user.upsert({
+  const administrator = await prisma.user.upsert({
     where: { email },
     update: {
       name: process.env.ADMIN_NAME || 'System Administrator',
