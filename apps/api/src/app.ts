@@ -15,6 +15,7 @@ import complianceRoutes from './routes/compliance';
 import supplyChainRoutes from './routes/supplyChain';
 import kpiRoutes from './routes/kpis';
 import trainingRoutes from './routes/training';
+import reportRoutes from './routes/reports';
 
 export const createApp = () => {
   const app = express();
