@@ -80,10 +80,14 @@ Portfolio hierarchy, programme aggregation, and direct asset links remain future
 - Independent approval, executive sign-off, publication, archive, and separation-of-duties controls
 - Print-ready A4 output plus generated PDF, Excel, and authenticated CSV evidence exports
 
-## Phase 10 — Finalization and deployment (approval required)
+## Phase 10 — Finalization and deployment (implemented; live acceptance required)
 
-- Full-system automated testing, security validation, CI/CD, production deployment, backup and restoration testing
-- User and administrator manuals plus live-environment acceptance
+- Automated release validation with PostgreSQL migrations, seed, tests, type checks, production builds, dependency audit, and container builds
+- Hardened API runtime with separate liveness/readiness probes, request correlation, authentication throttling, safe production configuration enforcement, and graceful shutdown
+- Production Compose deployment with private PostgreSQL networking, one-shot migrations, unprivileged API execution, health-gated startup, and a secured Nginx frontend
+- Checksum-verified PostgreSQL backup and guarded restore tooling, release checks, and authenticated deployment smoke tests
+- Deployment runbook, user manual, administrator manual, and formal production-acceptance record
+- Live infrastructure acceptance, restore timing, TLS validation, monitoring integration, and business sign-off remain deployment-environment responsibilities
 
 ## Cross-cutting constraints
 
