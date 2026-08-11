@@ -21,4 +21,5 @@ COPY --from=build /app/packages/database/prisma ./packages/database/prisma
 COPY --from=build /app/packages/database/package.json ./packages/database/package.json
 COPY --from=build /app/packages/shared/package.json ./packages/shared/package.json
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
-CMD ["sh", "-c", "npx prisma migrate deploy --schema packages/database/prisma/schema.prisma && npx tsx packages/database/prisma/seed.ts && node apps/api/dist/server.js"]
+USER node
+CMD ["node", "apps/api/dist/server.js"]
