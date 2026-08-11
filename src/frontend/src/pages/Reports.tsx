@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import { apiRequest, PMS_ROLES, ROLE_LABELS } from '../utils/auth';
 import { FormalReport, ReportEvent, ReportOptions, ReportRegister, ReportSummary, ReportTemplate, ReportVersion } from '../utils/reports';
+import { createWorkbook, saveWorkbook, styleWorksheet } from '../utils/excel';
 
 type TabName = 'reports' | 'templates' | 'archive' | 'workflow';
 type DialogName = 'report' | 'template' | 'revision' | 'evidence' | 'preview' | null;
