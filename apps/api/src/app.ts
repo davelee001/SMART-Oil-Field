@@ -67,7 +67,7 @@ export const createApp = () => {
       return res.status(404).json({ message: 'Record not found' });
     }
     console.error(error);
-    return res.status(500).json({ message: 'Unexpected server error' });
+    return res.status(500).json({ message: 'Unexpected server error', requestId: res.locals.requestId });
   });
 
   return app;
