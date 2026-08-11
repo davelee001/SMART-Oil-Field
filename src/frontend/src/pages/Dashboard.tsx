@@ -186,10 +186,20 @@ const Dashboard: React.FC = () => {
                 'Pressure (PSI)': well.pressure,
             }))
         );
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Oil Wells');
-        XLSX.writeFile(workbook, `oil-field-report-${Date.now()}.xlsx`);
-        toast.success(`Exported ${filteredWells.length} well(s) to Excel`);
+        try {
+            const workbook = await createWorkbook();
+            workbook.creator = 'SMART Oil Field PMS';
+            workbook.created = new Date();
+            const worksheet = workbook.addWorksheet('Oil Wells');
+            worksheet.addRow(Object.keys(rows[0]));
+            rows.forEach((row) => worksheet.addRow(Object.values(row)));
+            worksheet.columns.forEach((column) => { column.width = 22; });
+            styleWorksheet(worksheet);
+            await saveWorkbook(workbook, `oil-field-report-${Date.now()}.xlsx`);
+            toast.success(`Exported ${filteredWells.length} well(s) to Excel`);
+        } catch {
+            toast.error('Excel export could not be generated');
+        }
     };
 
     const cardVariants = {
