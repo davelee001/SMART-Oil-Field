@@ -8,7 +8,7 @@ The PostgreSQL operational database is the PMS system of record. Use `scripts/ba
 - SQLite database (`oilfield.db`)
 - DuckDB warehouse (`oilfield_wh.duckdb`)
 - Parquet files (ETL outputs)
-- Configuration files (`.env`, `etl.config.json`)
+- Non-secret ETL configuration where separately approved
 
 Backups are stored in `data/backups/` with timestamps.
 
