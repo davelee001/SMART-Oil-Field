@@ -13,7 +13,7 @@ A SMART Oil Field Performance Management System combining secure organizational 
 | 6 | Supply chain and supplier performance | Implemented; existing oil-movement tracking remains available |
 | 7 | Configurable KPI and performance engine | Implemented; existing operational analytics remain available |
 | 8 | Staff training and capacity building | Implemented |
-| 9 | Formal PMS reporting and analytics | Planned; existing technical exports remain available |
+| 9 | Formal PMS reporting and analytics | Implemented; governed outputs complement existing technical exports |
 | 10 | Full-system testing, finalization, and production deployment | Planned |
 
 Existing subscription and blockchain-payment features are maintained separately and do not count as project budgeting or expenditure.
@@ -22,11 +22,11 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 As of 10 August 2026:
 
-- 81 authentication, authorization, project, finance, compliance, supply-chain, KPI, and training tests pass across eight test files.
+- 98 authentication, authorization, project, finance, compliance, supply-chain, KPI, training, and formal-reporting tests pass across nine test files.
 - Prisma generation and the shared, database, API, and frontend TypeScript checks pass.
 - The production frontend build passes; Webpack continues to report its existing bundle-size advisory.
-- Eight PostgreSQL migrations are available, including `20260810092541_training_capacity_building` for Phase 8.
-- The Phase 8 migration has been applied successfully to the local PostgreSQL development database.
+- Nine PostgreSQL migrations are available, including `20260811075000_formal_reporting_analytics` for Phase 9.
+- The Phase 9 migration and nine controlled report templates have been applied successfully to the local PostgreSQL development database.
 
 ## PMS Foundation (Phase 1)
 
@@ -136,6 +136,14 @@ npm run build
 ```
 
 The migration is `20260810092541_training_capacity_building`. Production evidence references must use HTTPS, completed enrollments require at least 75 percent attendance plus a post-training assessment, and certificates issued from a course inherit its configured validity when an explicit expiry is not supplied.
+
+## PMS Formal Reporting and Analytics (Phase 9)
+
+The `/reports` workspace and `/api/reports` API generate governed project, quarterly, annual, finance, compliance, supplier, training, department, and executive reports from live PMS source records. Nine system templates are installed through the secure seed command; Administrators and M&E Officers can prepare additional templates for independent activation.
+
+Each report retains its project or department scope, reporting period, point-in-time cross-module snapshot, evidence metrics, narrative, immutable versions, workflow history, and SHA-256 checksum. Authors cannot approve or sign their own submissions. Domain reviewers provide assurance before Administrator or Department Head sign-off, publication, and controlled archival.
+
+Approved formal outputs are available as print-ready A4 HTML, generated PDF, generated Excel workbooks, and authenticated CSV evidence exports. Every output identifies its reference, version, approver, signatory, and integrity checksum. See [docs/PMS_FORMAL_REPORTING.md](docs/PMS_FORMAL_REPORTING.md).
 
 ## Overview
 
