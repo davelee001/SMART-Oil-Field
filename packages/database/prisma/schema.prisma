@@ -438,6 +438,17 @@ model User {
   verifiedCertifications       StaffCertification[]        @relation("CertificationVerifier")
   trainingEvidence             TrainingEvidence[]
   trainingWorkflowEvents       TrainingWorkflowEvent[]
+  createdReportTemplates       FormalReportTemplate[]      @relation("ReportTemplateCreator")
+  submittedReportTemplates     FormalReportTemplate[]      @relation("ReportTemplateSubmitter")
+  reviewedReportTemplates      FormalReportTemplate[]      @relation("ReportTemplateReviewer")
+  ownedFormalReports           FormalReport[]              @relation("FormalReportOwner")
+  submittedFormalReports       FormalReport[]              @relation("FormalReportSubmitter")
+  reviewedFormalReports        FormalReport[]              @relation("FormalReportReviewer")
+  signedFormalReports          FormalReport[]              @relation("FormalReportSignatory")
+  publishedFormalReports       FormalReport[]              @relation("FormalReportPublisher")
+  createdReportVersions        FormalReportVersion[]       @relation("ReportVersionCreator")
+  reportEvidence               FormalReportEvidence[]
+  reportWorkflowEvents         FormalReportWorkflowEvent[]
 
   @@index([role])
   @@index([isActive])
