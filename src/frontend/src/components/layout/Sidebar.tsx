@@ -32,6 +32,7 @@ import {
     Assessment as ReportsIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { Theme } from '@mui/material/styles';
 import { useAuth } from '../../contexts/AuthContext';
 import { PmsRole } from '../../utils/auth';
 
