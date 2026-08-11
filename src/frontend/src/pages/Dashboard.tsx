@@ -176,7 +176,7 @@ const Dashboard: React.FC = () => {
             return;
         }
 
-        const worksheet = XLSX.utils.json_to_sheet(
+        const rows = (
             filteredWells.map((well) => ({
                 Well: well.name,
                 Location: well.location,
