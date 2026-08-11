@@ -1,0 +1,87 @@
+name: smart-oil-field-production
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smart_oil_field}
+      POSTGRES_USER: ${POSTGRES_USER:-smart_oil}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - pms_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [pms_internal]
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: "no"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set an encoded PostgreSQL DATABASE_URL}
+      ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
+    command: ["sh", "-c", "npx prisma migrate deploy --schema packages/database/prisma/schema.prisma && npx tsx packages/database/prisma/seed.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [pms_internal]
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      ENFORCE_PRODUCTION_SECURITY: "true"
+      API_PORT: 4000
+      DATABASE_URL: ${DATABASE_URL:?Set an encoded PostgreSQL DATABASE_URL}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?Set the public HTTPS origin}
+      JWT_SECRET: ${JWT_SECRET:?Set a random secret of at least 64 characters}
+      JWT_ISSUER: ${JWT_ISSUER:-smart-oil-field-api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-smart-oil-field-services}
+      JWT_TTL_MINUTES: ${JWT_TTL_MINUTES:-60}
+      JWT_COOKIE_SECURE: "true"
+      ALLOW_PUBLIC_REGISTRATION: "false"
+      AUTH_RATE_LIMIT_WINDOW_MS: ${AUTH_RATE_LIMIT_WINDOW_MS:-900000}
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-10}
+      SHUTDOWN_TIMEOUT_MS: ${SHUTDOWN_TIMEOUT_MS:-10000}
+      OPERATIONAL_API_URL: ${OPERATIONAL_API_URL:-http://host.docker.internal:8000}
+    expose: ["4000"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [pms_internal]
+
+  web:
+    build:
+      context: .
+      dockerfile: src/frontend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [pms_internal]
+
+networks:
+  pms_internal:
+    driver: bridge
+
+volumes:
+  pms_postgres_data:
+
