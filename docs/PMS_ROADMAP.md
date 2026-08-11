@@ -71,10 +71,14 @@ Portfolio hierarchy, programme aggregation, and direct asset links remain future
 - Certification expiry, role/department compliance, learning-effectiveness, training-hour, and cost analytics
 - Secure evidence references and authenticated workforce-compliance export
 
-## Phase 9 — Reporting and analytics (approval required)
+## Phase 9 — Reporting and analytics (implemented)
 
 - Formal project, quarterly, annual, finance, compliance, supplier, training, department, and executive reports
-- Approval, sign-off, and controlled report templates
+- Controlled system and custom templates with role-based authorship and independent activation
+- Live project/department/period snapshots across delivery, finance, KPI, compliance, supplier, and workforce records
+- Immutable report versions, SHA-256 integrity checks, secure evidence, and auditable workflow history
+- Independent approval, executive sign-off, publication, archive, and separation-of-duties controls
+- Print-ready A4 output plus generated PDF, Excel, and authenticated CSV evidence exports
 
 ## Phase 10 — Finalization and deployment (approval required)
 
