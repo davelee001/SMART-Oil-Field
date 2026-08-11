@@ -16,12 +16,15 @@ import supplyChainRoutes from './routes/supplyChain';
 import kpiRoutes from './routes/kpis';
 import trainingRoutes from './routes/training';
 import reportRoutes from './routes/reports';
+import { createAuthenticationRateLimiter, requestContext } from './operations';
 
 export const createApp = () => {
   const app = express();
   const origins = (process.env.FRONTEND_ORIGIN || 'http://localhost:3001').split(',').map((origin) => origin.trim());
 
+  app.disable('x-powered-by');
   app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 0);
+  app.use(requestContext);
   app.use(helmet());
   app.use(compression());
   app.use(cors({ origin: origins, credentials: true }));
