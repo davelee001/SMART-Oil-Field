@@ -102,4 +102,6 @@ npm run typecheck
 npm run build
 ```
 
+Production operators should restrict report access to named accounts, retain PostgreSQL backups for the full records-retention period, and validate a report checksum before distributing any exported copy. Published records should be archived through the reporting workflow instead of being deleted or altered directly in the database.
+
 Phase 10 remains responsible for CI/CD, security validation, production deployment, backup restoration testing, manuals and live acceptance.
