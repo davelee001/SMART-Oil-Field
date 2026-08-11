@@ -36,6 +36,7 @@ services:
       ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
       ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+    command: ["sh", "-c", "npx prisma migrate deploy --schema packages/database/prisma/schema.prisma && npx tsx packages/database/prisma/seed.ts && node apps/api/dist/server.js"]
     ports:
       - "4000:4000"
     depends_on:
