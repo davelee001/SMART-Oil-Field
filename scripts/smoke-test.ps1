@@ -27,8 +27,8 @@ function Assert-JsonHealth([string]$Path, [string]$ExpectedStatus) {
 }
 
 Assert-HttpOk '/healthz'
-Assert-HttpOk '/health/live'
-Assert-HttpOk '/health/ready'
+Assert-JsonHealth '/health/live' 'ok'
+Assert-JsonHealth '/health/ready' 'ready'
 Assert-HttpOk '/'
 
 if ($AdminEmail -and $AdminPassword) {
