@@ -46,7 +46,7 @@ if ($AdminEmail -and $AdminPassword) {
     if ($me.user.id -ne $login.user.id) { throw 'Persistent session smoke test failed.' }
     Write-Host 'PASS administrator login and persistent session'
 } else {
-    Write-Warning 'ADMIN_EMAIL or ADMIN_PASSWORD not set; authenticated smoke test skipped.'
+    Write-Warning 'Administrator credentials not set; authenticated smoke test skipped. Use -RequireAuthentication for a production gate.'
 }
 
 Write-Host 'SMART Oil Field production smoke test completed.'
