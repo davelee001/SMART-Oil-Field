@@ -17,6 +17,7 @@ try {
         $requiredEnvironment = @('POSTGRES_PASSWORD', 'DATABASE_URL', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'FRONTEND_ORIGIN', 'JWT_SECRET')
         $missingEnvironment = $requiredEnvironment | Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) }
         if ($missingEnvironment) { throw "Required production environment variables are missing: $($missingEnvironment -join ', ')" }
+        if (-not $env:DATABASE_URL.StartsWith('postgresql://')) { throw 'DATABASE_URL must use PostgreSQL.' }
     }
     & npm.cmd test
     if ($LASTEXITCODE -ne 0) { throw 'Test suite failed.' }
