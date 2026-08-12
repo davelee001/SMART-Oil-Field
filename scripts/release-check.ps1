@@ -13,6 +13,11 @@ try {
     if (-not $SkipDocker -and -not (Get-Command 'docker' -ErrorAction SilentlyContinue)) {
         throw "Required command 'docker' is not available on PATH."
     }
+    if (-not $SkipDocker) {
+        $requiredEnvironment = @('POSTGRES_PASSWORD', 'DATABASE_URL', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'FRONTEND_ORIGIN', 'JWT_SECRET')
+        $missingEnvironment = $requiredEnvironment | Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) }
+        if ($missingEnvironment) { throw "Required production environment variables are missing: $($missingEnvironment -join ', ')" }
+    }
     & npm.cmd test
     if ($LASTEXITCODE -ne 0) { throw 'Test suite failed.' }
     & npm.cmd run typecheck
