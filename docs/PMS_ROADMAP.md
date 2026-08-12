@@ -28,6 +28,15 @@ Phase 1 does not introduce projects, budgets, KPIs, compliance cases, suppliers,
 
 Portfolio hierarchy, programme aggregation, and direct asset links remain future work and require separate approval.
 
+## Phase 3 — Integration and operational continuity (implemented)
+
+- Existing telemetry, oil movement, analytics, machine-learning, blockchain, and subscription interfaces retained
+- PMS modules use the shared Phase 1 identity and authorization contracts
+- Operational and management-system records remain separated by their domain ownership boundaries
+- Protected FastAPI write operations use shared JWT validation without replacing specialist services
+
+Phase 3 is a cross-cutting integration phase. It introduced no standalone PMS module or new system of record.
+
 ## Phase 4 — Budgeting and finance (implemented)
 
 - Annual project budgets, category allocations, and funding sources
