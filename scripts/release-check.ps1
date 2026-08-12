@@ -1,4 +1,7 @@
-param([switch]$SkipDocker)
+param(
+    [switch]$SkipDocker,
+    [switch]$SkipDatabase
+)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
