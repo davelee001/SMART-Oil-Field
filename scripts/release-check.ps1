@@ -27,6 +27,13 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Production dependency audit failed.' }
     & npm.cmd run db:generate
     if ($LASTEXITCODE -ne 0) { throw 'Prisma client generation failed.' }
+    if (-not $SkipDatabase) {
+        if ([string]::IsNullOrWhiteSpace($env:DATABASE_URL)) { throw 'DATABASE_URL is required for migration and seed validation.' }
+        & npm.cmd run db:migrate:deploy
+        if ($LASTEXITCODE -ne 0) { throw 'Database migration validation failed.' }
+        & npm.cmd run db:seed
+        if ($LASTEXITCODE -ne 0) { throw 'Database seed validation failed.' }
+    }
     & npm.cmd test
     if ($LASTEXITCODE -ne 0) { throw 'Test suite failed.' }
     & npm.cmd run typecheck
