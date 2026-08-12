@@ -7,6 +7,9 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 Push-Location $repoRoot
 try {
+    if (-not (Get-Command 'npm.cmd' -ErrorAction SilentlyContinue)) {
+        throw "Required command 'npm.cmd' is not available on PATH."
+    }
     & npm.cmd test
     if ($LASTEXITCODE -ne 0) { throw 'Test suite failed.' }
     & npm.cmd run typecheck
