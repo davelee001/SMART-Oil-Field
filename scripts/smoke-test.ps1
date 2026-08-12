@@ -1,7 +1,8 @@
 param(
     [string]$BaseUrl = 'http://localhost:8080',
     [string]$AdminEmail = $env:ADMIN_EMAIL,
-    [string]$AdminPassword = $env:ADMIN_PASSWORD
+    [string]$AdminPassword = $env:ADMIN_PASSWORD,
+    [switch]$RequireAuthentication
 )
 
 $ErrorActionPreference = 'Stop'
