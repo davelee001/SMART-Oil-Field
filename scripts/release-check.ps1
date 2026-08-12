@@ -18,6 +18,7 @@ try {
         $missingEnvironment = $requiredEnvironment | Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) }
         if ($missingEnvironment) { throw "Required production environment variables are missing: $($missingEnvironment -join ', ')" }
         if (-not $env:DATABASE_URL.StartsWith('postgresql://')) { throw 'DATABASE_URL must use PostgreSQL.' }
+        if (-not $env:FRONTEND_ORIGIN.StartsWith('https://')) { throw 'FRONTEND_ORIGIN must use HTTPS.' }
     }
     & npm.cmd test
     if ($LASTEXITCODE -ne 0) { throw 'Test suite failed.' }
