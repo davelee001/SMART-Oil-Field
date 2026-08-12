@@ -8,6 +8,7 @@ A SMART Oil Field Performance Management System combining secure organizational 
 |---|---|---|
 | 1 | PostgreSQL identity, authentication, RBAC, and user administration | Implemented |
 | 2 | Projects, objectives, activities, milestones, deliverables, risks, and staff assignments | Implemented |
+| 3 | Integration and operational continuity for specialist services | Implemented |
 | 4 | Annual project budgeting, allocations, commitments, expenditure, periods, evidence, and approvals | Implemented |
 | 5 | Oil-sector compliance and regulation register | Implemented |
 | 6 | Supply chain and supplier performance | Implemented; existing oil-movement tracking remains available |
@@ -20,13 +21,12 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 ### Current PMS verification baseline
 
-As of 10 August 2026:
+As of 12 August 2026:
 
-- 103 authentication, authorization, project, finance, compliance, supply-chain, KPI, training, formal-reporting, and production-readiness tests pass across ten test files.
-- Prisma generation and the shared, database, API, and frontend TypeScript checks pass.
-- The production frontend build passes; Webpack continues to report its existing bundle-size advisory.
-- Nine PostgreSQL migrations are available, including `20260811075000_formal_reporting_analytics` for Phase 9.
-- The Phase 9 migration and nine controlled report templates have been applied successfully to the local PostgreSQL development database.
+- The repository provides authentication, authorization, project, finance, compliance, supply-chain, KPI, training, formal-reporting, and production-readiness tests across ten API test files.
+- The release workflow validates a clean dependency installation, production dependency audit, Prisma generation, PostgreSQL migrations, idempotent seed, tests, TypeScript checks, production builds, and both container images.
+- The latest workflow for commit `61f48e5` passed installation, dependency audit, Prisma generation, migrations, and seed, then failed at `npm test`; later type-check, build, and container steps were consequently skipped.
+- Deployment remains staging-candidate work until a new release workflow passes and the live checks in `docs/PRODUCTION_ACCEPTANCE.md` are completed.
 
 ## PMS Foundation (Phase 1)
 
@@ -165,7 +165,15 @@ The controlled lifecycle is `DRAFT → SUBMITTED → APPROVED → SIGNED → PUB
 
 Phase 10 adds a GitHub Actions release gate, high/critical production dependency auditing, API and frontend container builds, a private PostgreSQL production topology, one-shot migration and seed execution, health-gated startup, API request correlation, authentication throttling, strict production configuration validation, graceful shutdown, and hardened Nginx delivery. The vulnerable legacy Excel package was replaced with ExcelJS, jsPDF and React Router were upgraded, and both dashboard and controlled-report exports remain available.
 
-Run the local release gate with `npm run release:check`; include clean container builds with `npm run release:check:containers`. Deploy with `docker compose -f docker-compose.production.yml up -d`, then execute `scripts/smoke-test.ps1` against the public HTTPS endpoint. PostgreSQL backup and restore use `scripts/backup-postgres.ps1` and `scripts/restore-postgres.ps1`, including SHA-256 verification and explicit destructive-restore confirmation.
+Run `npm run release:check` with `DATABASE_URL` set to an isolated validation database. This gate performs the production dependency audit, Prisma generation, migrations, seed, tests, TypeScript checks, and production build. Use `npm run release:check:containers` with all required production variables set to also validate the production Compose configuration and build the API and frontend images. Required container-gate variables are `POSTGRES_PASSWORD`, `DATABASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `FRONTEND_ORIGIN`, and a `JWT_SECRET` of at least 64 characters; the public origin must use HTTPS.
+
+Deploy with `docker compose -f docker-compose.production.yml up -d`, then run the authenticated smoke gate against the public HTTPS endpoint:
+
+```powershell
+./scripts/smoke-test.ps1 -BaseUrl https://pms.example.com -RequireAuthentication
+```
+
+The smoke gate verifies the web endpoint, JSON API liveness and database readiness through Nginx, administrator login, and persistent cookie authentication. PostgreSQL backup and restore use `scripts/backup-postgres.ps1` and `scripts/restore-postgres.ps1`, including SHA-256 verification and explicit destructive-restore confirmation.
 
 Repository validation cannot substitute for infrastructure acceptance. TLS, DNS, monitoring, off-host backup transfer, timed restore drills, specialist-service connectivity, and business sign-off must be completed in the target environment using [the deployment runbook](docs/DEPLOYMENT_RUNBOOK.md) and [production acceptance record](docs/PRODUCTION_ACCEPTANCE.md). User operations are documented in [the user manual](docs/USER_MANUAL.md), and privileged procedures are documented in [the administrator manual](docs/ADMINISTRATOR_MANUAL.md).
 
