@@ -4,13 +4,13 @@ Use this document for each release candidate. Repository automation provides evi
 
 ## Release identity
 
-- Commit SHA:
+- Commit SHA: `fa33d385d14931642e7428af08d64bfa5b3e93e4`
 - Image digests:
-- Environment:
-- Release owner:
+- Environment: Staging candidate; production target pending confirmation
+- Release owner: Pending assignment
 - Technical approver:
 - Business approver:
-- Deployment window:
+- Deployment window: Pending scheduling
 - Pre-release backup and SHA-256:
 
 ## Automated evidence
