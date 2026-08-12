@@ -23,6 +23,8 @@ try {
         & docker compose -f docker-compose.production.yml config --quiet
         if ($LASTEXITCODE -ne 0) { throw 'Production Compose configuration validation failed.' }
     }
+    & npm.cmd audit --omit=dev --audit-level=high
+    if ($LASTEXITCODE -ne 0) { throw 'Production dependency audit failed.' }
     & npm.cmd test
     if ($LASTEXITCODE -ne 0) { throw 'Test suite failed.' }
     & npm.cmd run typecheck
