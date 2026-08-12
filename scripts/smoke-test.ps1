@@ -31,6 +31,9 @@ Assert-JsonHealth '/health/live' 'ok'
 Assert-JsonHealth '/health/ready' 'ready'
 Assert-HttpOk '/'
 
+if (($AdminEmail -and -not $AdminPassword) -or ($AdminPassword -and -not $AdminEmail)) {
+    throw 'ADMIN_EMAIL and ADMIN_PASSWORD must be supplied together.'
+}
 if ($AdminEmail -and $AdminPassword) {
     $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
     $payload = @{ email = $AdminEmail; password = $AdminPassword } | ConvertTo-Json
