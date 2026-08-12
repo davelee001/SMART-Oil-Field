@@ -34,6 +34,9 @@ Assert-HttpOk '/'
 if (($AdminEmail -and -not $AdminPassword) -or ($AdminPassword -and -not $AdminEmail)) {
     throw 'ADMIN_EMAIL and ADMIN_PASSWORD must be supplied together.'
 }
+if ($RequireAuthentication -and (-not $AdminEmail -or -not $AdminPassword)) {
+    throw 'Authenticated smoke testing is required, but ADMIN_EMAIL or ADMIN_PASSWORD is missing.'
+}
 if ($AdminEmail -and $AdminPassword) {
     $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
     $payload = @{ email = $AdminEmail; password = $AdminPassword } | ConvertTo-Json
