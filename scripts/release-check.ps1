@@ -25,6 +25,8 @@ try {
     }
     & npm.cmd audit --omit=dev --audit-level=high
     if ($LASTEXITCODE -ne 0) { throw 'Production dependency audit failed.' }
+    & npm.cmd run db:generate
+    if ($LASTEXITCODE -ne 0) { throw 'Prisma client generation failed.' }
     & npm.cmd test
     if ($LASTEXITCODE -ne 0) { throw 'Test suite failed.' }
     & npm.cmd run typecheck
