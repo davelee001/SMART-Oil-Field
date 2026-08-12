@@ -14,6 +14,18 @@ function Assert-HttpOk([string]$Path) {
     Write-Host "PASS $Path ($($response.StatusCode))"
 }
 
+function Assert-JsonHealth([string]$Path, [string]$ExpectedStatus) {
+    $response = Invoke-WebRequest -Uri "$base$Path" -UseBasicParsing -TimeoutSec 15
+    if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 300) { throw "$Path returned $($response.StatusCode)" }
+    $contentType = [string]$response.Headers['Content-Type']
+    if (-not $contentType.StartsWith('application/json', [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "$Path returned '$contentType' instead of application/json"
+    }
+    try { $body = $response.Content | ConvertFrom-Json } catch { throw "$Path did not return valid JSON" }
+    if ($body.status -ne $ExpectedStatus) { throw "$Path returned status '$($body.status)' instead of '$ExpectedStatus'" }
+    Write-Host "PASS $Path ($($response.StatusCode), status=$ExpectedStatus)"
+}
+
 Assert-HttpOk '/healthz'
 Assert-HttpOk '/health/live'
 Assert-HttpOk '/health/ready'
