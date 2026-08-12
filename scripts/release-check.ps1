@@ -20,6 +20,8 @@ try {
         if (-not $env:DATABASE_URL.StartsWith('postgresql://')) { throw 'DATABASE_URL must use PostgreSQL.' }
         if (-not $env:FRONTEND_ORIGIN.StartsWith('https://')) { throw 'FRONTEND_ORIGIN must use HTTPS.' }
         if ($env:JWT_SECRET.Length -lt 64) { throw 'JWT_SECRET must contain at least 64 characters.' }
+        & docker compose -f docker-compose.production.yml config --quiet
+        if ($LASTEXITCODE -ne 0) { throw 'Production Compose configuration validation failed.' }
     }
     & npm.cmd test
     if ($LASTEXITCODE -ne 0) { throw 'Test suite failed.' }
