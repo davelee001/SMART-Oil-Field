@@ -15,14 +15,14 @@ Use this document for each release candidate. Repository automation provides evi
 
 ## Automated evidence
 
-- [ ] Clean dependency installation completed
-- [ ] High/critical dependency audit passed and moderate findings were reviewed
-- [ ] PostgreSQL migrations applied to an isolated test database
-- [ ] Seed command completed idempotently
-- [ ] Full API unit and integration suite passed
-- [ ] Shared, database, API and frontend TypeScript checks passed
-- [ ] Production frontend build passed
-- [ ] API and frontend container builds passed
+- [x] Clean dependency installation completed (GitHub Actions run 31691254107)
+- [x] High/critical dependency audit passed; two moderate `uuid` findings through ExcelJS reviewed
+- [x] PostgreSQL migrations applied to an isolated CI test database
+- [x] Seed command completed idempotently
+- [x] Full API unit and integration suite passed (103 tests)
+- [x] Shared, database, API and frontend TypeScript checks passed
+- [x] Production frontend build passed
+- [x] API and frontend container builds passed
 
 ## Live technical acceptance
 

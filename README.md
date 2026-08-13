@@ -25,8 +25,9 @@ As of 12 August 2026:
 
 - The repository provides authentication, authorization, project, finance, compliance, supply-chain, KPI, training, formal-reporting, and production-readiness tests across ten API test files.
 - The release workflow validates a clean dependency installation, production dependency audit, Prisma generation, PostgreSQL migrations, idempotent seed, tests, TypeScript checks, production builds, and both container images.
-- The clean-checkout test contract now builds the shared and database workspaces before starting Vitest; local Node 22 validation passes all 103 API tests, TypeScript checks, and production builds.
-- Deployment remains staging-candidate work until the updated release workflow passes its clean-runner and container checks and the live checks in `docs/PRODUCTION_ACCEPTANCE.md` are completed.
+- The clean-checkout test contract builds the shared and database workspaces before starting Vitest; local Node 22 validation passes all 103 API tests, TypeScript checks, and production builds.
+- GitHub Actions release validation for commit `f33843e` passes clean installation, dependency audit, Prisma generation, migrations, seed, all tests, type checks, production builds, and both container-image builds.
+- Deployment remains staging-ready until the live infrastructure and business checks in `docs/PRODUCTION_ACCEPTANCE.md` are completed.
 
 ## PMS Foundation (Phase 1)
 
