@@ -21,12 +21,13 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 ### Current PMS verification baseline
 
-As of 12 August 2026:
+As of 13 August 2026:
 
 - The repository provides authentication, authorization, project, finance, compliance, supply-chain, KPI, training, formal-reporting, and production-readiness tests across ten API test files.
 - The release workflow validates a clean dependency installation, production dependency audit, Prisma generation, PostgreSQL migrations, idempotent seed, tests, TypeScript checks, production builds, and both container images.
 - The clean-checkout test contract builds the shared and database workspaces before starting Vitest; local Node 22 validation passes all 103 API tests, TypeScript checks, and production builds.
-- GitHub Actions release validation for commit `f33843e` passes clean installation, dependency audit, Prisma generation, migrations, seed, all tests, type checks, production builds, and both container-image builds.
+- GitHub Actions release validation [run 4](https://github.com/davelee001/SMART-Oil-Field/actions/runs/31691254107) for commit `f33843e` passes clean installation, dependency audit, Prisma generation, migrations, seed, all 103 tests, type checks, production builds, and both container-image builds.
+- The production dependency audit has no high or critical findings. Two moderate findings remain in ExcelJS's transitive `uuid` dependency and require tracked risk acceptance or an upstream-compatible remediation.
 - Deployment remains staging-ready until the live infrastructure and business checks in `docs/PRODUCTION_ACCEPTANCE.md` are completed.
 
 ## PMS Foundation (Phase 1)
