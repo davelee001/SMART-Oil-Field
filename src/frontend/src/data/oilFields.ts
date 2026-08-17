@@ -51,7 +51,9 @@ const THARJAATH_WELLS: WellSpec[] = [
     { number: 2, pumpType: 'PCP', manifold: 'OGM1' },
     { number: 1, pumpType: 'PCP', manifold: 'OGM1' },
 ];
-const MALA_WELLS: WellSpec[] = [];
+const MALA_WELLS: WellSpec[] = [
+    { number: 1, pumpType: 'PCP', manifold: 'OGM Mala' },
+];
 
 const positionAround = (center: [number, number], index: number): [number, number] => {
     const angle = index * 2.399963;
