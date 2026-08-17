@@ -60,6 +60,7 @@ const Dashboard: React.FC = () => {
                 [
                     well.id,
                     well.name,
+                    well.field,
                     well.location,
                     well.status,
                     well.production,
