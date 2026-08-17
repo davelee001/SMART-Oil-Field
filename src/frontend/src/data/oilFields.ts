@@ -22,6 +22,7 @@ interface WellSpec { number: number; pumpType: PumpType; manifold: string; }
 const THARJAATH_CENTER: [number, number] = [8.4665, 30.3167];
 const MALA_CENTER: [number, number] = [8.43, 30.36];
 const THARJAATH_WELLS: WellSpec[] = [
+    { number: 16, pumpType: 'PCP', manifold: 'OGM3' },
     { number: 15, pumpType: 'PCP', manifold: 'OGM3' },
     { number: 14, pumpType: 'PCP', manifold: 'OGM3' },
     { number: 13, pumpType: 'ESP', manifold: 'OGM3' },
