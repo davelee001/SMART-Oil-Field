@@ -306,9 +306,13 @@ const Dashboard: React.FC = () => {
 
                                     {filteredWells.length === 0 ? (
                                         <Box sx={{ px: 2, py: 2.5, textAlign: 'center' }}>
-                                            <Typography fontWeight={650}>No matching wells found</Typography>
+                                            <Typography fontWeight={650}>
+                                                {ALL_WELLS.length === 0 ? 'No wells available' : 'No matching wells found'}
+                                            </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                Try a well name, ID, location, status, or telemetry value.
+                                                {ALL_WELLS.length === 0
+                                                    ? 'Well records will appear here after they are added.'
+                                                    : 'Try a well name, ID, location, status, or telemetry value.'}
                                             </Typography>
                                         </Box>
                                     ) : (
