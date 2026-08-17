@@ -1,4 +1,37 @@
 export type PumpType = 'PCP' | 'ESP';
+export type BasinName = 'Unity Basin' | 'Paloch Basin' | 'Tharjaath Basin';
+
+export interface OilBasin {
+    name: BasinName;
+    operator: string;
+    operatorCode: 'GPOC' | 'DPOC' | 'SPOC';
+    blocks: string[];
+    fields: Array<'Tharjaath Oil Field' | 'Mala Oil Field'>;
+}
+
+export const OIL_BASINS: OilBasin[] = [
+    {
+        name: 'Unity Basin',
+        operator: 'Greater Pioneer Petroleum Operating Company',
+        operatorCode: 'GPOC',
+        blocks: ['Block 1', 'Block 2', 'Block 4'],
+        fields: [],
+    },
+    {
+        name: 'Paloch Basin',
+        operator: 'Dar Petroleum Operating Company',
+        operatorCode: 'DPOC',
+        blocks: ['Block 3', 'Block 7'],
+        fields: [],
+    },
+    {
+        name: 'Tharjaath Basin',
+        operator: 'Sudd Petroleum Operating Company',
+        operatorCode: 'SPOC',
+        blocks: ['Block 5A'],
+        fields: ['Tharjaath Oil Field', 'Mala Oil Field'],
+    },
+];
 
 export interface OilWell {
     id: string;
