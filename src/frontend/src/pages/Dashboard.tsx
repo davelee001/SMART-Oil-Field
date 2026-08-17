@@ -49,16 +49,7 @@ interface OilWellRow {
     lastUpdated: number;
 }
 
-// Realistic rich datasets for populated dashboard
 const ALL_WELLS: OilWellRow[] = [
-    { id: 'well-001', name: 'Alpha Main Rig #1', location: 'Permian Basin, TX', status: 'active', production: 285.4, temperature: 78.2, pressure: 215.0, lastUpdated: Date.now() - 1000 * 60 * 5 },
-    { id: 'well-002', name: 'Beta Sector Deep', location: 'Eagle Ford, TX', status: 'active', production: 310.8, temperature: 76.8, pressure: 228.5, lastUpdated: Date.now() - 1000 * 60 * 12 },
-    { id: 'well-003', name: 'Gamma North Sub', location: 'Midland, TX', status: 'warning', production: 145.2, temperature: 88.6, pressure: 172.4, lastUpdated: Date.now() - 1000 * 60 * 25 },
-    { id: 'well-004', name: 'Delta Offshore #4', location: 'Gulf of Mexico', status: 'error', production: 0.0, temperature: 0.0, pressure: 0.0, lastUpdated: Date.now() - 1000 * 60 * 120 },
-    { id: 'well-005', name: 'Epsilon Shale #5', location: 'Bakken, ND', status: 'active', production: 242.1, temperature: 71.5, pressure: 204.8, lastUpdated: Date.now() - 1000 * 60 * 8 },
-    { id: 'well-006', name: 'Zeta Basin East', location: 'Odessa, TX', status: 'active', production: 198.7, temperature: 74.3, pressure: 195.2, lastUpdated: Date.now() - 1000 * 60 * 18 },
-    { id: 'well-007', name: 'Eta Heavy Crude #7', location: 'Marcellus, PA', status: 'warning', production: 112.0, temperature: 84.1, pressure: 168.0, lastUpdated: Date.now() - 1000 * 60 * 45 },
-    { id: 'well-008', name: 'Theta Deep Drill #8', location: 'Anadarko, OK', status: 'active', production: 340.5, temperature: 79.0, pressure: 235.1, lastUpdated: Date.now() - 1000 * 60 * 2 },
 ];
 
 type QuickFilter = 'all' | 'active' | 'warning' | '24h';
