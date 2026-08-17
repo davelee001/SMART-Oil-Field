@@ -583,7 +583,9 @@ const Dashboard: React.FC = () => {
                                                 {filteredWells.length === 0 ? (
                                                     <TableRow>
                                                         <TableCell colSpan={6} align="center">
-                                                            No wells match the current search/filter.
+                                                            {ALL_WELLS.length === 0
+                                                                ? 'No wells are currently available.'
+                                                                : 'No wells match the current search/filter.'}
                                                         </TableCell>
                                                     </TableRow>
                                                 ) : (
