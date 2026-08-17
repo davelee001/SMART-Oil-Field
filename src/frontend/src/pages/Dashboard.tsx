@@ -573,6 +573,7 @@ const Dashboard: React.FC = () => {
                                                 <TableRow>
                                                     <TableCell>Well</TableCell>
                                                     <TableCell>Location</TableCell>
+                                                    <TableCell>Pump</TableCell>
                                                     <TableCell>Status</TableCell>
                                                     <TableCell align="right">Production (bbl/day)</TableCell>
                                                     <TableCell align="right">Temp (°F)</TableCell>
@@ -582,7 +583,7 @@ const Dashboard: React.FC = () => {
                                             <TableBody>
                                                 {filteredWells.length === 0 ? (
                                                     <TableRow>
-                                                        <TableCell colSpan={6} align="center">
+                                                        <TableCell colSpan={7} align="center">
                                                             {ALL_WELLS.length === 0
                                                                 ? 'No wells are currently available.'
                                                                 : 'No wells match the current search/filter.'}
@@ -593,6 +594,7 @@ const Dashboard: React.FC = () => {
                                                         <TableRow key={well.id} hover>
                                                             <TableCell>{well.name}</TableCell>
                                                             <TableCell>{well.location}</TableCell>
+                                                            <TableCell>{well.pumpType}</TableCell>
                                                             <TableCell>
                                                                 <Chip
                                                                     label={well.status}
