@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -18,6 +18,7 @@ import {
     Divider,
     Avatar,
     InputAdornment,
+    keyframes,
 } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -42,6 +43,16 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
+
+const ledPulse = keyframes`
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.8); }
+`;
+
+const flowScroll = keyframes`
+    from { background-position: 0 0; }
+    to { background-position: 32px 0; }
+`;
 
 interface MarketPrice {
     name: string;
@@ -150,9 +161,100 @@ const ENERGY_FAQS = [
     },
 ];
 
+const INITIAL_MARKET_PRICES = MARKET_PRICES;
+
 const Home: React.FC = () => {
     const navigate = useNavigate();
     const [newsletterEmail, setNewsletterEmail] = useState('');
+    const [prices, setMarketPrices] = useState(INITIAL_MARKET_PRICES);
+
+    // SCADA Live Metrics state
+    const [scadaMetrics, setScadaMetrics] = useState({
+        flow: 4812,
+        pressure: 204.8,
+        temp: 74.2,
+        blockNum: 84920,
+        status: 'ONLINE'
+    });
+
+    // Console logs simulator state
+    const [scadaLogs, setScadaLogs] = useState<Array<{ id: number; time: string; msg: string; type: 'success' | 'info' | 'warning' | 'error' }>>([
+        { id: 1, time: '11:24:02 AM', msg: 'SCADA telemetry pipeline monitoring node initialized...', type: 'success' },
+        { id: 2, time: '11:24:05 AM', msg: 'Aptos Web3 RPC subscription validator online.', type: 'success' },
+        { id: 3, time: '11:24:08 AM', msg: 'Operational rules active: March, August, October defined as peak seasonal discount windows.', type: 'info' },
+    ]);
+
+    const logsEndRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll logs terminal
+    useEffect(() => {
+        if (logsEndRef.current) {
+            logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [scadaLogs]);
+
+    // Live fluctuate and ticks simulation loop
+    useEffect(() => {
+        const liveLoop = setInterval(() => {
+            setScadaMetrics(prev => {
+                const flowDelta = Math.floor(Math.random() * 14 - 7);
+                const pressDelta = parseFloat((Math.random() * 1.8 - 0.9).toFixed(1));
+                const tempDelta = parseFloat((Math.random() * 0.4 - 0.2).toFixed(1));
+
+                const nextPress = parseFloat((prev.pressure + pressDelta).toFixed(1));
+                const isFluctuating = nextPress > 206.5 || nextPress < 203.2;
+
+                return {
+                    flow: prev.flow + flowDelta,
+                    pressure: nextPress,
+                    temp: parseFloat((prev.temp + tempDelta).toFixed(1)),
+                    blockNum: prev.blockNum + (Math.random() > 0.45 ? 1 : 0),
+                    status: isFluctuating ? 'FLUCTUATING' : 'ONLINE'
+                };
+            });
+
+            // Fluctuate global energy commodities slightly
+            setMarketPrices(prev => prev.map(item => {
+                const changePct = parseFloat((Math.random() * 0.3 - 0.15).toFixed(2));
+                const rawPrice = parseFloat(item.price.replace(/[$,]/g, ''));
+                const nextPrice = rawPrice * (1 + changePct / 100);
+                const formatted = '$' + nextPrice.toFixed(2);
+
+                return {
+                    ...item,
+                    price: formatted,
+                    change: (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '%',
+                    positive: changePct >= 0
+                };
+            }));
+        }, 3500);
+
+        return () => clearInterval(liveLoop);
+    }, []);
+
+    // Simulated log feed loop
+    useEffect(() => {
+        const logTimer = setInterval(() => {
+            const timeStr = new Date().toLocaleTimeString();
+            const phrases = [
+                { msg: `Sub-second IoT ingest: well-001 reporting ${scadaMetrics.flow} bbl/d, pressure nominal.`, type: 'info' },
+                { msg: `Batch provenance published: sulfur content ${(0.22 + Math.random() * 0.1).toFixed(3)}% uploaded to Aptos blockchain.`, type: 'success' },
+                { msg: `Predictive maintenance anomaly classifier scored 0.04 (HSE bounds: SAFE).`, type: 'success' },
+                { msg: `Aptos Node verified: Block #${scadaMetrics.blockNum} state synchronized seamlessly.`, type: 'success' },
+                { msg: `Referral affiliate checking invoked: Operator referral logs completed on-chain.`, type: 'info' },
+                { msg: `Refinery check: ESP vibration logs mapped to pipeline storage aggregates.`, type: 'info' }
+            ];
+
+            // Randomly pick a log phrase
+            const selected = phrases[Math.floor(Math.random() * phrases.length)];
+            setScadaLogs(prev => [
+                ...prev.slice(-15), // keep last 15
+                { id: Date.now(), time: timeStr, msg: selected.msg, type: selected.type as any }
+            ]);
+        }, 5000);
+
+        return () => clearInterval(logTimer);
+    }, [scadaMetrics]);
 
     const handleNewsletterSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -160,135 +262,340 @@ const Home: React.FC = () => {
             toast.error('Please enter a valid business email address.');
             return;
         }
-        toast.success(`Subscribed! Daily Oil & Gas Intelligence digest sent to ${newsletterEmail}`);
+        toast.success(`Subscribed! Daily Petroleum Operations Digest routed to ${newsletterEmail}`);
         setNewsletterEmail('');
     };
 
     return (
-        <Box sx={{ width: '100%', minWidth: 0, px: { xs: 1.5, sm: 2, md: 3 }, py: 1.5 }}>
+        <Box
+            sx={{
+                width: '100%',
+                minWidth: 0,
+                px: { xs: 1.5, sm: 2.5, md: 4 },
+                py: 2.5,
+                background: (theme) => theme.palette.mode === 'dark' ? '#080c16' : '#f8fafc',
+                backgroundImage: (theme) => theme.palette.mode === 'dark'
+                    ? 'radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.02) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.02) 0px, transparent 50%)'
+                    : 'none',
+            }}
+        >
             {/* Live Oil & Energy Market Commodities Bar */}
             <Paper
                 elevation={0}
                 sx={{
-                    mb: 2,
-                    p: 1.5,
-                    borderRadius: 2,
+                    mb: 3,
+                    p: 2,
+                    borderRadius: 3,
                     background: (theme) =>
                         theme.palette.mode === 'dark'
-                            ? 'linear-gradient(90deg, #0A192F 0%, #112240 100%)'
-                            : 'linear-gradient(90deg, #0F2942 0%, #173F5F 100%)',
+                            ? 'linear-gradient(135deg, #0b1329 0%, #111a36 100%)'
+                            : 'linear-gradient(135deg, #0F2942 0%, #1d3c5f 100%)',
                     color: '#ffffff',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                 }}
             >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <OilIcon sx={{ color: '#E5A93C', fontSize: 20 }} />
-                        <Typography variant="subtitle2" fontWeight={800} sx={{ letterSpacing: '0.03em', textTransform: 'uppercase', fontSize: '0.75rem', color: '#E5A93C' }}>
-                            Live Global Crude & Energy Benchmark Markets
+                        <OilIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
+                        <Typography variant="subtitle2" fontWeight={850} sx={{ letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.78rem', color: '#f59e0b' }}>
+                            SCADA Live Global Crude & Energy Benchmark Markets
                         </Typography>
                     </Box>
                     <Chip
                         role="status"
-                        icon={<SparklesIcon sx={{ color: '#4CAF50 !important', fontSize: 14 }} />}
-                        label="Market Feed Online • 30s Refresh"
+                        icon={<SparklesIcon sx={{ color: '#10b981 !important', fontSize: 13 }} />}
+                        label="Markets Feed Live • 3s SCADA Polling"
                         size="small"
                         sx={{
-                            backgroundColor: 'rgba(76, 175, 80, 0.14)',
-                            border: '1px solid rgba(76, 175, 80, 0.35)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
                             color: '#ffffff',
+                            fontWeight: 700,
                             height: 22,
-                            fontSize: '0.7rem',
+                            fontSize: '0.68rem',
                         }}
                     />
                 </Box>
 
-                <Grid container spacing={1}>
-                    {MARKET_PRICES.map((item) => (
+                <Grid container spacing={1.5}>
+                    {prices.map((item) => (
                         <Grid item xs={6} sm={4} md={2} key={item.symbol}>
                             <Box
-                                role="group"
-                                aria-label={`${item.name}: ${item.price}${item.unit}, ${item.change}, daily range ${item.low} to ${item.high}`}
                                 sx={{
-                                    p: 1.25,
-                                    borderRadius: 1.5,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                                    border: '1px solid rgba(255, 255, 255, 0.05)',
                                     transition: 'all 0.2s ease',
-                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.12)' },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                                        borderColor: 'rgba(245, 158, 11, 0.2)',
+                                    },
                                 }}
                             >
-                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, display: 'block', fontSize: '0.7rem' }}>
-                                    {item.name} ({item.symbol})
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700, display: 'block', fontSize: '0.68rem', letterSpacing: 0.3 }}>
+                                    {item.name}
                                 </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mt: 0.2 }}>
-                                    <Typography variant="body2" fontWeight={850} sx={{ color: '#ffffff', fontSize: '0.95rem' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mt: 0.3 }}>
+                                    <Typography variant="body2" fontWeight={900} sx={{ color: '#ffffff', fontSize: '1rem', fontFamily: 'JetBrains Mono, monospace' }}>
                                         {item.price}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)' }}>
+                                    <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>
                                         {item.unit}
                                     </Typography>
                                 </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.3 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
                                         {item.positive ? (
-                                            <TrendingUpIcon sx={{ fontSize: 14, color: '#4CAF50' }} />
+                                            <TrendingUpIcon sx={{ fontSize: 13, color: '#10b981' }} />
                                         ) : (
-                                            <TrendingDownIcon sx={{ fontSize: 14, color: '#FF5252' }} />
+                                            <TrendingDownIcon sx={{ fontSize: 13, color: '#ef4444' }} />
                                         )}
                                         <Typography
                                             variant="caption"
-                                            fontWeight={700}
-                                            sx={{ fontSize: '0.7rem', color: item.positive ? '#4CAF50' : '#FF5252' }}
+                                            fontWeight={800}
+                                            sx={{ fontSize: '0.68rem', color: item.positive ? '#10b981' : '#ef4444' }}
                                         >
                                             {item.change}
                                         </Typography>
                                     </Box>
-                                    <Typography variant="caption" sx={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.5)' }}>
-                                        24h Vol: {item.volume}
-                                    </Typography>
                                 </Box>
-                                <Typography
-                                    variant="caption"
-                                    sx={{ display: 'block', mt: 0.45, fontSize: '0.62rem', color: 'rgba(255,255,255,0.58)' }}
-                                >
-                                    Day range: {item.low} – {item.high}
-                                </Typography>
                             </Box>
                         </Grid>
                     ))}
                 </Grid>
             </Paper>
 
-            {/* Main Oil & Gas Enterprise Hero */}
+            {/* Industrial SCADA Top Landing Bar / Header */}
             <Paper
                 elevation={0}
                 sx={{
-                    background: 'linear-gradient(130deg, #0F2942 0%, #173F5F 50%, #1A5563 100%)',
-                    color: '#ffffff',
-                    borderRadius: 2,
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    p: { xs: 2.5, sm: 3.5, md: 4 },
-                    mb: 2.5,
-                    position: 'relative',
-                    overflow: 'hidden',
+                    mb: 3,
+                    p: { xs: 2, sm: 3 },
+                    borderRadius: 3,
+                    background: (theme) => theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, #0d1222 0%, #080b15 100%)'
+                        : 'linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)',
+                    border: '1px solid',
+                    borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0,0,0,0.06)',
+                    borderLeft: '5px solid #f59e0b',
+                    display: 'flex',
+                    flexDirection: { xs: 'column', md: 'row' },
+                    alignItems: { xs: 'flex-start', md: 'center' },
+                    justifyContent: 'space-between',
+                    gap: 3,
+                    boxShadow: '0 15px 35px -15px rgba(0,0,0,0.1)'
                 }}
             >
-                <Grid container spacing={3} alignItems="center">
+                <Box>
+                    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+                        <Avatar sx={{ bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', width: 44, height: 44 }}>
+                            <RigIcon sx={{ fontSize: 24 }} />
+                        </Avatar>
+                        <Box sx={{ textAlign: 'left' }}>
+                            <Typography variant="h5" fontWeight={900} sx={{ letterSpacing: '-0.3px', fontFamily: 'Montserrat, sans-serif' }}>
+                                SMART <span style={{ color: '#f59e0b' }}>OIL FIELD</span>
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }} className="font-mono">
+                                SCADA OPERATIONS CONTROL DECK • v1.2.0
+                            </Typography>
+                        </Box>
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 650, fontSize: '0.85rem', textAlign: 'left' }}>
+                        IoT telemetry streaming and blockchain-backed subscription management compiled with Python FastAPI servers, TypeScript middleware gateways, and Aptos Move smart contracts.
+                    </Typography>
+                </Box>
+
+                {/* Real-time system diagnostics KPIs */}
+                <Stack direction="row" spacing={1} sx={{ alignSelf: { xs: 'stretch', md: 'auto' }, flexWrap: 'wrap' }} useFlexGap>
+                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 100, textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>LIVE FLOW</Typography>
+                        <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.flow.toLocaleString()} bbl/d</Typography>
+                    </Box>
+                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 100, textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>LINE PRESS</Typography>
+                        <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.pressure} PSI</Typography>
+                    </Box>
+                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 100, textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>WELL TEMP</Typography>
+                        <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.temp} °F</Typography>
+                    </Box>
+                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 100, textAlign: 'center', position: 'relative' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>APTOS MOVE</Typography>
+                        <Typography variant="subtitle2" fontWeight={850} color="#f59e0b" className="font-mono" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                            <Box component="span" sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#10b981', display: 'inline-block', animation: `${ledPulse} 1s infinite` }} />
+                            #{scadaMetrics.blockNum}
+                        </Typography>
+                    </Box>
+                </Stack>
+            </Paper>
+
+            {/* SPECIAL REFNERY DISCOUNT PROMPT */}
+            <Paper
+                elevation={0}
+                sx={{
+                    mb: 3,
+                    p: 2.5,
+                    borderRadius: 3,
+                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(249, 115, 22, 0.01) 100%)',
+                    border: '1px dashed rgba(245, 158, 11, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 2
+                }}
+            >
+                <Box sx={{ textAlign: 'left' }}>
+                    <Chip label="REFINERY PROMOTIONS" size="small" sx={{ bgcolor: '#f59e0b', color: '#000', fontWeight: 900, mb: 1, height: 20, fontSize: '0.65rem' }} />
+                    <Typography variant="subtitle1" fontWeight={900} sx={{ color: '#fef08a', fontSize: '1.05rem', mb: 0.2 }}>
+                        🔥 High-Season Discount Active: Receive 30% OFF Plan Subscriptions!
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.78rem' }}>
+                        Valid in March, August, and October on Aptos subscription renewals. Returning loyal users get an automatic 15% discount.
+                    </Typography>
+                </Box>
+                <Button variant="contained" component={Link} to="/subscriptions" sx={{ bgcolor: '#f59e0b', color: '#000', fontWeight: 800, '&:hover': { bgcolor: '#d19830' } }}>
+                    Deploy Web3 Access
+                </Button>
+            </Paper>
+
+            {/* INTERACTIVE SCADA DRILLING-TO-REFINERY PIPELINE STREAM */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 3,
+                    mb: 3,
+                    borderRadius: 3,
+                    background: (theme) => theme.palette.mode === 'dark' ? '#0c101d' : '#ffffff',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    boxShadow: '0 8px 24px -10px rgba(0,0,0,0.1)'
+                }}
+            >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#06b6d4', boxShadow: '0 0 8px #06b6d4' }} />
+                        <Typography variant="subtitle2" fontWeight={800} color="text.primary" sx={{ letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                            IoT-to-Chain Real-Time Pipeline Stream
+                        </Typography>
+                    </Box>
+                    <Chip
+                        label="SCADA STREAM LIVE"
+                        size="small"
+                        sx={{
+                            height: 20,
+                            fontSize: '0.65rem',
+                            bgcolor: 'rgba(6, 182, 212, 0.08)',
+                            color: '#06b6d4',
+                            border: '1px solid rgba(6, 182, 212, 0.2)',
+                            fontWeight: 800
+                        }}
+                    />
+                </Box>
+
+                <Grid container spacing={2} alignItems="center">
+                    {/* Node 1: Wellhead */}
+                    <Grid item xs={12} sm={5} md={2.4}>
+                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#f8fafc', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box sx={{ fontSize: '1.5rem', bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', width: 32, height: 32, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🔌</Box>
+                            <Box sx={{ textAlign: 'left' }}>
+                                <Typography variant="caption" fontWeight={800} color="text.primary" sx={{ display: 'block', lineHeight: 1.2 }}>Wellhead IoT Node</Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.68rem', fontFamily: 'monospace' }}>well-001</Typography>
+                                <Chip label={scadaMetrics.status} size="small" color={scadaMetrics.status === 'ONLINE' ? 'success' : 'warning'} sx={{ height: 16, fontSize: '0.58rem', fontWeight: 800, mt: 0.3 }} />
+                            </Box>
+                        </Paper>
+                    </Grid>
+
+                    {/* Pipe Connector 1 */}
+                    <Grid item xs={12} sm={1} md={0.8} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Box sx={{ width: '100%', height: 4, bgcolor: 'divider', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
+                            <Box sx={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '150%', background: 'linear-gradient(90deg, transparent, #06b6d4, transparent)', animation: `${flowScroll} 1.5s linear infinite` }} />
+                        </Box>
+                    </Grid>
+
+                    {/* Node 2: FastAPI Broker */}
+                    <Grid item xs={12} sm={5} md={2.4}>
+                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#f8fafc', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box sx={{ fontSize: '1.5rem', bgcolor: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4', width: 32, height: 32, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⚡</Box>
+                            <Box sx={{ textAlign: 'left' }}>
+                                <Typography variant="caption" fontWeight={800} color="text.primary" sx={{ display: 'block', lineHeight: 1.2 }}>FastAPI Ingestion</Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.68rem', fontFamily: 'monospace' }}>Port 8000</Typography>
+                                <Chip label="BROKER LISTENING" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(6,182,212,0.1)', color: '#06b6d4', fontWeight: 800, mt: 0.3 }} />
+                            </Box>
+                        </Paper>
+                    </Grid>
+
+                    {/* Pipe Connector 2 */}
+                    <Grid item xs={12} sm={1} md={0.8} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Box sx={{ width: '100%', height: 4, bgcolor: 'divider', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
+                            <Box sx={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '150%', background: 'linear-gradient(90deg, transparent, #3b82f6, transparent)', animation: `${flowScroll} 1.5s linear infinite` }} />
+                        </Box>
+                    </Grid>
+
+                    {/* Node 3: TS Gateway */}
+                    <Grid item xs={12} sm={5} md={2.4}>
+                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#f8fafc', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box sx={{ fontSize: '1.5rem', bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', width: 32, height: 32, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🟢</Box>
+                            <Box sx={{ textAlign: 'left' }}>
+                                <Typography variant="caption" fontWeight={800} color="text.primary" sx={{ display: 'block', lineHeight: 1.2 }}>TS Express Gateway</Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.68rem', fontFamily: 'monospace' }}>Port 3000</Typography>
+                                <Chip label="PROXY ACTIVE" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(59,130,246,0.1)', color: '#3b82f6', fontWeight: 800, mt: 0.3 }} />
+                            </Box>
+                        </Paper>
+                    </Grid>
+
+                    {/* Pipe Connector 3 */}
+                    <Grid item xs={12} sm={1} md={0.8} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Box sx={{ width: '100%', height: 4, bgcolor: 'divider', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
+                            <Box sx={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '150%', background: 'linear-gradient(90deg, transparent, #f59e0b, transparent)', animation: `${flowScroll} 1.5s linear infinite` }} />
+                        </Box>
+                    </Grid>
+
+                    {/* Node 4: Move Contract */}
+                    <Grid item xs={12} sm={5} md={2.4}>
+                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#f8fafc', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box sx={{ fontSize: '1.5rem', bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', width: 32, height: 32, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⛓️</Box>
+                            <Box sx={{ textAlign: 'left' }}>
+                                <Typography variant="caption" fontWeight={800} color="text.primary" sx={{ display: 'block', lineHeight: 1.2 }}>Move Smart Contract</Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.68rem', fontFamily: 'monospace' }}>Aptos Modules</Typography>
+                                <Chip label="APT DECIMALS SYNCED" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 800, mt: 0.3 }} />
+                            </Box>
+                        </Paper>
+                    </Grid>
+                </Grid>
+            </Paper>
+
+            {/* Hero Banner Area */}
+            <Paper
+                elevation={0}
+                sx={{
+                    background: 'linear-gradient(135deg, #090e1a 0%, #15243f 100%)',
+                    color: '#ffffff',
+                    borderRadius: 4,
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    p: { xs: 3, sm: 4, md: 5 },
+                    mb: 3,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxShadow: '0 25px 50px -15px rgba(0, 0, 0, 0.35)'
+                }}
+            >
+                <Grid container spacing={4} alignItems="center">
                     <Grid item xs={12} md={7}>
                         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-                            <Stack direction="row" spacing={1} sx={{ mb: 1.5 }} flexWrap="wrap">
+                            <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
                                 <Chip
-                                    icon={<RigIcon sx={{ color: '#E5A93C !important', fontSize: 16 }} />}
-                                    label="Digital Oilfield & Upstream Platform"
+                                    icon={<RigIcon sx={{ color: '#f59e0b !important', fontSize: 13 }} />}
+                                    label="Digital Oilfield SCADA"
                                     size="small"
-                                    sx={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#ffffff', fontWeight: 700 }}
+                                    sx={{ backgroundColor: 'rgba(245, 158, 11, 0.12)', color: '#ffffff', border: '1px solid rgba(245,158,11,0.25)', fontWeight: 700 }}
                                 />
                                 <Chip
-                                    icon={<ShieldIcon sx={{ color: '#73C7E8 !important', fontSize: 16 }} />}
-                                    label="Aptos Blockchain Verifiable"
+                                    icon={<ShieldIcon sx={{ color: '#06b6d4 !important', fontSize: 13 }} />}
+                                    label="Aptos Move On-Chain Trust"
                                     size="small"
-                                    sx={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#ffffff', fontWeight: 700 }}
+                                    sx={{ backgroundColor: 'rgba(6, 182, 212, 0.12)', color: '#ffffff', border: '1px solid rgba(6,182,212,0.25)', fontWeight: 700 }}
                                 />
                             </Stack>
 
@@ -296,25 +603,28 @@ const Home: React.FC = () => {
                                 variant="h3"
                                 component="h1"
                                 sx={{
-                                    fontWeight: 850,
-                                    fontSize: { xs: '1.6rem', sm: '2.2rem', md: '2.6rem' },
-                                    lineHeight: 1.2,
-                                    mb: 1.5,
+                                    fontWeight: 900,
+                                    fontSize: { xs: '1.8rem', sm: '2.4rem', md: '3rem' },
+                                    lineHeight: 1.15,
+                                    mb: 2,
+                                    fontFamily: 'Montserrat, sans-serif',
+                                    textAlign: 'left'
                                 }}
                             >
-                                Next-Gen <span style={{ color: '#E5A93C' }}>Oil & Gas</span> Telemetry, AI Analytics & On-Chain Trust
+                                Next-Gen <span style={{ color: '#f59e0b' }}>Oil & Gas</span> Telemetry, AI Analytics & On-Chain Billing
                             </Typography>
 
                             <Typography
                                 variant="body1"
                                 sx={{
-                                    color: 'rgba(255, 255, 255, 0.88)',
-                                    mb: 3,
-                                    fontSize: '0.95rem',
+                                    color: 'rgba(255, 255, 255, 0.8)',
+                                    mb: 4,
+                                    fontSize: '0.98rem',
                                     lineHeight: 1.6,
+                                    textAlign: 'left'
                                 }}
                             >
-                                SMART Oil Field empowers energy operators, pipeline fleets, and petroleum refineries with sub-second SCADA wellhead monitoring, AI pump anomaly forecasting, and cryptographically verified crude oil custody logs on Aptos Move.
+                                SMART Oil Field empowers energy operators, pipeline engineers, and refinery controllers with sub-second SCADA wellhead monitoring, AI pump anomaly forecasting, and cryptographically verified crude oil custody logs on Aptos Move.
                             </Typography>
 
                             <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
@@ -325,12 +635,13 @@ const Home: React.FC = () => {
                                     to="/dashboard"
                                     endIcon={<ArrowForwardIcon />}
                                     sx={{
-                                        backgroundColor: '#E5A93C',
-                                        color: '#0F2942',
+                                        backgroundColor: '#f59e0b',
+                                        color: '#090e1a',
                                         '&:hover': { backgroundColor: '#d19830' },
                                         fontWeight: 800,
-                                        borderRadius: 1.5,
-                                        px: 3,
+                                        borderRadius: 2,
+                                        px: 3.5,
+                                        py: 1.25,
                                     }}
                                 >
                                     Launch Well Operations Portal
@@ -343,14 +654,14 @@ const Home: React.FC = () => {
                                     startIcon={<DemoIcon />}
                                     sx={{
                                         color: '#ffffff',
-                                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                                        borderColor: 'rgba(255, 255, 255, 0.25)',
                                         '&:hover': {
                                             borderColor: '#ffffff',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
                                         },
                                         fontWeight: 700,
-                                        borderRadius: 1.5,
-                                        px: 2.5,
+                                        borderRadius: 2,
+                                        px: 3,
                                     }}
                                 >
                                     Sign In / Register
@@ -362,64 +673,67 @@ const Home: React.FC = () => {
                     {/* Live Oil Field Operations Snapshot */}
                     <Grid item xs={12} md={5}>
                         <Paper
-                            elevation={6}
+                            elevation={12}
                             sx={{
-                                p: 2.5,
-                                backgroundColor: 'rgba(10, 25, 47, 0.85)',
-                                backdropFilter: 'blur(12px)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: 2,
+                                p: 3,
+                                backgroundColor: 'rgba(5, 7, 15, 0.85)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                borderRadius: 3,
                                 color: '#ffffff',
+                                boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.65)'
                             }}
                         >
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                <Typography variant="caption" sx={{ color: '#E5A93C', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 800 }}>
-                                    LIVE WELLHEAD TELEMETRY FEED
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                                <Typography variant="caption" sx={{ color: '#f59e0b', textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981', display: 'inline-block', animation: `${ledPulse} 1s infinite` }} />
+                                    REAL-TIME FIELD TELEMETRY DECK
                                 </Typography>
-                                <Chip label="ONLINE" color="success" size="small" sx={{ height: 18, fontSize: '0.65rem' }} />
+                                <Chip label="SCADA LIVE" color="success" size="small" sx={{ height: 18, fontSize: '0.62rem', fontWeight: 800, borderRadius: 1 }} />
                             </Box>
-                            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.15)', mb: 2 }} />
+                            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', mb: 2.5 }} />
 
-                            <Grid container spacing={1.5}>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Active Rigs Monitored</Typography>
-                                    <Typography variant="subtitle1" fontWeight={800} color="#73C7E8">1,420 Active</Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={6} sx={{ textAlign: 'left' }}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.5)">Active Monitored Wells</Typography>
+                                    <Typography variant="body1" fontWeight={900} color="#06b6d4" className="font-mono">1,420 Active</Typography>
                                 </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Crude Production</Typography>
-                                    <Typography variant="subtitle1" fontWeight={800}>850,240 bbl/d</Typography>
+                                <Grid item xs={6} sx={{ textAlign: 'left' }}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.5)">Gross Daily Rate</Typography>
+                                    <Typography variant="body1" fontWeight={900} className="font-mono">{scadaMetrics.flow.toLocaleString()} bbl/d</Typography>
                                 </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Average Wellhead Pressure</Typography>
-                                    <Typography variant="subtitle1" fontWeight={800}>215.4 PSI</Typography>
+                                <Grid item xs={6} sx={{ textAlign: 'left' }}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.5)">Pipeline Pressure</Typography>
+                                    <Typography variant="body1" fontWeight={900} className="font-mono">{scadaMetrics.pressure} PSI</Typography>
                                 </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Downhole Temperature</Typography>
-                                    <Typography variant="subtitle1" fontWeight={800}>178.2 °F</Typography>
+                                <Grid item xs={6} sx={{ textAlign: 'left' }}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.5)">Wellhead Fluid Temp</Typography>
+                                    <Typography variant="body1" fontWeight={900} className="font-mono">{scadaMetrics.temp} °F</Typography>
                                 </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Water Cut Ratio</Typography>
-                                    <Typography variant="body2" fontWeight={700} color="#81c784">12.4% (Normal)</Typography>
+                                <Grid item xs={6} sx={{ textAlign: 'left' }}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.5)">Water Cut Ratio</Typography>
+                                    <Typography variant="caption" fontWeight={800} color="#10b981" sx={{ display: 'block', mt: 0.3, fontSize: '0.82rem' }}>12.4% (Optimal)</Typography>
                                 </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">Aptos Move Verification</Typography>
-                                    <Typography variant="body2" fontWeight={700} color="#73C7E8">Synced (Block #84920)</Typography>
+                                <Grid item xs={6} sx={{ textAlign: 'left' }}>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.5)">Aptos Move Chain</Typography>
+                                    <Typography variant="caption" fontWeight={800} color="#3b82f6" sx={{ display: 'block', mt: 0.3, fontSize: '0.82rem' }} className="font-mono">Block #{scadaMetrics.blockNum}</Typography>
                                 </Grid>
                             </Grid>
 
                             <Button
                                 fullWidth
                                 variant="contained"
-                                size="small"
+                                size="medium"
                                 onClick={() => navigate('/dashboard')}
                                 sx={{
-                                    mt: 2,
-                                    backgroundColor: 'rgba(229, 169, 60, 0.9)',
-                                    color: '#0F2942',
+                                    mt: 3,
+                                    backgroundColor: '#f59e0b',
+                                    color: '#090e1a',
                                     fontWeight: 800,
-                                    '&:hover': { backgroundColor: '#E5A93C' },
+                                    height: 38,
+                                    '&:hover': { backgroundColor: '#d19830' },
                                     textTransform: 'none',
-                                    py: 0.8,
+                                    borderRadius: 1.5
                                 }}
                             >
                                 Open Full Telemetry Dashboard & Maps
@@ -429,43 +743,194 @@ const Home: React.FC = () => {
                 </Grid>
             </Paper>
 
-            {/* Key Industry Operational Metrics */}
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-                {INDUSTRY_STATS.map((stat) => (
-                    <Grid item xs={6} md={3} key={stat.label}>
-                        <Paper
-                            elevation={1}
-                            sx={{
-                                p: 2,
-                                textAlign: 'center',
-                                borderRadius: 2,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                borderTop: '4px solid #173F5F',
-                            }}
-                        >
-                            <Typography variant="h5" color="primary" fontWeight={850} sx={{ lineHeight: 1.2 }}>
-                                {stat.value}
-                            </Typography>
-                            <Typography variant="subtitle2" fontWeight={700} sx={{ my: 0.3, fontSize: '0.85rem' }}>
-                                {stat.label}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                                {stat.detail}
-                            </Typography>
-                        </Paper>
-                    </Grid>
-                ))}
-            </Grid>
+            {/* MOCK RETRO SCADA MONITOR LOG TERMINAL */}
+            <Paper
+                elevation={0}
+                sx={{
+                    mb: 4,
+                    p: 0,
+                    borderRadius: 3,
+                    bgcolor: '#040710',
+                    border: '1px solid rgba(255, 255, 255, 0.04)',
+                    overflow: 'hidden',
+                    boxShadow: '0 12px 28px -10px rgba(0,0,0,0.5)'
+                }}
+            >
+                {/* Console header */}
+                <Box sx={{ px: 2.22, py: 1.1, bgcolor: '#0b0f1d', borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Stack direction="row" spacing={0.8} alignItems="center">
+                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#ef4444' }} />
+                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#f59e0b' }} />
+                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981' }} />
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.68rem', pl: 1, letterSpacing: 0.5, fontFamily: 'monospace' }}>
+                            SCADA_NET_MONITOR_NODE ~/telemetry_feed
+                        </Typography>
+                    </Stack>
+                    <Box component="span" sx={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 900, animation: `${ledPulse} 1s infinite` }}>
+                        ▮
+                    </Box>
+                </Box>
+                {/* Lines box */}
+                <Box
+                    sx={{
+                        p: 2,
+                        height: 160,
+                        overflowY: 'auto',
+                        fontFamily: 'JetBrains Mono, Courier New, monospace',
+                        fontSize: '0.72rem',
+                        lineHeight: 1.6,
+                        color: 'rgba(255,255,255,0.7)',
+                    }}
+                >
+                    {scadaLogs.map((log) => (
+                        <Box key={log.id} sx={{ mb: 0.5, display: 'flex', gap: 1 }}>
+                            <Box component="span" sx={{ color: 'text.secondary', fontWeight: 700 }}>[{log.time}]</Box>
+                            <Box component="span" sx={{
+                                color: log.type === 'success' ? '#10b981' : log.type === 'warning' ? '#f59e0b' : log.type === 'error' ? '#ef4444' : '#06b6d4',
+                                fontWeight: 800,
+                            }}>
+                                [{log.type.toUpperCase()}]
+                            </Box>
+                            <Box component="span" sx={{ textAlign: 'left' }}>{log.msg}</Box>
+                        </Box>
+                    ))}
+                    <div ref={logsEndRef} />
+                </Box>
+            </Paper>
 
-            {/* Comprehensive Oil & Gas Solutions Grid */}
-            <Box sx={{ mb: 3 }}>
-                <Box sx={{ textAlign: 'center', mb: 2 }}>
-                    <Typography variant="h5" fontWeight={850} color="primary">
-                        End-to-End Petroleum & Energy Solutions
+            {/* WEB3 ENTERPRISE ACCESS PLANS (PRICING TIERS) */}
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <Typography variant="h5" fontWeight={900} color="primary" sx={{ fontFamily: 'Montserrat, sans-serif' }}>
+                        Web3 Refinery & Operator Licensing Plans
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Connecting upstream drilling, midstream transport, and smart contract settlement.
+                        Fully decentralized on-chain subscription models with automated loyalty stacked benefits & 5-day grace periods.
+                    </Typography>
+                </Box>
+
+                <Grid container spacing={3}>
+                    {/* Tier 1 */}
+                    <Grid item xs={12} md={4}>
+                        <Card sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.4)' : '#ffffff' }}>
+                            <CardContent sx={{ p: 2, flexGrow: 1 }}>
+                                <Typography variant="caption" sx={{ color: '#3b82f6', letterSpacing: 1.2, fontWeight: 900, display: 'block', mb: 1, textTransform: 'uppercase', textAlign: 'left' }}>CRUDE FIELD OPERATIONS</Typography>
+                                <Typography variant="h6" fontWeight={850} sx={{ fontSize: '1.25rem', textAlign: 'left' }}>Field Monitor</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mt: 1.5, mb: 2 }}>
+                                    <Typography variant="h4" fontWeight={900} className="font-mono">0.5</Typography>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={750}>APT / Mo</Typography>
+                                </Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mb: 3, textAlign: 'left' }}>
+                                    Essential sub-second sensor reading, baseline wellhead analytics, and secure REST telemetry logs for small producers.
+                                </Typography>
+                                <Divider sx={{ mb: 2.5 }} />
+                                <Stack spacing={1} sx={{ mb: 2 }}>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> Standard telemetry API (Limit 10)
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> Simple leak trigger alerts
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> Standard support dashboard (M-F)
+                                    </Typography>
+                                </Stack>
+                            </CardContent>
+                            <Button variant="contained" component={Link} to="/subscriptions" fullWidth sx={{ bgcolor: 'rgba(148, 163, 184, 0.08)', color: 'text.primary', border: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'rgba(148, 163, 184, 0.15)' } }}>
+                                Subscribe Field Access
+                            </Button>
+                        </Card>
+                    </Grid>
+
+                    {/* Tier 2: Popular Premium */}
+                    <Grid item xs={12} md={4}>
+                        <Card
+                            sx={{
+                                p: 1.5,
+                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                border: '1px solid rgba(245, 158, 11, 0.25)',
+                                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(23, 20, 15, 0.5)' : '#ffffff'
+                            }}
+                        >
+                            {/* Premium popular ribbon */}
+                            <Box sx={{ position: 'absolute', top: 12, right: -25, bgcolor: '#f59e0b', color: '#000', fontSize: '0.58rem', fontWeight: 900, px: 3, py: 0.3, transform: 'rotate(45deg)', letterSpacing: 0.8 }}>
+                                RECOMMENDED
+                            </Box>
+                            <CardContent sx={{ p: 2, flexGrow: 1 }}>
+                                <Typography variant="caption" sx={{ color: '#f59e0b', letterSpacing: 1.2, fontWeight: 900, display: 'block', mb: 1, textTransform: 'uppercase', textAlign: 'left' }}>REFINERY STREAM TIERS</Typography>
+                                <Typography variant="h6" fontWeight={850} sx={{ fontSize: '1.25rem', textAlign: 'left' }}>Control Supervisor</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mt: 1.5, mb: 2 }}>
+                                    <Typography variant="h4" fontWeight={900} className="font-mono">1.0</Typography>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={750}>APT / Mo</Typography>
+                                </Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mb: 3, textAlign: 'left' }}>
+                                    Unrestricted telemetry pipelines, full drill-to-refinery custody provenance timeline tools, and active loyalty discounts.
+                                </Typography>
+                                <Divider sx={{ mb: 2.5 }} />
+                                <Stack spacing={1} sx={{ mb: 2 }}>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> Unlimited node telemetry stream
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> Provenance batches (Aptos Move)
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> Full grace cancellation + refund
+                                    </Typography>
+                                </Stack>
+                            </CardContent>
+                            <Button variant="contained" component={Link} to="/subscriptions" fullWidth sx={{ bgcolor: '#f59e0b', color: '#000', fontWeight: 800, '&:hover': { bgcolor: '#d19830' } }}>
+                                Deploy Supervisor Plan
+                            </Button>
+                        </Card>
+                    </Grid>
+
+                    {/* Tier 3 */}
+                    <Grid item xs={12} md={4}>
+                        <Card sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.4)' : '#ffffff' }}>
+                            <CardContent sx={{ p: 2, flexGrow: 1 }}>
+                                <Typography variant="caption" sx={{ color: '#06b6d4', letterSpacing: 1.2, fontWeight: 900, display: 'block', mb: 1, textTransform: 'uppercase', textAlign: 'left' }}>OFFSHORE RIG COMMAND</Typography>
+                                <Typography variant="h6" fontWeight={850} sx={{ fontSize: '1.25rem', textAlign: 'left' }}>Direct Command</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mt: 1.5, mb: 2 }}>
+                                    <Typography variant="h4" fontWeight={900} className="font-mono">2.5</Typography>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={750}>APT / Mo</Typography>
+                                </Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mb: 3, textAlign: 'left' }}>
+                                    Comprehensive enterprise platform: ML anomaly alerts, CSV exporting, on-chain operator promo setups, and multi-region tracker arrays.
+                                </Typography>
+                                <Divider sx={{ mb: 2.5 }} />
+                                <Stack spacing={1} sx={{ mb: 2 }}>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> Custom promo code setups (On-Chain)
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> Interactive refinery mapping & logs
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color: 'text.secondary', textAlign: 'left' }}>
+                                        <CheckIcon sx={{ color: '#10b981', fontSize: 16 }} /> 24/7 dedicated support staff
+                                    </Typography>
+                                </Stack>
+                            </CardContent>
+                            <Button variant="contained" component={Link} to="/subscriptions" fullWidth sx={{ bgcolor: 'rgba(148, 163, 184, 0.08)', color: 'text.primary', border: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'rgba(148, 163, 184, 0.15)' } }}>
+                                Acquire Command Fleet
+                            </Button>
+                        </Card>
+                    </Grid>
+                </Grid>
+            </Box>
+
+            {/* Comprehensive Oil & Gas Features Grid */}
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <Typography variant="h5" fontWeight={900} color="primary" sx={{ fontFamily: 'Montserrat, sans-serif' }}>
+                        Integrated Enterprise IoT & Blockchain Features
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Comprehensive workflows linking upstream arrays to robust digital ledger records.
                     </Typography>
                 </Box>
 
