@@ -25,44 +25,7 @@ interface OilWell {
 const OilFieldMap: React.FC = () => {
     const theme = useTheme();
 
-    // Mock data for oil wells - replace with actual API data
     const wells: OilWell[] = [
-        {
-            id: 'well-001',
-            name: 'Well Alpha-1',
-            position: [29.7604, -95.3698], // Houston area
-            status: 'active',
-            production: 150.2,
-            temperature: 75.5,
-            pressure: 200.0,
-        },
-        {
-            id: 'well-002',
-            name: 'Well Beta-2',
-            position: [29.7804, -95.3898],
-            status: 'active',
-            production: 142.8,
-            temperature: 76.1,
-            pressure: 198.5,
-        },
-        {
-            id: 'well-003',
-            name: 'Well Gamma-3',
-            position: [29.7404, -95.3498],
-            status: 'warning',
-            production: 95.3,
-            temperature: 82.1,
-            pressure: 185.2,
-        },
-        {
-            id: 'well-004',
-            name: 'Well Delta-4',
-            position: [29.7704, -95.3798],
-            status: 'error',
-            production: 0,
-            temperature: 0,
-            pressure: 0,
-        },
     ];
 
     const getMarkerColor = (status: string) => {
