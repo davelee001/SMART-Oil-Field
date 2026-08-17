@@ -62,7 +62,7 @@ const OilFieldMap: React.FC = () => {
     };
 
     return (
-        <Box sx={{ height: 300, width: '100%', borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ height: 300, width: '100%', borderRadius: 2, overflow: 'hidden', position: 'relative' }}>
             <MapContainer
                 center={[8.448, 30.338]}
                 zoom={12}
@@ -90,6 +90,18 @@ const OilFieldMap: React.FC = () => {
                                 </Box>
 
                                 <Typography variant="body2" gutterBottom>
+                                    <strong>Field:</strong> {well.field}
+                                </Typography>
+
+                                <Typography variant="body2" gutterBottom>
+                                    <strong>Pump:</strong> {well.pumpType}
+                                </Typography>
+
+                                <Typography variant="body2" gutterBottom>
+                                    <strong>Route:</strong> {well.manifold} to {well.cpf}
+                                </Typography>
+
+                                <Typography variant="body2" gutterBottom>
                                     <strong>Production:</strong> {well.production} bbl/day
                                 </Typography>
 
@@ -105,6 +117,21 @@ const OilFieldMap: React.FC = () => {
                     </Marker>
                 ))}
             </MapContainer>
+            {wells.length === 0 && (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        zIndex: 1000,
+                        display: 'grid',
+                        placeItems: 'center',
+                        pointerEvents: 'none',
+                        backgroundColor: 'rgba(255, 255, 255, 0.72)',
+                    }}
+                >
+                    <Typography fontWeight={650}>No wells available</Typography>
+                </Box>
+            )}
         </Box>
     );
 };
