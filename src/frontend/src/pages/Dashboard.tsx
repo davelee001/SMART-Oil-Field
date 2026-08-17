@@ -37,20 +37,9 @@ import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
 import LoadingCard from '../components/common/LoadingCard';
 import { useAuth } from '../contexts/AuthContext';
+import { OIL_WELLS } from '../data/oilFields';
 
-interface OilWellRow {
-    id: string;
-    name: string;
-    location: string;
-    status: 'active' | 'warning' | 'error' | 'inactive';
-    production: number;
-    temperature: number;
-    pressure: number;
-    lastUpdated: number;
-}
-
-const ALL_WELLS: OilWellRow[] = [
-];
+const ALL_WELLS = OIL_WELLS;
 
 type QuickFilter = 'all' | 'active' | 'warning' | '24h';
 
