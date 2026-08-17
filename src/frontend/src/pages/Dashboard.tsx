@@ -62,6 +62,7 @@ const Dashboard: React.FC = () => {
                     well.name,
                     well.field,
                     well.location,
+                    well.pumpType,
                     well.status,
                     well.production,
                     well.temperature,
