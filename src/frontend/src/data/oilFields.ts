@@ -52,6 +52,7 @@ const THARJAATH_WELLS: WellSpec[] = [
     { number: 1, pumpType: 'PCP', manifold: 'OGM1' },
 ];
 const MALA_WELLS: WellSpec[] = [
+    { number: 12, pumpType: 'ESP', manifold: 'OGM Mala' },
     { number: 11, pumpType: 'PCP', manifold: 'OGM Mala' },
     { number: 10, pumpType: 'PCP', manifold: 'OGM Mala' },
     { number: 9, pumpType: 'PCP', manifold: 'OGM Mala' },
