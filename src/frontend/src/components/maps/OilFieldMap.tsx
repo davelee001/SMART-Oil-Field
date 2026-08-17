@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { LatLngExpression, Icon } from 'leaflet';
+import { Icon } from 'leaflet';
 import { Box, Chip, Typography, useTheme } from '@mui/material';
 import 'leaflet/dist/leaflet.css';
+import { OIL_WELLS } from '../../data/oilFields';
 
 // Fix for default markers in React Leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -12,21 +13,10 @@ Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-interface OilWell {
-    id: string;
-    name: string;
-    position: LatLngExpression;
-    status: 'active' | 'warning' | 'error' | 'inactive';
-    production: number;
-    temperature: number;
-    pressure: number;
-}
-
 const OilFieldMap: React.FC = () => {
     const theme = useTheme();
 
-    const wells: OilWell[] = [
-    ];
+    const wells = OIL_WELLS;
 
     const getMarkerColor = (status: string) => {
         switch (status) {
