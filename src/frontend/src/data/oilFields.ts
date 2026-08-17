@@ -36,6 +36,7 @@ export const OIL_BASINS: OilBasin[] = [
 export interface OilWell {
     id: string;
     name: string;
+    basin: BasinName;
     field: 'Tharjaath Oil Field' | 'Mala Oil Field';
     block: 'Block 5A';
     pumpType: PumpType;
@@ -124,7 +125,7 @@ const buildWells = (specs: WellSpec[], field: OilWell['field'], pcpPrefix: strin
     espPrefix: string, center: [number, number]): OilWell[] => specs.map((spec, index) => {
     const name = `${spec.pumpType === 'ESP' ? espPrefix : pcpPrefix}${spec.number}`;
     return {
-        id: name.toLowerCase(), name, field, block: 'Block 5A', pumpType: spec.pumpType,
+        id: name.toLowerCase(), name, basin: 'Tharjaath Basin', field, block: 'Block 5A', pumpType: spec.pumpType,
         manifold: spec.manifold, cpf: 'Tharjaath CPF', location: `${field} / ${spec.manifold}`,
         position: positionAround(center, index), status: 'inactive', production: 0,
         temperature: 0, pressure: 0, lastUpdated: 0,
