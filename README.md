@@ -29,13 +29,19 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 The Tharjaath inventory contains 28 wells across `OGM1` to `OGM5`; Mala contains 27 wells through `OGM Mala`. PCP wells use the `TJ` and `ML` prefixes, while ESP wells use `TJH` and `MLH`. Unity and Paloch remain intentionally empty until controlled source data is supplied.
 
+### Operations dashboard
+
+The primary React dashboard presents the three-basin management structure, a Block 5A field map, and the complete 55-well Tharjaath/Mala inventory. Operators can search and filter wells by field, pump type, status, gathering manifold, and CPF route. A standalone SCADA-oriented interface is also retained in `src/frontend/index.html` for the specialist operational service.
+
+The seeded well topology is authoritative reference data, but the changing production rates, pressures, temperatures, alerts, and online/offline indicators currently shown by the dashboard are demonstration values. They must not be used for operational decisions until the frontend is connected to authenticated field telemetry and the target environment passes the production acceptance checks.
+
 ### Current PMS verification baseline
 
-As of 13 August 2026:
+As of 17 August 2026:
 
 - The repository provides authentication, authorization, project, finance, compliance, supply-chain, KPI, training, formal-reporting, and production-readiness tests across ten API test files.
 - The release workflow validates a clean dependency installation, production dependency audit, Prisma generation, PostgreSQL migrations, idempotent seed, tests, TypeScript checks, production builds, and both container images.
-- The clean-checkout test contract builds the shared and database workspaces before starting Vitest; local Node 22 validation passes all 103 API tests, TypeScript checks, and production builds.
+- The clean-checkout test contract builds the shared and database workspaces before starting Vitest; the latest local Node 22 validation passes all 103 API tests, TypeScript checks, and production builds after the basin and operations-dashboard updates.
 - GitHub Actions release validation [run 4](https://github.com/davelee001/SMART-Oil-Field/actions/runs/31691254107) for commit `f33843e` passes clean installation, dependency audit, Prisma generation, migrations, seed, all 103 tests, type checks, production builds, and both container-image builds.
 - The production dependency audit has no high or critical findings. Two moderate findings remain in ExcelJS's transitive `uuid` dependency and require tracked risk acceptance or an upstream-compatible remediation.
 - Deployment remains staging-ready until the live infrastructure and business checks in `docs/PRODUCTION_ACCEPTANCE.md` are completed.
@@ -77,6 +83,8 @@ npm run build
 ```
 
 The default local URLs are `http://localhost:3001` for the frontend and `http://localhost:4000` for the PMS API. PostgreSQL is exposed on host port `5433` by default to avoid conflicts; services inside Docker use port `5432`.
+
+`GET http://localhost:4000/health/live` confirms that the Express process is running. `GET http://localhost:4000/health/ready` only succeeds when PostgreSQL is reachable and migrations have been applied. The specialist FastAPI service runs separately on `http://localhost:8000`; start it with `src/python_api/run.ps1` after installing its Python dependencies.
 
 The KPI connector defaults are `http://localhost:8000` for a locally running PMS API and `http://host.docker.internal:8000` for the Compose API. Connector definitions accept only relative `/api/telemetry`, `/api/analytics`, or `/api/aggregation` paths; synchronized values enter the normal verification workflow rather than becoming approved results automatically.
 
@@ -195,7 +203,7 @@ This project integrates multiple technologies:
 - **IoT & SCADA**: Real-time telemetry from oilfield sensors with WebSocket streaming
 - **RESTful APIs**: FastAPI (Python) and Express (TypeScript) with comprehensive endpoints
 - **Blockchain**: Aptos Move smart contracts for immutable records
-- **Public & Operational Portals**: Public showcase website landing page and interactive operational dashboard
+- **Operational Interfaces**: React PMS dashboard plus the standalone SCADA-oriented portal
 - **Data Analytics**: Time-series DB, warehouse, ML predictions, anomaly detection, and backup/DR
 - **Advanced Features**: Predictive analytics, alerting system, audit logging, and real-time monitoring
 
@@ -216,7 +224,7 @@ This project integrates multiple technologies:
 | Subscriptions | Multi-token payments (APT, USDC, USDT), seasonal discounts (30%), promo codes, referral rewards (10%), loyalty rewards (15%), grace period (5 days), pro-rated refunds, installment plans |
 | Blockchain | Aptos Move smart contracts, immutable records, event tracking, ownership transfer |
 | Notifications | Subscription expiration reminders with 3 severity levels, email/SMS alerts |
-| Public Website & UI | Public landing page (`Home.tsx`) introducing platform capabilities, full-stack preview, pricing, and live stats; clean public navigation with top Sign In / Sign Up actions; protected internal routing |
+| Operations UI | Basin management, Block 5A map, searchable 55-well inventory, OGM/CPF routing, operational summaries, and protected internal routing; changing SCADA values remain simulated until telemetry integration is completed |
 | Analytics | InfluxDB time-series, DuckDB warehouse, ML anomaly detection, predictive analytics, trend analysis |
 | Data Science | Ensemble ML models, advanced feature engineering, real-time stream processing, production optimization, comprehensive ETL with data quality validation |
 | Machine Learning | Multi-algorithm anomaly detection, predictive maintenance, time series forecasting, automated training pipeline, synthetic data generation |
@@ -230,7 +238,7 @@ This project integrates multiple technologies:
 - **Data Science Suite**: Comprehensive ML and analytics platform with ensemble models, real-time stream processing, advanced feature engineering, production optimization, and ETL pipelines with data quality validation. See [src/data_science/](src/data_science/).
 - **Move Subscriptions**: Aptos Move package for blockchain-based subscription management with payment processing, discount codes, seasonal promotions, and referral rewards. See [blockchain/move/subscriptions](blockchain/move/subscriptions).
 - **Move Oil Tracker**: Aptos Move module for immutable, blockchain-verified oil batch tracking with ownership transfer and lifecycle events. See [blockchain/move/oil_tracker](blockchain/move/oil_tracker).
-- **Frontend Dashboard**: Modern React TypeScript application with Material-UI components, real-time charts, interactive maps, dark/light mode toggle, and PWA capabilities. Features responsive design, smooth animations, comprehensive data visualization, user authentication UI, profile management, a subscription management dashboard with discount code redemption, and payment history. See [src/frontend/](src/frontend/).
+- **Frontend Dashboard**: React TypeScript application with Material-UI components, basin management, the Tharjaath/Mala well topology, operational summaries, interactive maps, dark/light mode, protected PMS routes, and PWA capabilities. See [src/frontend/](src/frontend/).
 
 ## Features
 
