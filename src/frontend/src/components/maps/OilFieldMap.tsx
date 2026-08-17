@@ -64,7 +64,7 @@ const OilFieldMap: React.FC = () => {
     return (
         <Box sx={{ height: 300, width: '100%', borderRadius: 2, overflow: 'hidden' }}>
             <MapContainer
-                center={[29.7604, -95.3698]}
+                center={[8.448, 30.338]}
                 zoom={12}
                 style={{ height: '100%', width: '100%' }}
             >
