@@ -36,6 +36,7 @@ import { createWorkbook, saveWorkbook, styleWorksheet } from '../utils/excel';
 import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
 import LoadingCard from '../components/common/LoadingCard';
+import BasinOverview from '../components/basins/BasinOverview';
 import { useAuth } from '../contexts/AuthContext';
 import { OIL_WELLS } from '../data/oilFields';
 
@@ -240,6 +241,10 @@ const Dashboard: React.FC = () => {
                             <Chip label="IoT Gateway: 100ms" color="info" size="small" variant="outlined" />
                         </Box>
                     </Box>
+                </motion.div>
+
+                <motion.div variants={cardVariants}>
+                    <BasinOverview />
                 </motion.div>
 
                 {/* Search Bar */}
