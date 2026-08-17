@@ -19,6 +19,16 @@ A SMART Oil Field Performance Management System combining secure organizational 
 
 Existing subscription and blockchain-payment features are maintained separately and do not count as project budgeting or expenditure.
 
+### South Sudan basin scope
+
+| Basin | Operator | Current platform data |
+|---|---|---|
+| Unity Basin | Greater Pioneer Petroleum Operating Company (GPOC) | Awaiting field and well data |
+| Paloch Basin | Dar Petroleum Operating Company (DPOC) | Awaiting field and well data |
+| Tharjaath Basin | Sudd Petroleum Operating Company (SPOC) | Tharjaath and Mala fields; 55 wells routed through six OGMs to Tharjaath CPF |
+
+The Tharjaath inventory contains 28 wells across `OGM1` to `OGM5`; Mala contains 27 wells through `OGM Mala`. PCP wells use the `TJ` and `ML` prefixes, while ESP wells use `TJH` and `MLH`. Unity and Paloch remain intentionally empty until controlled source data is supplied.
+
 ### Current PMS verification baseline
 
 As of 13 August 2026:
