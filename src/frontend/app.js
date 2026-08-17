@@ -599,11 +599,148 @@ async function checkBackendStatus() {
 window.addEventListener('DOMContentLoaded', () => {
     checkBackendStatus();
     checkSubscriptionStatus();
+    startLiveMetrics();
     // Recheck every 5 minutes
     setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
     // Recheck backend status every 30 seconds
     setInterval(checkBackendStatus, 30 * 1000);
+
+    // Page load logs
+    appendLog('SCADA Node dashboard fully initialized.', 'success');
+    appendLog(`Gateway Routing Protocol: ${API_CONFIG.USE_GATEWAY ? 'TypeScript Gateway' : 'Direct Python REST API'}.`, 'info');
+    appendLog(`Python API Engine: ${API_CONFIG.PYTHON_API}`, 'info');
+    appendLog(`TypeScript API Engine: ${API_CONFIG.TS_GATEWAY}`, 'info');
 });
+
+// Toast Messaging System
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    let icon = '🔔';
+    let title = 'System Log';
+    const msgLower = message.toLowerCase();
+
+    if (msgLower.includes('success') || msgLower.includes('created') || msgLower.includes('added') || msgLower.includes('successful')) {
+        toast.classList.add('success');
+        icon = '✅';
+        title = 'Transaction Success';
+        type = 'success';
+    } else if (msgLower.includes('error') || msgLower.includes('failed') || msgLower.includes('failure') || msgLower.includes('invalid')) {
+        toast.classList.add('error');
+        icon = '❌';
+        title = 'System Error';
+        type = 'error';
+    } else if (msgLower.includes('warning') || msgLower.includes('expired') || msgLower.includes('required') || msgLower.includes('grace')) {
+        toast.classList.add('warning');
+        icon = '⚠️';
+        title = 'Operational Alert';
+        type = 'warning';
+    }
+
+    toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div class="toast-body">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message.replace(/\n/g, '<br>')}</div>
+        </div>
+        <div class="toast-close" onclick="this.parentElement.remove()">×</div>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto-remove
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 400);
+    }, 6000);
+}
+
+// Retro Console Logger
+function appendLog(message, type = 'info') {
+    const consoleElem = document.getElementById('scada-console');
+    if (!consoleElem) return;
+
+    const time = new Date().toLocaleTimeString();
+    const logLine = document.createElement('div');
+    logLine.className = `line line-${type}`;
+    logLine.innerHTML = `<strong>[${time}]</strong> [${type.toUpperCase()}] ${message}`;
+
+    consoleElem.appendChild(logLine);
+    consoleElem.scrollTop = consoleElem.scrollHeight;
+
+    // Cap lines at 100
+    while (consoleElem.children.length > 100) {
+        consoleElem.removeChild(consoleElem.firstChild);
+    }
+}
+
+// Override native alerts to avoid blocking modals
+window.alert = function (message) {
+    let type = 'info';
+    const msgLower = message.toLowerCase();
+    if (msgLower.includes('success') || msgLower.includes('created') || msgLower.includes('added') || msgLower.includes('successful')) {
+        type = 'success';
+    } else if (msgLower.includes('error') || msgLower.includes('failed') || msgLower.includes('failure') || msgLower.includes('invalid')) {
+        type = 'error';
+    } else if (msgLower.includes('warning') || msgLower.includes('expired') || msgLower.includes('required') || msgLower.includes('grace')) {
+        type = 'warning';
+    }
+
+    showToast(message, type);
+    appendLog(message.replace(/\r?\n|\r/g, ' '), type);
+};
+
+// Simulate live flow metrics fluctuations
+function startLiveMetrics() {
+    let baseFlow = 4812;
+    let basePressure = 204.8;
+    let baseTemp = 74.2;
+
+    setInterval(() => {
+        const flowVar = (Math.random() * 10 - 5).toFixed(0);
+        const pressVar = (Math.random() * 2 - 1).toFixed(1);
+        const tempVar = (Math.random() * 0.4 - 0.2).toFixed(1);
+
+        const currentFlow = baseFlow + parseFloat(flowVar);
+        const currentPress = (basePressure + parseFloat(pressVar)).toFixed(1);
+        const currentTemp = (baseTemp + parseFloat(tempVar)).toFixed(1);
+
+        const flowEl = document.getElementById('kpi-flow');
+        const pressEl = document.getElementById('kpi-pressure');
+        const tempEl = document.getElementById('kpi-temp');
+
+        if (flowEl) flowEl.innerText = `${currentFlow.toLocaleString()} bbl/d`;
+        if (pressEl) pressEl.innerText = `${currentPress} PSI`;
+        if (tempEl) tempEl.innerText = `${currentTemp} °F`;
+
+        // Update pipeline nodes statuses in real-time
+        const wellheadStatus = document.getElementById('scada-well-status');
+        if (wellheadStatus) {
+            if (currentPress > 206 || currentPress < 203.5) {
+                wellheadStatus.className = 'pill status-ok';
+                wellheadStatus.style.background = 'rgba(245, 158, 11, 0.08)';
+                wellheadStatus.style.color = 'var(--accent-gold)';
+                wellheadStatus.style.borderColor = 'rgba(245, 158, 11, 0.15)';
+                wellheadStatus.innerText = 'FLUCTUATING';
+            } else {
+                wellheadStatus.className = 'pill status-ok';
+                wellheadStatus.style.background = '';
+                wellheadStatus.style.color = '';
+                wellheadStatus.style.borderColor = '';
+                wellheadStatus.innerText = 'ONLINE';
+            }
+        }
+
+        // Random log heartbeat
+        if (Math.random() < 0.1) {
+            appendLog(`Telemetry stream heartbeat: Node pressure ${currentPress} PSI | Flow rate ${currentFlow} bbl/d`, 'info');
+        }
+    }, 4000);
+}
 
 // Demo function - call this in console to test:
 // setMockSubscription(5) - expires in 5 days
