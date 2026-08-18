@@ -16,6 +16,7 @@ import supplyChainRoutes from './routes/supplyChain';
 import kpiRoutes from './routes/kpis';
 import trainingRoutes from './routes/training';
 import reportRoutes from './routes/reports';
+import operatorRoutes from './routes/operators';
 import { createAuthenticationRateLimiter, requestContext } from './operations';
 
 export const createApp = () => {
@@ -55,6 +56,7 @@ export const createApp = () => {
   app.use('/api/kpis', kpiRoutes);
   app.use('/api/training', trainingRoutes);
   app.use('/api/reports', reportRoutes);
+  app.use('/api/operators', operatorRoutes);
 
   app.use((req, res) => res.status(404).json({ message: 'Route not found', requestId: res.locals.requestId }));
 
