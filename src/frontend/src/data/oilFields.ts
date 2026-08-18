@@ -6,7 +6,7 @@ export interface OilBasin {
     operator: string;
     operatorCode: 'GPOC' | 'DPOC' | 'SPOC';
     blocks: string[];
-    fields: Array<'Tharjaath Oil Field' | 'Mala Oil Field'>;
+    fields: string[];
 }
 
 export const OIL_BASINS: OilBasin[] = [
