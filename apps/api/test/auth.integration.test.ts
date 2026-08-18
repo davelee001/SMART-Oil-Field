@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Role, User } from '@prisma/client';
+import { OperatorScope, Role, User } from '@prisma/client';
 
 const prismaMock = vi.hoisted(() => ({
   user: {
@@ -26,6 +26,7 @@ const baseUser = (): User => ({
   email: 'user@example.com',
   passwordHash: '',
   role: Role.VIEWER,
+  operatorScope: OperatorScope.SPOC,
   walletAddress: null,
   isActive: true,
   tokenVersion: 0,
@@ -116,6 +117,7 @@ describe('authentication and authorization HTTP integration', () => {
       email: 'supply@example.com',
       name: 'Supply Officer',
       role: Role.SUPPLY_CHAIN_OFFICER,
+      operatorScope: OperatorScope.SPOC,
     };
     prismaMock.user.create.mockResolvedValue(createdUser);
     const agent = request.agent(createApp());
@@ -126,11 +128,32 @@ describe('authentication and authorization HTTP integration', () => {
       email: createdUser.email,
       password: 'TemporaryPassword123!',
       role: Role.SUPPLY_CHAIN_OFFICER,
+      operatorScope: OperatorScope.SPOC,
     });
 
     expect(response.status).toBe(201);
     expect(response.body.user.role).toBe(Role.SUPPLY_CHAIN_OFFICER);
+    expect(response.body.user.operatorScope).toBe(OperatorScope.SPOC);
     expect(prismaMock.auditLog.create).toHaveBeenCalledOnce();
+  });
+
+  it('limits an operator user to their assigned workspace', async () => {
+    const agent = request.agent(createApp());
+    await agent.post('/api/auth/login').send({ email: user.email, password: 'SecurePassword123!' });
+
+    expect((await agent.get('/api/operators/spoc')).status).toBe(200);
+    expect((await agent.get('/api/operators/dpoc')).status).toBe(403);
+    expect((await agent.get('/api/operators/gpoc')).status).toBe(403);
+  });
+
+  it('allows an Administrator to access every operator workspace', async () => {
+    user = { ...user, role: Role.ADMINISTRATOR, operatorScope: null };
+    const agent = request.agent(createApp());
+    await agent.post('/api/auth/login').send({ email: user.email, password: 'SecurePassword123!' });
+
+    expect((await agent.get('/api/operators/spoc')).status).toBe(200);
+    expect((await agent.get('/api/operators/dpoc')).status).toBe(200);
+    expect((await agent.get('/api/operators/gpoc')).status).toBe(200);
   });
 
   it('invalidates an issued token after the account token version changes', async () => {
