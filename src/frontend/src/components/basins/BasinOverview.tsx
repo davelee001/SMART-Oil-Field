@@ -1,8 +1,12 @@
 import React from 'react';
 import { Box, Card, CardContent, Chip, Grid, Typography } from '@mui/material';
 import { OIL_BASINS, OIL_WELLS } from '../../data/oilFields';
+import { OPERATOR_WORKSPACES } from '../../data/operators';
+import { OperatorScope } from '../../utils/auth';
 
-const BasinOverview: React.FC = () => (
+const BasinOverview: React.FC<{ operatorScope?: OperatorScope }> = ({ operatorScope }) => {
+    const basins = operatorScope ? OIL_BASINS.filter((basin) => basin.operatorCode === operatorScope) : OIL_BASINS;
+    return (
     <Box component="section" aria-labelledby="basin-overview-title" sx={{ mb: 3 }}>
         <Box sx={{ mb: 1.5 }}>
             <Typography id="basin-overview-title" variant="h6" fontWeight={750}>
@@ -14,15 +18,16 @@ const BasinOverview: React.FC = () => (
         </Box>
 
         <Grid container spacing={2}>
-            {OIL_BASINS.map((basin) => {
+            {basins.map((basin) => {
                 const wells = OIL_WELLS.filter((well) => well.basin === basin.name);
+                const color = OPERATOR_WORKSPACES[basin.operatorCode].color;
                 return (
-                    <Grid item xs={12} md={4} key={basin.name}>
-                        <Card sx={{ height: '100%', borderTop: '3px solid', borderTopColor: wells.length ? 'secondary.main' : 'divider' }}>
+                    <Grid item xs={12} md={operatorScope ? 7 : 4} key={basin.name}>
+                        <Card sx={{ height: '100%', borderTop: `4px solid ${color}` }}>
                             <CardContent>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 1.5 }}>
                                     <Typography variant="h6" fontWeight={750}>{basin.name}</Typography>
-                                    <Chip label={basin.operatorCode} size="small" color={wells.length ? 'secondary' : 'default'} />
+                                    <Chip label={basin.operatorCode} size="small" sx={{ bgcolor: color, color: OPERATOR_WORKSPACES[basin.operatorCode].foreground, fontWeight: 800 }} />
                                 </Box>
                                 <Typography variant="body2" fontWeight={650}>{basin.operator}</Typography>
                                 <Typography variant="caption" color="text.secondary">
@@ -50,6 +55,7 @@ const BasinOverview: React.FC = () => (
             })}
         </Grid>
     </Box>
-);
+    );
+};
 
 export default BasinOverview;
