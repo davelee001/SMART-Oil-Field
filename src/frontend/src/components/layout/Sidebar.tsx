@@ -42,7 +42,7 @@ interface SidebarProps {
 
 const menuItems: Array<{ text: string; icon: React.ReactNode; path: string; roles?: PmsRole[] }> = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'Operations Workspaces', icon: <DashboardIcon />, path: '/workspaces' },
     { text: 'Projects', icon: <ProjectsIcon />, path: '/projects' },
     { text: 'Budgeting & Finance', icon: <FinanceIcon />, path: '/finance' },
     { text: 'Compliance', icon: <ComplianceIcon />, path: '/compliance' },
