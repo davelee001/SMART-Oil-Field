@@ -42,7 +42,7 @@ const Login: React.FC = () => {
                 ? await register(name.trim(), email.trim(), password)
                 : await login(email.trim(), password);
             toast.success(tab === 'register' ? `Welcome to SMART Oil Field, ${user.name}!` : `Welcome back, ${user.name}!`);
-            navigate('/dashboard', { replace: true });
+            navigate('/workspaces', { replace: true });
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Authentication failed');
         } finally {
