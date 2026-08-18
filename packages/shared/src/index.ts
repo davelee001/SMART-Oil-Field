@@ -11,6 +11,15 @@ export const PMS_ROLES = [
 
 export type PmsRole = (typeof PMS_ROLES)[number];
 
+export const OPERATOR_SCOPES = ['SPOC', 'DPOC', 'GPOC'] as const;
+export type OperatorScope = (typeof OPERATOR_SCOPES)[number];
+
+export const OPERATOR_LABELS: Record<OperatorScope, string> = {
+  SPOC: 'Sudd Petroleum Operating Company',
+  DPOC: 'Dar Petroleum Operating Company',
+  GPOC: 'Greater Pioneer Petroleum Operating Company',
+};
+
 export const ROLE_LABELS: Record<PmsRole, string> = {
   ADMINISTRATOR: 'Administrator',
   PROJECT_MANAGER: 'Project Manager',
@@ -28,6 +37,7 @@ export interface SessionUser {
   email: string;
   department: string | null;
   role: PmsRole;
+  operatorScope: OperatorScope | null;
   walletAddress: string | null;
   isActive: boolean;
   createdAt: string;
