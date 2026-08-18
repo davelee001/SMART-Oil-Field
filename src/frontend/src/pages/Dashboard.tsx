@@ -39,12 +39,14 @@ import LoadingCard from '../components/common/LoadingCard';
 import BasinOverview from '../components/basins/BasinOverview';
 import { useAuth } from '../contexts/AuthContext';
 import { OIL_WELLS } from '../data/oilFields';
+import { OPERATOR_WORKSPACES } from '../data/operators';
+import { OperatorScope } from '../utils/auth';
 
 const ALL_WELLS = OIL_WELLS;
 
 type QuickFilter = 'all' | 'active' | 'warning' | '24h';
 
-const Dashboard: React.FC = () => {
+const Dashboard: React.FC<{ operatorScope?: OperatorScope }> = ({ operatorScope }) => {
     const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
@@ -52,10 +54,11 @@ const Dashboard: React.FC = () => {
     const hasSearch = searchTerm.trim().length > 0;
     const rawDisplayName = user?.name?.trim() || 'Operator';
     const displayName = rawDisplayName.charAt(0).toUpperCase() + rawDisplayName.slice(1);
+    const scopedWells = useMemo(() => !operatorScope || operatorScope === 'SPOC' ? ALL_WELLS : [], [operatorScope]);
 
     const filteredWells = useMemo(() => {
         const term = searchTerm.trim().toLowerCase();
-        return ALL_WELLS.filter((well) => {
+        return scopedWells.filter((well) => {
             const matchesSearch =
                 term === '' ||
                 [
@@ -87,7 +90,7 @@ const Dashboard: React.FC = () => {
                     return true;
             }
         });
-    }, [searchTerm, quickFilter]);
+    }, [searchTerm, quickFilter, scopedWells]);
 
     const stats = useMemo(() => {
         const activeWells = filteredWells.filter((w) => w.status === 'active').length;
@@ -191,6 +194,7 @@ const Dashboard: React.FC = () => {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0 },
     };
+    const workspace = operatorScope ? OPERATOR_WORKSPACES[operatorScope] : null;
 
     return (
         <Container maxWidth={false} sx={{ py: 1, px: { xs: 1.5, sm: 2, md: 3 } }}>
@@ -220,7 +224,7 @@ const Dashboard: React.FC = () => {
                             border: '1px solid',
                             borderColor: 'divider',
                             borderLeft: '4px solid',
-                            borderLeftColor: 'secondary.main',
+                            borderLeftColor: workspace?.color || 'secondary.main',
                             borderRadius: 1,
                             background: (theme) =>
                                 theme.palette.mode === 'dark'
@@ -233,7 +237,7 @@ const Dashboard: React.FC = () => {
                                 Welcome back, {displayName}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Here is your live oil field operations overview.
+                                {workspace ? `${workspace.name} · ${workspace.basin} · Based in ${workspace.base}` : 'Here is your live oil field operations overview.'}
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -244,7 +248,7 @@ const Dashboard: React.FC = () => {
                 </motion.div>
 
                 <motion.div variants={cardVariants}>
-                    <BasinOverview />
+                    <BasinOverview operatorScope={operatorScope} />
                 </motion.div>
 
                 {/* Search Bar */}
@@ -312,10 +316,10 @@ const Dashboard: React.FC = () => {
                                     {filteredWells.length === 0 ? (
                                         <Box sx={{ px: 2, py: 2.5, textAlign: 'center' }}>
                                             <Typography fontWeight={650}>
-                                                {ALL_WELLS.length === 0 ? 'No wells available' : 'No matching wells found'}
+                                                {scopedWells.length === 0 ? 'No wells available' : 'No matching wells found'}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                {ALL_WELLS.length === 0
+                                                {scopedWells.length === 0
                                                     ? 'Well records will appear here after they are added.'
                                                     : 'Try a well name, ID, location, status, or telemetry value.'}
                                             </Typography>
@@ -553,7 +557,7 @@ const Dashboard: React.FC = () => {
                                     {loading ? (
                                         <LoadingCard height={300} />
                                     ) : (
-                                        <OilFieldMap />
+                                        <OilFieldMap wells={filteredWells} />
                                     )}
                                 </CardContent>
                             </Card>
@@ -591,7 +595,7 @@ const Dashboard: React.FC = () => {
                                                 {filteredWells.length === 0 ? (
                                                     <TableRow>
                                                         <TableCell colSpan={9} align="center">
-                                                            {ALL_WELLS.length === 0
+                                                            {scopedWells.length === 0
                                                                 ? 'No wells are currently available.'
                                                                 : 'No wells match the current search/filter.'}
                                                         </TableCell>
