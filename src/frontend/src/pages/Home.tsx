@@ -468,7 +468,7 @@ const Home: React.FC = () => {
                     p: 3,
                     mb: 3,
                     borderRadius: 3,
-                    background: (theme) => theme.palette.mode === 'dark' ? '#0c101d' : '#ffffff',
+                    background: (theme) => theme.palette.mode === 'dark' ? '#0a0e16' : '#f7f9fa',
                     border: '1px solid',
                     borderColor: 'divider',
                     boxShadow: '0 8px 24px -10px rgba(0,0,0,0.1)'
