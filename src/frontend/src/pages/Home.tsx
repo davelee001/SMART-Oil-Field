@@ -438,7 +438,7 @@ const Home: React.FC = () => {
                     mb: 3,
                     p: 2.5,
                     borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(249, 115, 22, 0.01) 100%)',
+                    background: (theme) => theme.palette.mode === 'dark' ? '#18150f' : '#f5eddd',
                     border: '1px dashed rgba(245, 158, 11, 0.2)',
                     display: 'flex',
                     alignItems: 'center',
@@ -449,7 +449,7 @@ const Home: React.FC = () => {
             >
                 <Box sx={{ textAlign: 'left' }}>
                     <Chip label="REFINERY PROMOTIONS" size="small" sx={{ bgcolor: '#f59e0b', color: '#000', fontWeight: 900, mb: 1, height: 20, fontSize: '0.65rem' }} />
-                    <Typography variant="subtitle1" fontWeight={900} sx={{ color: '#fef08a', fontSize: '1.05rem', mb: 0.2 }}>
+                    <Typography variant="subtitle1" fontWeight={900} sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#fef08a' : '#65430b', fontSize: '1.05rem', mb: 0.2 }}>
                         🔥 High-Season Discount Active: Receive 30% OFF Plan Subscriptions!
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.78rem' }}>
