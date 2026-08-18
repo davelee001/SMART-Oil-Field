@@ -273,10 +273,11 @@ const Home: React.FC = () => {
                 minWidth: 0,
                 px: { xs: 1.5, sm: 2.5, md: 4 },
                 py: 2.5,
-                background: (theme) => theme.palette.mode === 'dark' ? '#080c16' : '#f8fafc',
-                backgroundImage: (theme) => theme.palette.mode === 'dark'
-                    ? 'radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.02) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.02) 0px, transparent 50%)'
-                    : 'none',
+                color: (theme) => theme.palette.mode === 'dark' ? '#eef4f7' : '#172b3a',
+                backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#070a10' : '#e7ecef',
+                '& .MuiTypography-colorTextSecondary': {
+                    color: (theme) => theme.palette.mode === 'dark' ? '#aebbc5' : '#5b6b78',
+                },
             }}
         >
             {/* Live Oil & Energy Market Commodities Bar */}
