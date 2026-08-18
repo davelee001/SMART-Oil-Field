@@ -47,6 +47,7 @@ router.post('/register', async (req, res, next) => {
         email: input.email,
         passwordHash: await bcrypt.hash(input.password, 12),
         role: 'VIEWER',
+        operatorScope: null,
         lastLoginAt: new Date(),
       },
     });
