@@ -18,6 +18,12 @@ enum Role {
   VIEWER
 }
 
+enum OperatorScope {
+  SPOC
+  DPOC
+  GPOC
+}
+
 enum ProjectStatus {
   PLANNED
   ACTIVE
@@ -377,6 +383,7 @@ model User {
   department                   String?
   passwordHash                 String
   role                         Role                        @default(VIEWER)
+  operatorScope                OperatorScope?
   walletAddress                String?
   isActive                     Boolean                     @default(true)
   tokenVersion                 Int                         @default(0)
@@ -451,6 +458,7 @@ model User {
   reportWorkflowEvents         FormalReportWorkflowEvent[]
 
   @@index([role])
+  @@index([operatorScope])
   @@index([isActive])
 }
 
