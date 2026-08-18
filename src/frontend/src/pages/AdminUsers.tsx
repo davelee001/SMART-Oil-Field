@@ -8,7 +8,7 @@ import {
     PersonAddOutlined as AddUserIcon, Refresh as RefreshIcon, Visibility, VisibilityOff,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-import { apiRequest, AppUser, PMS_ROLES, PmsRole, ROLE_LABELS } from '../utils/auth';
+import { apiRequest, AppUser, OPERATOR_LABELS, OPERATOR_SCOPES, OperatorScope, PMS_ROLES, PmsRole, ROLE_LABELS } from '../utils/auth';
 
 const AdminUsers: React.FC = () => {
     const [users, setUsers] = useState<AppUser[]>([]);
@@ -19,6 +19,7 @@ const AdminUsers: React.FC = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [role, setRole] = useState<PmsRole>('VIEWER');
+    const [operatorScope, setOperatorScope] = useState<OperatorScope | ''>('');
     const [creating, setCreating] = useState(false);
 
     const loadUsers = useCallback(async () => {
@@ -38,17 +39,17 @@ const AdminUsers: React.FC = () => {
         setCreating(true);
         try {
             const result = await apiRequest<{ user: AppUser }>('/api/admin/users', {
-                method: 'POST', body: JSON.stringify({ name, email, password, role, department: department || null }),
+                method: 'POST', body: JSON.stringify({ name, email, password, role, operatorScope: role === 'ADMINISTRATOR' ? null : operatorScope || null, department: department || null }),
             });
             setUsers((current) => [...current, result.user].sort((a, b) => a.name.localeCompare(b.name)));
-            setName(''); setEmail(''); setDepartment(''); setPassword(''); setRole('VIEWER');
+            setName(''); setEmail(''); setDepartment(''); setPassword(''); setRole('VIEWER'); setOperatorScope('');
             toast.success('User created');
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Could not create user');
         } finally { setCreating(false); }
     };
 
-    const updateUser = async (id: string, changes: { role?: PmsRole; isActive?: boolean; department?: string | null }) => {
+    const updateUser = async (id: string, changes: { role?: PmsRole; operatorScope?: OperatorScope | null; isActive?: boolean; department?: string | null }) => {
         try {
             const result = await apiRequest<{ user: AppUser }>(`/api/admin/users/${id}`, {
                 method: 'PATCH', body: JSON.stringify(changes),
@@ -106,6 +107,11 @@ const AdminUsers: React.FC = () => {
                                     {PMS_ROLES.map((item) => <MenuItem key={item} value={item}>{ROLE_LABELS[item]}</MenuItem>)}
                                 </Select></FormControl>
                             </Grid>
+                            <Grid item xs={12} md={2}>
+                                <FormControl fullWidth required={role !== 'ADMINISTRATOR'}><InputLabel>Operator</InputLabel><Select value={operatorScope} label="Operator" onChange={(e) => setOperatorScope(e.target.value as OperatorScope)} disabled={role === 'ADMINISTRATOR'}>
+                                    {OPERATOR_SCOPES.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                                </Select></FormControl>
+                            </Grid>
                             <Grid item xs={12} md={2}><Button type="submit" variant="contained" startIcon={<AddUserIcon />} disabled={creating} fullWidth>{creating ? 'Adding…' : 'Add User'}</Button></Grid>
                         </Grid>
                     </Box>
@@ -121,12 +127,17 @@ const AdminUsers: React.FC = () => {
                     {loading && users.length === 0 ? <Alert severity="info">Loading users…</Alert> : (
                         <TableContainer>
                             <Table size="small">
-                                <TableHead><TableRow><TableCell>User</TableCell><TableCell>Department</TableCell><TableCell>Role</TableCell><TableCell>Status</TableCell><TableCell>Last login</TableCell></TableRow></TableHead>
+                                <TableHead><TableRow><TableCell>User</TableCell><TableCell>Department</TableCell><TableCell>Operator</TableCell><TableCell>Role</TableCell><TableCell>Status</TableCell><TableCell>Last login</TableCell></TableRow></TableHead>
                                 <TableBody>
                                     {users.map((user) => (
                                         <TableRow key={user.id} hover>
                                             <TableCell><Typography variant="body2" fontWeight={700}>{user.name}</Typography><Typography variant="caption" color="text.secondary">{user.email}</Typography></TableCell>
                                             <TableCell><TextField size="small" value={user.department || ''} placeholder="Unassigned" onChange={(e) => setUsers((current) => current.map((item) => item.id === user.id ? { ...item, department: e.target.value || null } : item))} onBlur={(e) => void updateUser(user.id, { department: e.target.value.trim() || null })} /></TableCell>
+                                            <TableCell>
+                                                {user.role === 'ADMINISTRATOR' ? <Chip size="small" label="All operators" /> : <FormControl size="small" sx={{ minWidth: 120 }}><Select value={user.operatorScope || ''} displayEmpty onChange={(e) => void updateUser(user.id, { operatorScope: e.target.value as OperatorScope })}>
+                                                    <MenuItem value="" disabled>Unassigned</MenuItem>{OPERATOR_SCOPES.map((item) => <MenuItem key={item} value={item}>{OPERATOR_LABELS[item]}</MenuItem>)}
+                                                </Select></FormControl>}
+                                            </TableCell>
                                             <TableCell>
                                                 <FormControl size="small" sx={{ minWidth: 190 }}><Select value={user.role} onChange={(e) => void updateUser(user.id, { role: e.target.value as PmsRole })}>
                                                     {PMS_ROLES.map((item) => <MenuItem key={item} value={item}>{ROLE_LABELS[item]}</MenuItem>)}
