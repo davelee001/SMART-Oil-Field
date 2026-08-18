@@ -498,7 +498,7 @@ const Home: React.FC = () => {
                 <Grid container spacing={2} alignItems="center">
                     {/* Node 1: Wellhead */}
                     <Grid item xs={12} sm={5} md={2.4}>
-                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#f8fafc', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#edf2f4', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Box sx={{ fontSize: '1.5rem', bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', width: 32, height: 32, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🔌</Box>
                             <Box sx={{ textAlign: 'left' }}>
                                 <Typography variant="caption" fontWeight={800} color="text.primary" sx={{ display: 'block', lineHeight: 1.2 }}>Wellhead IoT Node</Typography>
@@ -517,7 +517,7 @@ const Home: React.FC = () => {
 
                     {/* Node 2: FastAPI Broker */}
                     <Grid item xs={12} sm={5} md={2.4}>
-                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#f8fafc', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#edf2f4', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Box sx={{ fontSize: '1.5rem', bgcolor: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4', width: 32, height: 32, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⚡</Box>
                             <Box sx={{ textAlign: 'left' }}>
                                 <Typography variant="caption" fontWeight={800} color="text.primary" sx={{ display: 'block', lineHeight: 1.2 }}>FastAPI Ingestion</Typography>
@@ -536,7 +536,7 @@ const Home: React.FC = () => {
 
                     {/* Node 3: TS Gateway */}
                     <Grid item xs={12} sm={5} md={2.4}>
-                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#f8fafc', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#edf2f4', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Box sx={{ fontSize: '1.5rem', bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', width: 32, height: 32, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🟢</Box>
                             <Box sx={{ textAlign: 'left' }}>
                                 <Typography variant="caption" fontWeight={800} color="text.primary" sx={{ display: 'block', lineHeight: 1.2 }}>TS Express Gateway</Typography>
@@ -555,7 +555,7 @@ const Home: React.FC = () => {
 
                     {/* Node 4: Move Contract */}
                     <Grid item xs={12} sm={5} md={2.4}>
-                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#f8fafc', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Paper sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.6)' : '#edf2f4', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Box sx={{ fontSize: '1.5rem', bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', width: 32, height: 32, borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⛓️</Box>
                             <Box sx={{ textAlign: 'left' }}>
                                 <Typography variant="caption" fontWeight={800} color="text.primary" sx={{ display: 'block', lineHeight: 1.2 }}>Move Smart Contract</Typography>
