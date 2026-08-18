@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, Box, Button, Card, CardContent, Chip, Container, TextField, Typography } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
-import { ROLE_LABELS } from '../utils/auth';
+import { OPERATOR_LABELS, ROLE_LABELS } from '../utils/auth';
 
 const Profile: React.FC = () => {
     const navigate = useNavigate();
@@ -48,6 +48,7 @@ const Profile: React.FC = () => {
                             <Typography variant="h5">{name || 'Unnamed User'}</Typography>
                             <Typography variant="body2" color="text.secondary">{email}</Typography>
                             <Chip label={ROLE_LABELS[user.role]} size="small" color="primary" variant="outlined" sx={{ mt: 0.75 }} />
+                            <Chip label={user.role === 'ADMINISTRATOR' ? 'All operators' : user.operatorScope ? OPERATOR_LABELS[user.operatorScope] : 'Operator unassigned'} size="small" variant="outlined" sx={{ mt: 0.75, ml: 0.75 }} />
                         </Box>
                     </Box>
                     <Box component="form" onSubmit={handleSave} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
