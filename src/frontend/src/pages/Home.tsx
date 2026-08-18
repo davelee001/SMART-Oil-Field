@@ -608,6 +608,7 @@ const Home: React.FC = () => {
                                     fontSize: { xs: '1.8rem', sm: '2.4rem', md: '3rem' },
                                     lineHeight: 1.15,
                                     mb: 2,
+                                    color: '#f4f7fa',
                                     fontFamily: 'Montserrat, sans-serif',
                                     textAlign: 'left'
                                 }}
