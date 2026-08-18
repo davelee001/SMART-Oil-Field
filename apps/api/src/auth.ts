@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { User } from '@prisma/client';
-import { PmsRole, SessionUser } from '@smart-oil-field/shared';
+import { OperatorScope, PmsRole, SessionUser } from '@smart-oil-field/shared';
 import { prisma } from '@smart-oil-field/database';
 import { readAccessToken, verifyAccessToken } from './jwt';
 
@@ -10,6 +10,7 @@ export const publicUser = (user: User): SessionUser => ({
   email: user.email,
   department: user.department,
   role: user.role as PmsRole,
+  operatorScope: user.operatorScope as OperatorScope | null,
   walletAddress: user.walletAddress,
   isActive: user.isActive,
   createdAt: user.createdAt.toISOString(),
@@ -39,6 +40,16 @@ export const requireRoles = (...roles: PmsRole[]) => [
   (req: Request, res: Response, next: NextFunction) => {
     if (!req.authUser || !roles.includes(req.authUser.role as PmsRole)) {
       return res.status(403).json({ message: 'You do not have permission to perform this action' });
+    }
+    return next();
+  },
+];
+
+export const requireOperatorScope = (scope: OperatorScope) => [
+  requireAuth,
+  (req: Request, res: Response, next: NextFunction) => {
+    if (!req.authUser || (req.authUser.role !== 'ADMINISTRATOR' && req.authUser.operatorScope !== scope)) {
+      return res.status(403).json({ message: 'You do not have access to this operator workspace' });
     }
     return next();
   },
