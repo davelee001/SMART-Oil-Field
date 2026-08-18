@@ -22,6 +22,7 @@ async function main() {
       name: process.env.ADMIN_NAME || 'System Administrator',
       passwordHash,
       role: Role.ADMINISTRATOR,
+      operatorScope: null,
       isActive: true,
       tokenVersion: { increment: 1 },
     },
@@ -30,6 +31,7 @@ async function main() {
       email,
       passwordHash,
       role: Role.ADMINISTRATOR,
+      operatorScope: null,
     },
   });
 
