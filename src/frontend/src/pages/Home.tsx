@@ -814,7 +814,7 @@ const Home: React.FC = () => {
                 <Grid container spacing={3}>
                     {/* Tier 1 */}
                     <Grid item xs={12} md={4}>
-                        <Card sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.4)' : '#ffffff' }}>
+                        <Card sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.4)' : '#f7f9fa' }}>
                             <CardContent sx={{ p: 2, flexGrow: 1 }}>
                                 <Typography variant="caption" sx={{ color: '#3b82f6', letterSpacing: 1.2, fontWeight: 900, display: 'block', mb: 1, textTransform: 'uppercase', textAlign: 'left' }}>CRUDE FIELD OPERATIONS</Typography>
                                 <Typography variant="h6" fontWeight={850} sx={{ fontSize: '1.25rem', textAlign: 'left' }}>Field Monitor</Typography>
@@ -855,7 +855,7 @@ const Home: React.FC = () => {
                                 position: 'relative',
                                 overflow: 'hidden',
                                 border: '1px solid rgba(245, 158, 11, 0.25)',
-                                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(23, 20, 15, 0.5)' : '#ffffff'
+                                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(23, 20, 15, 0.5)' : '#f8f4ea'
                             }}
                         >
                             {/* Premium popular ribbon */}
@@ -893,7 +893,7 @@ const Home: React.FC = () => {
 
                     {/* Tier 3 */}
                     <Grid item xs={12} md={4}>
-                        <Card sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.4)' : '#ffffff' }}>
+                        <Card sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(10, 15, 29, 0.4)' : '#f7f9fa' }}>
                             <CardContent sx={{ p: 2, flexGrow: 1 }}>
                                 <Typography variant="caption" sx={{ color: '#06b6d4', letterSpacing: 1.2, fontWeight: 900, display: 'block', mb: 1, textTransform: 'uppercase', textAlign: 'left' }}>OFFSHORE RIG COMMAND</Typography>
                                 <Typography variant="h6" fontWeight={850} sx={{ fontSize: '1.25rem', textAlign: 'left' }}>Direct Command</Typography>
