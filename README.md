@@ -29,6 +29,12 @@ Existing subscription and blockchain-payment features are maintained separately 
 
 The Tharjaath inventory contains 28 wells across `OGM1` to `OGM5`; Mala contains 27 wells through `OGM Mala`. PCP wells use the `TJ` and `ML` prefixes, while ESP wells use `TJH` and `MLH`. Unity and Paloch remain intentionally empty until controlled source data is supplied.
 
+### Operator workspaces and access
+
+Authenticated users enter through `/workspaces` and can open only the operating-company workspace assigned to their account. SPOC users enter the yellow Tharjaath workspace, DPOC users enter the gray Paloch workspace, and GPOC users enter the light-blue Unity workspace. Administrators can enter all three workspaces.
+
+Operator assignment is controlled from `/admin/users`. Creating a non-administrator requires an `SPOC`, `DPOC`, or `GPOC` assignment; changing the assignment invalidates existing sessions. Direct workspace URLs are guarded in both the React router and the Express API. DPOC and GPOC currently display an empty operational state until their field and well records are supplied.
+
 ### Operations dashboard
 
 The primary React dashboard presents the three-basin management structure, a Block 5A field map, and the complete 55-well Tharjaath/Mala inventory. Operators can search and filter wells by field, pump type, status, gathering manifold, and CPF route. A standalone SCADA-oriented interface is also retained in `src/frontend/index.html` for the specialist operational service.
