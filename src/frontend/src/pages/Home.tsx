@@ -375,10 +375,10 @@ const Home: React.FC = () => {
                     p: { xs: 2, sm: 3 },
                     borderRadius: 3,
                     background: (theme) => theme.palette.mode === 'dark'
-                        ? 'linear-gradient(135deg, #0d1222 0%, #080b15 100%)'
-                        : 'linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)',
+                        ? 'linear-gradient(135deg, #0b0f18 0%, #070a10 100%)'
+                        : '#f7f9fa',
                     border: '1px solid',
-                    borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0,0,0,0.06)',
+                    borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#cbd5dc',
                     borderLeft: '5px solid #f59e0b',
                     display: 'flex',
                     flexDirection: { xs: 'column', md: 'row' },
@@ -394,41 +394,41 @@ const Home: React.FC = () => {
                             <RigIcon sx={{ fontSize: 24 }} />
                         </Avatar>
                         <Box sx={{ textAlign: 'left' }}>
-                            <Typography variant="h5" fontWeight={900} sx={{ letterSpacing: '-0.3px', fontFamily: 'Montserrat, sans-serif' }}>
+                            <Typography variant="h5" fontWeight={900} sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#f8fafc' : '#172b3a', fontFamily: 'Montserrat, sans-serif' }}>
                                 SMART <span style={{ color: '#f59e0b' }}>OIL FIELD</span>
                             </Typography>
-                            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }} className="font-mono">
+                            <Typography variant="caption" sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#9fb0bd' : '#687985', display: 'flex', alignItems: 'center', gap: 0.5 }} className="font-mono">
                                 SCADA OPERATIONS CONTROL DECK • v1.2.0
                             </Typography>
                         </Box>
                     </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 650, fontSize: '0.85rem', textAlign: 'left' }}>
+                    <Typography variant="body2" sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#aebbc5' : '#50616d', maxWidth: 650, fontSize: '0.85rem', textAlign: 'left' }}>
                         IoT telemetry streaming and blockchain-backed subscription management compiled with Python FastAPI servers, TypeScript middleware gateways, and Aptos Move smart contracts.
                     </Typography>
                 </Box>
 
                 {/* Real-time system diagnostics KPIs */}
-                <Stack direction="row" spacing={1} sx={{ alignSelf: { xs: 'stretch', md: 'auto' }, flexWrap: 'wrap' }} useFlexGap>
-                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 100, textAlign: 'center' }}>
+                <Box sx={{ alignSelf: { xs: 'stretch', md: 'auto' }, display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' }, gap: 1 }}>
+                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 0, textAlign: 'center' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>LIVE FLOW</Typography>
                         <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.flow.toLocaleString()} bbl/d</Typography>
                     </Box>
-                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 100, textAlign: 'center' }}>
+                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 0, textAlign: 'center' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>LINE PRESS</Typography>
                         <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.pressure} PSI</Typography>
                     </Box>
-                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 100, textAlign: 'center' }}>
+                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 0, textAlign: 'center' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>WELL TEMP</Typography>
                         <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.temp} °F</Typography>
                     </Box>
-                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 100, textAlign: 'center', position: 'relative' }}>
+                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 0, textAlign: 'center', position: 'relative' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>APTOS MOVE</Typography>
                         <Typography variant="subtitle2" fontWeight={850} color="#f59e0b" className="font-mono" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                             <Box component="span" sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#10b981', display: 'inline-block', animation: `${ledPulse} 1s infinite` }} />
                             #{scadaMetrics.blockNum}
                         </Typography>
                     </Box>
-                </Stack>
+                </Box>
             </Paper>
 
             {/* SPECIAL REFNERY DISCOUNT PROMPT */}
