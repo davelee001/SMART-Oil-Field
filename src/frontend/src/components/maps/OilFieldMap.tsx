@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import { Box, Chip, Typography, useTheme } from '@mui/material';
 import 'leaflet/dist/leaflet.css';
-import { OIL_WELLS } from '../../data/oilFields';
+import { OilWell, OIL_WELLS } from '../../data/oilFields';
 
 // Fix for default markers in React Leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -13,10 +13,8 @@ Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const OilFieldMap: React.FC = () => {
+const OilFieldMap: React.FC<{ wells?: OilWell[] }> = ({ wells = OIL_WELLS }) => {
     const theme = useTheme();
-
-    const wells = OIL_WELLS;
 
     const getMarkerColor = (status: string) => {
         switch (status) {
@@ -60,6 +58,10 @@ const OilFieldMap: React.FC = () => {
             popupAnchor: [1, -34],
         });
     };
+
+    if (wells.length === 0) {
+        return <Box sx={{ height: 300, display: 'grid', placeItems: 'center', bgcolor: 'background.default', border: '1px dashed', borderColor: 'divider' }}><Typography color="text.secondary">Map data will appear when field and well records are assigned.</Typography></Box>;
+    }
 
     return (
         <Box sx={{ height: 300, width: '100%', borderRadius: 2, overflow: 'hidden', position: 'relative' }}>
