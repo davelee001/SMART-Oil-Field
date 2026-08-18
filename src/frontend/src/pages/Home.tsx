@@ -289,8 +289,8 @@ const Home: React.FC = () => {
                     borderRadius: 3,
                     background: (theme) =>
                         theme.palette.mode === 'dark'
-                            ? 'linear-gradient(135deg, #0b1329 0%, #111a36 100%)'
-                            : 'linear-gradient(135deg, #0F2942 0%, #1d3c5f 100%)',
+                            ? 'linear-gradient(135deg, #080d18 0%, #0d1528 100%)'
+                            : 'linear-gradient(135deg, #14283a 0%, #1d3b52 100%)',
                     color: '#ffffff',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
                 }}
@@ -298,7 +298,7 @@ const Home: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <OilIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
-                        <Typography variant="subtitle2" fontWeight={850} sx={{ letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.78rem', color: '#f59e0b' }}>
+                        <Typography variant="subtitle2" fontWeight={850} sx={{ textTransform: 'uppercase', fontSize: '0.78rem', color: '#f59e0b', overflowWrap: 'anywhere' }}>
                             SCADA Live Global Crude & Energy Benchmark Markets
                         </Typography>
                     </Box>
