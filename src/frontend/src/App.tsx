@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Box, ThemeProvider } from '@mui/material';
 import { motion } from 'framer-motion';
 
@@ -18,9 +18,11 @@ import SupplyChain from './pages/SupplyChain';
 import KpiPerformance from './pages/KpiPerformance';
 import Training from './pages/Training';
 import Reports from './pages/Reports';
+import Workspaces from './pages/Workspaces';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import OperatorRoute from './components/common/OperatorRoute';
 
 const AppContent: React.FC = () => {
     const [darkMode, setDarkMode] = useState(false);
@@ -79,7 +81,7 @@ const AppContent: React.FC = () => {
                                 path="/dashboard"
                                 element={
                                     <ProtectedRoute>
-                                        <Dashboard />
+                                        <Navigate to="/workspaces" replace />
                                     </ProtectedRoute>
                                 }
                             />
@@ -107,6 +109,14 @@ const AppContent: React.FC = () => {
                                     </ProtectedRoute>
                                 }
                             />
+                            <Route path="/workspaces" element={<ProtectedRoute><Workspaces /></ProtectedRoute>} />
+                            {(['SPOC', 'DPOC', 'GPOC'] as const).map((scope) => (
+                                <Route
+                                    key={scope}
+                                    path={`/operations/${scope.toLowerCase()}`}
+                                    element={<ProtectedRoute><OperatorRoute scope={scope}><Dashboard operatorScope={scope} /></OperatorRoute></ProtectedRoute>}
+                                />
+                            ))}
                             <Route
                                 path="/projects"
                                 element={
