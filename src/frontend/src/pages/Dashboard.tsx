@@ -37,6 +37,7 @@ import TelemetryChart from '../components/charts/TelemetryChart';
 import OilFieldMap from '../components/maps/OilFieldMap';
 import LoadingCard from '../components/common/LoadingCard';
 import BasinOverview from '../components/basins/BasinOverview';
+import SpocCpfProcess from '../components/operations/SpocCpfProcess';
 import { useAuth } from '../contexts/AuthContext';
 import { OIL_WELLS } from '../data/oilFields';
 import { OPERATOR_WORKSPACES } from '../data/operators';
@@ -250,6 +251,12 @@ const Dashboard: React.FC<{ operatorScope?: OperatorScope }> = ({ operatorScope 
                 <motion.div variants={cardVariants}>
                     <BasinOverview operatorScope={operatorScope} />
                 </motion.div>
+
+                {operatorScope === 'SPOC' && (
+                    <motion.div variants={cardVariants}>
+                        <SpocCpfProcess />
+                    </motion.div>
+                )}
 
                 {/* Search Bar */}
                 <motion.div variants={cardVariants}>
