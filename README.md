@@ -25,9 +25,17 @@ Existing subscription and blockchain-payment features are maintained separately 
 |---|---|---|
 | Unity Basin | Greater Pioneer Petroleum Operating Company (GPOC) | Awaiting field and well data |
 | Paloch Basin | Dar Petroleum Operating Company (DPOC) | Awaiting field and well data |
-| Tharjaath Basin | Sudd Petroleum Operating Company (SPOC) | Tharjaath and Mala fields; 55 wells routed through six OGMs to Tharjaath CPF |
+| Tharjaath Basin | Sudd Petroleum Operating Company (SPOC) | Tharjaath and Mala fields; 55 wells routed to Tharjaath CPF |
 
 The Tharjaath inventory contains 28 wells across `OGM1` to `OGM5`; Mala contains 27 wells through `OGM Mala`. PCP wells use the `TJ` and `ML` prefixes, while ESP wells use `TJH` and `MLH`. Unity and Paloch remain intentionally empty until controlled source data is supplied.
+
+### SPOC CPF process records
+
+The Tharjaath CPF register contains seven inlet lines: `OGM1` through `OGM6`, plus `OGM Mala`. `OGM6` is registered as an inlet but has no wells assigned pending controlled source data. Each inlet line has a local pressure gauge, a local temperature gauge, and a temperature transmitter that sends the pipe temperature signal to the Distributed Control System (DCS). The inlet lines combine at the `CPF Main Header`, which supplies two Free Water Knock Out tanks: `FWKO 1` and `FWKO 2`.
+
+Each FWKO has one inlet, one water outlet, one crude outlet, and an 18-point interface scale. Readings `1-8` indicate water and permit water release; `9-10` identify the emulsion band and require monitoring; `11-18` indicate crude routing. Operators must take the interface reading from each FWKO twice daily and report it to the CPF Control Room.
+
+Produced water receives reverse-demulsifier injection immediately downstream of the FWKO water outlet before entering the Corrugated Plate Interceptor (CPI). The CPF records three CPI units: `CPI 1` is in service, while `CPI 2` and `CPI 3` are on standby. Crude recovered by the active CPI is routed to the Dry Oil Sump Pump and then to the Feed Pump.
 
 ### Operator workspaces and access
 
@@ -43,11 +51,11 @@ The seeded well topology is authoritative reference data, but the changing produ
 
 ### Current PMS verification baseline
 
-As of 17 August 2026:
+As of 19 August 2026:
 
 - The repository provides authentication, authorization, project, finance, compliance, supply-chain, KPI, training, formal-reporting, and production-readiness tests across ten API test files.
 - The release workflow validates a clean dependency installation, production dependency audit, Prisma generation, PostgreSQL migrations, idempotent seed, tests, TypeScript checks, production builds, and both container images.
-- The clean-checkout test contract builds the shared and database workspaces before starting Vitest; the latest local Node 22 validation passes all 103 API tests, TypeScript checks, and production builds after the basin and operations-dashboard updates.
+- The clean-checkout test contract builds the shared and database workspaces before starting Vitest; the latest local Node 22 validation passes all 105 API tests, TypeScript checks, and production builds after the operator-workspace and SPOC CPF updates.
 - GitHub Actions release validation [run 4](https://github.com/davelee001/SMART-Oil-Field/actions/runs/31691254107) for commit `f33843e` passes clean installation, dependency audit, Prisma generation, migrations, seed, all 103 tests, type checks, production builds, and both container-image builds.
 - The production dependency audit has no high or critical findings. Two moderate findings remain in ExcelJS's transitive `uuid` dependency and require tracked risk acceptance or an upstream-compatible remediation.
 - Deployment remains staging-ready until the live infrastructure and business checks in `docs/PRODUCTION_ACCEPTANCE.md` are completed.
