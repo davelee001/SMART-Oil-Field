@@ -23,6 +23,21 @@ export interface FwkoInterfacePoint {
     operatorResponse: string;
 }
 
+export const CPF_TREATMENT_PROCESSES = [
+    {
+        id: 'CPF-PRODUCED-WATER-TREATMENT',
+        name: 'Produced Water Treatment',
+        status: 'RECORDED',
+        description: 'Removes crude traces from produced water through CPI and IGF separation before pond discharge.',
+    },
+    {
+        id: 'CPF-CRUDE-OIL-TREATMENT',
+        name: 'Crude Oil Treatment',
+        status: 'AWAITING_DETAILS',
+        description: 'Receives crude separated at the FWKO and recovered crude returned from the produced-water treatment process.',
+    },
+] as const;
+
 const instrumentsFor = (lineId: string): CpfInstrumentRecord[] => [
     { id: `${lineId}-PG`, type: 'PRESSURE_GAUGE', service: 'Local inlet-line pressure indication', signalDestination: 'LOCAL' },
     { id: `${lineId}-TG`, type: 'TEMPERATURE_GAUGE', service: 'Local inlet-line temperature indication', signalDestination: 'LOCAL' },
@@ -53,9 +68,19 @@ export const CPF_PROCESS_EQUIPMENT = {
         service: 'Receives and combines production fluids from all OGM inlet lines',
     },
     fwkoTanks: [
-        { id: 'CPF-FWKO-1', name: 'FWKO 1', type: 'Free Water Knock Out Tank', inletCount: 1, outlets: ['Produced-water line', 'Crude line'], compartments: [{ name: 'Inner tank', phase: 'Water' }, { name: 'Outer tank', phase: 'Crude' }] },
-        { id: 'CPF-FWKO-2', name: 'FWKO 2', type: 'Free Water Knock Out Tank', inletCount: 1, outlets: ['Produced-water line', 'Crude line'], compartments: [{ name: 'Inner tank', phase: 'Water' }, { name: 'Outer tank', phase: 'Crude' }] },
+        { id: 'CPF-FWKO-1', name: 'FWKO 1', type: 'Free Water Knock Out Tank', inletCount: 1, outlets: ['Produced-water line', 'Crude line', 'Gas outlet'], compartments: [{ name: 'Outer tank', phase: 'Water' }, { name: 'Inner tank', phase: 'Crude' }] },
+        { id: 'CPF-FWKO-2', name: 'FWKO 2', type: 'Free Water Knock Out Tank', inletCount: 1, outlets: ['Produced-water line', 'Crude line', 'Gas outlet'], compartments: [{ name: 'Outer tank', phase: 'Water' }, { name: 'Inner tank', phase: 'Crude' }] },
     ],
+    fwkoSeparation: {
+        phases: ['Water', 'Crude', 'Gas'],
+        gasHandling: {
+            source: 'Top of each FWKO',
+            action: 'Degassed through the gas outlet',
+            destination: 'Flare Knock Out Drum',
+            finalDisposition: 'Flared through controlled combustion',
+            purpose: 'Prevent direct release of unprocessed hydrocarbon gas and reduce atmospheric pollution risk',
+        },
+    },
 } as const;
 
 export const FWKO_INTERFACE_POINTS: FwkoInterfacePoint[] = Array.from({ length: 18 }, (_, index) => {
