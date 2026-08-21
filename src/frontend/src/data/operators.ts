@@ -14,7 +14,7 @@ export interface OperatorWorkspaceDefinition {
 export const OPERATOR_WORKSPACES: Record<OperatorScope, OperatorWorkspaceDefinition> = {
     SPOC: {
         scope: 'SPOC', shortName: 'SPOC', name: 'Sudd Petroleum Operating Company',
-        basin: 'Tharjaath Basin', base: 'Tharjaath', color: '#f2c94c', foreground: '#29230d', route: '/operations/spoc',
+        basin: 'Tharjaath', base: 'Tharjaath', color: '#f2c94c', foreground: '#29230d', route: '/operations/spoc',
     },
     DPOC: {
         scope: 'DPOC', shortName: 'DPOC', name: 'Dar Petroleum Operating Company',
