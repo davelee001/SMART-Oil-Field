@@ -17,6 +17,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
 import { useAuth } from '../contexts/AuthContext';
+import { operatorPath } from '../data/operators';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -42,7 +43,12 @@ const Login: React.FC = () => {
                 ? await register(name.trim(), email.trim(), password)
                 : await login(email.trim(), password);
             toast.success(tab === 'register' ? `Welcome to SMART Oil Field, ${user.name}!` : `Welcome back, ${user.name}!`);
-            navigate('/workspaces', { replace: true });
+            const destination = user.role === 'ADMINISTRATOR'
+                ? '/workspaces'
+                : user.operatorScope
+                    ? operatorPath(user.operatorScope)
+                    : '/workspaces';
+            navigate(destination, { replace: true });
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Authentication failed');
         } finally {
@@ -82,8 +88,8 @@ const Login: React.FC = () => {
                             />
                         )}
                         <TextField
-                            label="Email"
-                            type="email"
+                            label={tab === 'login' ? 'Username or email' : 'Email'}
+                            type={tab === 'login' ? 'text' : 'email'}
                             fullWidth
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -96,7 +102,7 @@ const Login: React.FC = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            inputProps={{ minLength: 12 }}
+                            inputProps={{ minLength: tab === 'login' ? 8 : 12 }}
                             autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
                             InputProps={{
                                 endAdornment: (
