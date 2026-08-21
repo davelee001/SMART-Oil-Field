@@ -3,9 +3,9 @@ import {
     Alert, Box, Chip, Grid, Paper, Stack, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Typography,
 } from '@mui/material';
-import { Air, ArrowForward, DeviceThermostat, Science, Speed, Storage, Sensors, WaterDrop } from '@mui/icons-material';
+import { Air, ArrowForward, DeviceThermostat, LocalFireDepartment, Science, Speed, Storage, Sensors, WaterDrop } from '@mui/icons-material';
 import {
-    CPF_INLET_RECORDS, CPF_PROCESS_EQUIPMENT, CPF_WATER_TREATMENT,
+    CPF_INLET_RECORDS, CPF_PROCESS_EQUIPMENT, CPF_TREATMENT_PROCESSES, CPF_WATER_TREATMENT,
     FWKO_INTERFACE_POINTS, FWKO_OPERATING_REQUIREMENT,
 } from '../../data/spocCpf';
 
@@ -17,6 +17,25 @@ const SpocCpfProcess: React.FC = () => (
                 SPOC production fluids are received from the OGM inlet lines, combined in the main header, and routed to two Free Water Knock Out tanks.
             </Typography>
         </Box>
+
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+            {CPF_TREATMENT_PROCESSES.map((process) => {
+                const recorded = process.status === 'RECORDED';
+                return (
+                    <Grid item xs={12} md={6} key={process.id}>
+                        <Paper variant="outlined" sx={{ p: 2, height: '100%', borderLeft: '5px solid', borderLeftColor: recorded ? 'info.main' : 'warning.main' }}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+                                <Box>
+                                    <Typography variant="h6" fontWeight={800}>{process.name}</Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>{process.description}</Typography>
+                                </Box>
+                                <Chip size="small" label={recorded ? 'Recorded' : 'Awaiting details'} color={recorded ? 'success' : 'warning'} />
+                            </Stack>
+                        </Paper>
+                    </Grid>
+                );
+            })}
+        </Grid>
 
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
             <Stack direction={{ xs: 'column', md: 'row' }} alignItems="center" justifyContent="center" gap={1.5}>
@@ -43,17 +62,34 @@ const SpocCpfProcess: React.FC = () => (
                             <Box><Typography fontWeight={850}>{tank.name}</Typography><Typography variant="caption" color="text.secondary">{tank.id} · {tank.type}</Typography></Box>
                             <Chip size="small" label={`${tank.inletCount} inlet`} />
                         </Stack>
-                        <Stack direction="row" gap={1} sx={{ mt: 2 }}>
+                        <Stack direction="row" flexWrap="wrap" useFlexGap gap={1} sx={{ mt: 2 }}>
                             <Chip size="small" icon={<WaterDrop />} label={tank.outlets[0]} color="info" variant="outlined" />
                             <Chip size="small" label={tank.outlets[1]} sx={{ bgcolor: '#f2c94c', color: '#29230d' }} />
+                            <Chip size="small" icon={<Air />} label={tank.outlets[2]} variant="outlined" />
                         </Stack>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
-                            {tank.compartments[0].name}: {tank.compartments[0].phase} · {tank.compartments[1].name}: {tank.compartments[1].phase}
+                            {tank.compartments[0].name}: {tank.compartments[0].phase} | {tank.compartments[1].name}: {tank.compartments[1].phase}
                         </Typography>
                     </Paper>
                 </Grid>
             ))}
         </Grid>
+
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+            <Typography variant="caption" fontWeight={800} color="text.secondary">FWKO THREE-PHASE SEPARATION</Typography>
+            <Stack direction={{ xs: 'column', md: 'row' }} alignItems="center" justifyContent="center" gap={1} sx={{ mt: 1.5 }}>
+                <Chip icon={<WaterDrop />} label="Water - Outer tank" color="info" variant="outlined" />
+                <Chip label="Crude - Inner tank" sx={{ bgcolor: '#f2c94c', color: '#29230d' }} />
+                <Chip icon={<Air />} label="Gas - Degassed from top" variant="outlined" />
+                <ArrowForward color="action" />
+                <Chip icon={<LocalFireDepartment />} label={CPF_PROCESS_EQUIPMENT.fwkoSeparation.gasHandling.destination} color="warning" variant="outlined" />
+                <ArrowForward color="action" />
+                <Chip icon={<LocalFireDepartment />} label="Controlled flaring" color="error" variant="outlined" />
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1.5 }}>
+                Gas is removed from the top of each FWKO, routed through the Flare Knock Out Drum, and flared to prevent direct release of unprocessed hydrocarbons and reduce atmospheric pollution risk.
+            </Typography>
+        </Paper>
 
         <Alert severity="info" sx={{ mb: 2 }}>
             OGM6 is registered as a CPF inlet. Its well assignments remain pending until controlled source data is provided.
