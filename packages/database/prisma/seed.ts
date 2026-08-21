@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { FormalReportType, OperatorScope, PrismaClient, ReportTemplateStatus, Role, SupplierSector, SupplierStatus } from '@prisma/client';
+import { ComplianceRegisterStatus, FormalReportType, OperatorScope, PrismaClient, RegulationType, ReportTemplateStatus, Role, SupplierSector, SupplierStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -114,6 +114,40 @@ async function main() {
     });
   }
 
+  const spocPolicies = [
+    {
+      code: 'SPOC-POL-001',
+      title: 'SPOC Policy',
+      description: 'Corporate policy framework for SPOC operations. Controlled revision, owner, approval, and authoritative effective date require confirmation.',
+    },
+    {
+      code: 'SPOC-HR-POL-001',
+      title: 'Human Resource Policy',
+      description: 'SPOC policy governing workforce and human-resource management. Controlled revision, owner, approval, and authoritative effective date require confirmation.',
+    },
+    {
+      code: 'SPOC-HSE-POL-001',
+      title: 'HSE Policy',
+      description: 'SPOC policy governing health, safety, and environmental management. Controlled revision, owner, approval, and authoritative effective date require confirmation.',
+    },
+  ];
+
+  for (const policy of spocPolicies) {
+    await prisma.complianceRegulation.upsert({
+      where: { code: policy.code },
+      update: { ...policy, status: ComplianceRegisterStatus.DRAFT },
+      create: {
+        ...policy,
+        type: RegulationType.POLICY,
+        jurisdiction: 'SPOC Operations - South Sudan',
+        regulator: 'Sudd Petroleum Operating Company (SPOC)',
+        effectiveDate: new Date('2026-08-21T00:00:00.000Z'),
+        status: ComplianceRegisterStatus.DRAFT,
+        createdById: administrator.id,
+      },
+    });
+  }
+
   const reportTemplates: Array<{ code: string; name: string; type: FormalReportType; description: string; allowedRoles: Role[]; sections: string[] }> = [
     { code: 'PMS-PROJECT', name: 'Project Performance Report', type: FormalReportType.PROJECT, description: 'Formal project delivery, finance, results, risk, compliance, supply-chain, and training report.', allowedRoles: [Role.ADMINISTRATOR, Role.PROJECT_MANAGER, Role.DEPARTMENT_HEAD], sections: ['Executive summary', 'Delivery progress', 'Results and KPIs', 'Financial performance', 'Risks and issues', 'Compliance', 'Supply chain', 'Workforce capacity', 'Recommendations'] },
     { code: 'PMS-QUARTERLY', name: 'Quarterly Portfolio Report', type: FormalReportType.QUARTERLY, description: 'Quarterly enterprise performance and exception report.', allowedRoles: [Role.ADMINISTRATOR, Role.ME_OFFICER, Role.DEPARTMENT_HEAD], sections: ['Executive summary', 'Portfolio progress', 'Quarterly results', 'Financial position', 'Compliance exceptions', 'Supplier performance', 'Workforce capacity', 'Management actions'] },
@@ -134,7 +168,7 @@ async function main() {
     });
   }
 
-  console.log(`Seeded administrator, ${spocSuppliers.length} SPOC suppliers, and ${reportTemplates.length} controlled report templates: ${email}`);
+  console.log(`Seeded administrator, ${spocSuppliers.length} SPOC suppliers, ${spocPolicies.length} SPOC policies, and ${reportTemplates.length} controlled report templates: ${email}`);
 }
 
 main()
