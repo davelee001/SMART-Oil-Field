@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Box, ThemeProvider } from '@mui/material';
 import { motion } from 'framer-motion';
 
@@ -181,6 +181,7 @@ const AppContent: React.FC = () => {
                                     </ProtectedRoute>
                                 }
                             />
+                            <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
                     </motion.div>
                 </Box>
