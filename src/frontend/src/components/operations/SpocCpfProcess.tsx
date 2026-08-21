@@ -77,15 +77,21 @@ const SpocCpfProcess: React.FC = () => (
 
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
             <Typography variant="caption" fontWeight={800} color="text.secondary">FWKO THREE-PHASE SEPARATION</Typography>
-            <Stack direction={{ xs: 'column', md: 'row' }} alignItems="center" justifyContent="center" gap={1} sx={{ mt: 1.5 }}>
-                <Chip icon={<WaterDrop />} label="Water - Outer tank" color="info" variant="outlined" />
-                <Chip label="Crude - Inner tank" sx={{ bgcolor: '#f2c94c', color: '#29230d' }} />
-                <Chip icon={<Air />} label="Gas - Degassed from top" variant="outlined" />
-                <ArrowForward color="action" />
-                <Chip icon={<LocalFireDepartment />} label={CPF_PROCESS_EQUIPMENT.fwkoSeparation.gasHandling.destination} color="warning" variant="outlined" />
-                <ArrowForward color="action" />
-                <Chip icon={<LocalFireDepartment />} label="Controlled flaring" color="error" variant="outlined" />
-            </Stack>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }, gap: 1, mt: 1.5 }}>
+                <Chip icon={<WaterDrop />} label="Water - Outer tank" color="info" variant="outlined" sx={{ width: '100%', height: 'auto', '& .MuiChip-label': { py: 0.75, whiteSpace: 'normal' } }} />
+                <Chip label="Crude - Inner tank" sx={{ width: '100%', height: 'auto', bgcolor: '#f2c94c', color: '#29230d', '& .MuiChip-label': { py: 0.75, whiteSpace: 'normal' } }} />
+                <Chip icon={<Air />} label="Gas - Overhead outlet" variant="outlined" sx={{ width: '100%', height: 'auto', '& .MuiChip-label': { py: 0.75, whiteSpace: 'normal' } }} />
+            </Box>
+            <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="caption" fontWeight={800} color="text.secondary">GAS DISPOSAL ROUTE</Typography>
+                <Stack direction={{ xs: 'column', md: 'row' }} alignItems="center" justifyContent="center" gap={1} sx={{ mt: 1 }}>
+                    <Chip icon={<Air />} label="Degassed from FWKO top" variant="outlined" sx={{ width: { xs: '100%', md: 'auto' } }} />
+                    <ArrowForward color="action" sx={{ transform: { xs: 'rotate(90deg)', md: 'none' } }} />
+                    <Chip icon={<LocalFireDepartment />} label={CPF_PROCESS_EQUIPMENT.fwkoSeparation.gasHandling.destination} color="warning" variant="outlined" sx={{ width: { xs: '100%', md: 'auto' } }} />
+                    <ArrowForward color="action" sx={{ transform: { xs: 'rotate(90deg)', md: 'none' } }} />
+                    <Chip icon={<LocalFireDepartment />} label="Controlled flaring" color="error" variant="outlined" sx={{ width: { xs: '100%', md: 'auto' } }} />
+                </Stack>
+            </Box>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1.5 }}>
                 Gas is removed from the top of each FWKO, routed through the Flare Knock Out Drum, and flared to prevent direct release of unprocessed hydrocarbons and reduce atmospheric pollution risk.
             </Typography>
@@ -150,19 +156,24 @@ const SpocCpfProcess: React.FC = () => (
         </Alert>
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
             <Typography variant="caption" fontWeight={800} color="text.secondary">PRODUCED-WATER ROUTE</Typography>
-            <Stack direction={{ xs: 'column', lg: 'row' }} alignItems="center" justifyContent="center" gap={1}>
-                <Chip icon={<WaterDrop />} label="FWKO water lines" color="info" variant="outlined" />
-                <ArrowForward color="action" />
-                <Chip icon={<Science />} label="Reverse demulsifier injection" color="secondary" variant="outlined" />
-                <ArrowForward color="action" />
-                <Chip label="CPI 1 · In service" color="success" />
-                <ArrowForward color="action" />
-                <Chip label="CPI 1 Goose Neck · Level indication" variant="outlined" />
-                <ArrowForward color="action" />
-                <Chip label="IGF" color="info" />
-                <ArrowForward color="action" />
-                <Chip label="Produced-water pond" variant="outlined" />
-            </Stack>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(6, minmax(0, 1fr))' }, gap: 1, mt: 1 }}>
+                {[
+                    { label: 'FWKO water lines', icon: <WaterDrop fontSize="small" />, color: '#1677a8' },
+                    { label: 'Reverse demulsifier injection', icon: <Science fontSize="small" />, color: '#087f8c' },
+                    { label: 'CPI 1 - In service', color: '#2f7d59' },
+                    { label: 'CPI 1 Goose Neck - Level indication', color: '#596773' },
+                    { label: 'IGF', color: '#287da8' },
+                    { label: 'Produced-water pond', color: '#596773' },
+                ].map((step, index) => (
+                    <Box key={step.label} sx={{ minWidth: 0, minHeight: 78, p: 1.25, border: '1px solid', borderColor: 'divider', borderTop: '3px solid', borderTopColor: step.color, borderRadius: 1, bgcolor: 'background.default', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 1 }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={800}>STEP {index + 1}</Typography>
+                        <Stack direction="row" alignItems="center" gap={0.75} sx={{ minWidth: 0, color: step.color }}>
+                            {step.icon}
+                            <Typography variant="body2" fontWeight={800} sx={{ minWidth: 0, color: 'text.primary', overflowWrap: 'anywhere' }}>{step.label}</Typography>
+                        </Stack>
+                    </Box>
+                ))}
+            </Box>
             <Stack direction="row" justifyContent="center" flexWrap="wrap" useFlexGap gap={1} sx={{ mt: 2 }}>
                 {CPF_WATER_TREATMENT.cpiUnits.map((unit) => <Chip key={unit.id} size="small" label={`${unit.name}: ${unit.status === 'IN_SERVICE' ? 'In service' : 'Standby'}`} color={unit.status === 'IN_SERVICE' ? 'success' : 'default'} variant="outlined" />)}
             </Stack>
