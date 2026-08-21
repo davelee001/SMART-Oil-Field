@@ -4,7 +4,7 @@ import { apiRequest, ApiError, AppUser } from '../utils/auth';
 interface AuthContextValue {
     user: AppUser | null;
     loading: boolean;
-    login: (email: string, password: string) => Promise<AppUser>;
+    login: (identifier: string, password: string) => Promise<AppUser>;
     register: (name: string, email: string, password: string) => Promise<AppUser>;
     logout: () => Promise<void>;
     updateProfile: (input: { name: string; email: string; walletAddress: string | null }) => Promise<AppUser>;
@@ -31,9 +31,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => { void refresh(); }, [refresh]);
 
-    const login = async (email: string, password: string) => {
+    const login = async (identifier: string, password: string) => {
         const result = await apiRequest<{ user: AppUser }>('/api/auth/login', {
-            method: 'POST', body: JSON.stringify({ email, password }),
+            method: 'POST', body: JSON.stringify({ identifier, password }),
         });
         setUser(result.user);
         return result.user;
