@@ -27,8 +27,10 @@ import {
     Error,
     PictureAsPdf,
     TableChart,
+    SwapHoriz,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import { createWorkbook, saveWorkbook, styleWorksheet } from '../utils/excel';
@@ -242,6 +244,11 @@ const Dashboard: React.FC<{ operatorScope?: OperatorScope }> = ({ operatorScope 
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 1 }}>
+                            {user?.role === 'ADMINISTRATOR' && (
+                                <Button component={Link} to="/workspaces" size="small" variant="outlined" startIcon={<SwapHoriz />}>
+                                    Choose another workspace
+                                </Button>
+                            )}
                             <Chip label="Aptos Testnet: Connected" color="success" size="small" variant="outlined" />
                             <Chip label="IoT Gateway: 100ms" color="info" size="small" variant="outlined" />
                         </Box>
