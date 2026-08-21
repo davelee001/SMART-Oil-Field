@@ -34,6 +34,7 @@ export const ROLE_LABELS: Record<PmsRole, string> = {
 export interface AppUser {
     id: string;
     name: string;
+    username: string | null;
     email: string;
     department: string | null;
     role: PmsRole;
