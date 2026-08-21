@@ -1,5 +1,19 @@
 export type ComplianceTab = 'regulations' | 'obligations' | 'permits' | 'inspections' | 'findings' | 'workflow';
 export type ComplianceRecordKind = Exclude<ComplianceTab, 'workflow'> | 'actions';
+export const PERMIT_TO_WORK_TYPES = [
+    {
+        value: 'COLD_WORK_PERMIT',
+        name: 'Cold Work Permit (PTW)',
+        description: 'Controls cleaning, equipment work, and structure erection where the work does not involve flame, heat, sparks, or another ignition source.',
+        examples: ['Equipment cleaning', 'Non-sparking maintenance', 'Structure erection without hot work'],
+    },
+    {
+        value: 'HOT_WORK_PERMIT',
+        name: 'Hot Work Permit (PTW)',
+        description: 'Controls work involving flame, heat, sparks, or any activity capable of starting a fire.',
+        examples: ['Welding', 'Gas cutting', 'Grinding or other spark-producing work'],
+    },
+] as const;
 export interface ComplianceUser { id: string; name: string; email: string; role: string }
 export interface ComplianceProject { id: string; title: string; code: string; department: string; managerId: string }
 export interface ComplianceEvidence { id: string; name: string; url: string; mimeType: string | null; notes: string | null; uploadedBy: ComplianceUser; createdAt: string }
