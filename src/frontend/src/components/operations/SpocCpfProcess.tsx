@@ -3,7 +3,7 @@ import {
     Alert, Box, Chip, Grid, Paper, Stack, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Typography,
 } from '@mui/material';
-import { ArrowForward, DeviceThermostat, Science, Speed, Storage, Sensors, WaterDrop } from '@mui/icons-material';
+import { Air, ArrowForward, DeviceThermostat, Science, Speed, Storage, Sensors, WaterDrop } from '@mui/icons-material';
 import {
     CPF_INLET_RECORDS, CPF_PROCESS_EQUIPMENT, CPF_WATER_TREATMENT,
     FWKO_INTERFACE_POINTS, FWKO_OPERATING_REQUIREMENT,
@@ -47,6 +47,9 @@ const SpocCpfProcess: React.FC = () => (
                             <Chip size="small" icon={<WaterDrop />} label={tank.outlets[0]} color="info" variant="outlined" />
                             <Chip size="small" label={tank.outlets[1]} sx={{ bgcolor: '#f2c94c', color: '#29230d' }} />
                         </Stack>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+                            {tank.compartments[0].name}: {tank.compartments[0].phase} · {tank.compartments[1].name}: {tank.compartments[1].phase}
+                        </Typography>
                     </Paper>
                 </Grid>
             ))}
@@ -103,10 +106,14 @@ const SpocCpfProcess: React.FC = () => (
         </Paper>
 
         <Box sx={{ mt: 3, mb: 1.5 }}>
-            <Typography variant="subtitle1" fontWeight={800}>Produced-water treatment and recovered-oil route</Typography>
-            <Typography variant="body2" color="text.secondary">Reverse demulsifier is injected immediately after the FWKO water outlets before CPI separation.</Typography>
+            <Typography variant="subtitle1" fontWeight={800}>{CPF_WATER_TREATMENT.processName}</Typography>
+            <Typography variant="body2" color="text.secondary">From the FWKO produced-water outlet to the pond, the process removes remaining traces of crude before final water discharge.</Typography>
         </Box>
-        <Paper variant="outlined" sx={{ p: 2 }}>
+        <Alert severity="info" sx={{ mb: 2 }}>
+            Recovered crude is returned to the main header and FWKO so crude treatment can continue; only treated water is discharged to the pond.
+        </Alert>
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+            <Typography variant="caption" fontWeight={800} color="text.secondary">PRODUCED-WATER ROUTE</Typography>
             <Stack direction={{ xs: 'column', lg: 'row' }} alignItems="center" justifyContent="center" gap={1}>
                 <Chip icon={<WaterDrop />} label="FWKO water lines" color="info" variant="outlined" />
                 <ArrowForward color="action" />
@@ -114,14 +121,75 @@ const SpocCpfProcess: React.FC = () => (
                 <ArrowForward color="action" />
                 <Chip label="CPI 1 · In service" color="success" />
                 <ArrowForward color="action" />
-                <Chip label="Dry Oil Sump Pump" variant="outlined" />
+                <Chip label="CPI 1 Goose Neck · Level indication" variant="outlined" />
                 <ArrowForward color="action" />
-                <Chip label="Feed Pump" variant="outlined" />
+                <Chip label="IGF" color="info" />
+                <ArrowForward color="action" />
+                <Chip label="Produced-water pond" variant="outlined" />
             </Stack>
             <Stack direction="row" justifyContent="center" flexWrap="wrap" useFlexGap gap={1} sx={{ mt: 2 }}>
                 {CPF_WATER_TREATMENT.cpiUnits.map((unit) => <Chip key={unit.id} size="small" label={`${unit.name}: ${unit.status === 'IN_SERVICE' ? 'In service' : 'Standby'}`} color={unit.status === 'IN_SERVICE' ? 'success' : 'default'} variant="outlined" />)}
             </Stack>
+            <Grid container spacing={1} sx={{ mt: 1 }}>
+                {CPF_WATER_TREATMENT.cpiUnits.map((unit) => (
+                    <Grid item xs={12} md={4} key={unit.gooseNeck.id}>
+                        <Box sx={{ p: 1.25, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                            <Typography variant="body2" fontWeight={750}>{unit.name} Goose Neck</Typography>
+                            <Typography variant="caption" color="text.secondary">Produced-water outlet · Shows CPI water level · Routes to IGF</Typography>
+                        </Box>
+                    </Grid>
+                ))}
+            </Grid>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1.5 }}>{CPF_WATER_TREATMENT.gravitySeparation}</Typography>
         </Paper>
+
+        <Grid container spacing={2}>
+            <Grid item xs={12} lg={6}>
+                <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
+                    <Typography variant="caption" fontWeight={800} color="text.secondary">CPI CRUDE OUTLET</Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} alignItems="center" gap={1} sx={{ mt: 1.5 }}>
+                        <Chip label="CPI crude compartment" sx={{ bgcolor: '#f2c94c', color: '#29230d' }} />
+                        <ArrowForward color="action" />
+                        <Chip label="Dry Oil Sump Pump" variant="outlined" />
+                        <ArrowForward color="action" />
+                        <Chip label="Feed Pump" variant="outlined" />
+                    </Stack>
+                </Paper>
+            </Grid>
+            <Grid item xs={12} lg={6}>
+                <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
+                    <Typography variant="caption" fontWeight={800} color="text.secondary">IGF FINAL SEPARATION</Typography>
+                    <Stack direction="row" alignItems="center" gap={1} sx={{ mt: 1.5, flexWrap: 'wrap' }}>
+                        <Chip icon={<Air />} label={CPF_WATER_TREATMENT.igfUnits[0].blower.name} color="info" variant="outlined" />
+                        <Chip label="Water compartment" color="info" variant="outlined" />
+                        <Chip label="Crude compartment" sx={{ bgcolor: '#f2c94c', color: '#29230d' }} />
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>{CPF_WATER_TREATMENT.igfUnits[0].blower.service}.</Typography>
+                    <Stack direction="row" gap={1} sx={{ mt: 1.5, flexWrap: 'wrap' }}>
+                        {CPF_WATER_TREATMENT.igfUnits.map((unit) => <Chip key={unit.id} label={`${unit.name}: ${unit.status === 'IN_SERVICE' ? 'In service' : 'Damaged'}`} color={unit.status === 'IN_SERVICE' ? 'success' : 'error'} size="small" />)}
+                    </Stack>
+                </Paper>
+            </Grid>
+            <Grid item xs={12}>
+                <Alert severity="error">
+                    IGF 2 is damaged and requires repair and maintenance before production can be stepped up.
+                </Alert>
+            </Grid>
+            <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="caption" fontWeight={800} color="text.secondary">IGF RECOVERED-CRUDE RECYCLE</Typography>
+                    <Stack direction={{ xs: 'column', md: 'row' }} alignItems="center" justifyContent="center" gap={1} sx={{ mt: 1.5 }}>
+                        {CPF_WATER_TREATMENT.igfOilRecycle.map((item, index) => (
+                            <React.Fragment key={item.id}>
+                                {index > 0 && <ArrowForward color="action" />}
+                                <Chip label={item.name} variant={index === 0 ? 'filled' : 'outlined'} />
+                            </React.Fragment>
+                        ))}
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1.5 }}>{CPF_WATER_TREATMENT.treatmentOutcomes.recoveredCrude}.</Typography>
+                </Paper>
+            </Grid>
+        </Grid>
     </Box>
 );
 
