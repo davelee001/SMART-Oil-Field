@@ -126,6 +126,10 @@ Compliance Officers and Administrators control master records, verification, clo
 
 The compliance dashboard is available at `/compliance`; its protected API is mounted at `/api/compliance`, and the authenticated regulatory-register export is `GET /api/compliance/reports/register.csv`.
 
+The seeded SPOC compliance register includes `SPOC-POL-001` (SPOC Policy), `SPOC-HR-POL-001` (Human Resource Policy), and `SPOC-HSE-POL-001` (HSE Policy). These entries are classified as `POLICY` and remain in `DRAFT` status until their controlled revisions, owners, approvals, review dates, and authoritative effective dates are confirmed.
+
+Permit to Work (PTW) records use two controlled classifications. A `COLD_WORK_PERMIT` covers cleaning, non-sparking maintenance, and structure erection that does not involve flame, heat, sparks, or another ignition source. A `HOT_WORK_PERMIT` covers welding, gas cutting, grinding, and other work involving flame, heat, sparks, or a credible fire risk. The Compliance interface displays both definitions and requires users to select one when creating a PTW record.
+
 ## PMS Supply Chain and Supplier Performance (Phase 6)
 
 The `/supply-chain` workspace and `/api/supply-chain` API provide an oil-sector supplier register, upstream/midstream/downstream classification, qualification, contracts, purchase requests, delivery acceptance, secure evidence references, expiry alerts, workflow history, and supplier-performance scoring across quality, delivery, HSE, local content, and cost.
