@@ -35,6 +35,7 @@ import { motion } from 'framer-motion';
 import { Theme } from '@mui/material/styles';
 import { useAuth } from '../../contexts/AuthContext';
 import { PmsRole } from '../../utils/auth';
+import { operatorPath } from '../../data/operators';
 
 interface SidebarProps {
     open: boolean;
@@ -101,8 +102,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                         <ListItem disablePadding>
                             <ListItemButton
                                 component={Link}
-                                to={item.path}
-                                selected={location.pathname === item.path}
+                                to={item.path === '/workspaces' && user?.role !== 'ADMINISTRATOR' && user?.operatorScope ? operatorPath(user.operatorScope) : item.path}
+                                selected={item.path === '/workspaces' ? location.pathname.startsWith('/operations/') || location.pathname === '/workspaces' : location.pathname === item.path}
                                 sx={{
                                     borderLeft: '3px solid transparent',
                                     '&.Mui-selected': {
@@ -123,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                                 <ListItemIcon sx={{ color: 'primary.main', minWidth: 36 }}>
                                     {item.icon}
                                 </ListItemIcon>
-                                <ListItemText primary={item.text} />
+                                <ListItemText primary={item.path === '/workspaces' && user?.role !== 'ADMINISTRATOR' && user?.operatorScope ? `${user.operatorScope} Operations` : item.text} />
                             </ListItemButton>
                         </ListItem>
                     </motion.div>
