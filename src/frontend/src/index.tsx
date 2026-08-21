@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import App from './App';
 import { lightTheme } from './themes/theme';
 import { AuthProvider } from './contexts/AuthContext';
+import AppErrorBoundary from './components/common/AppErrorBoundary';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -28,9 +29,11 @@ root.render(
         <QueryClientProvider client={queryClient}>
             <ThemeProvider theme={lightTheme}>
                 <CssBaseline />
-                <AuthProvider>
-                    <App />
-                </AuthProvider>
+                <AppErrorBoundary>
+                    <AuthProvider>
+                        <App />
+                    </AuthProvider>
+                </AppErrorBoundary>
                 <ToastContainer
                     position="top-right"
                     autoClose={5000}
