@@ -7,6 +7,7 @@ import { readAccessToken, verifyAccessToken } from './jwt';
 export const publicUser = (user: User): SessionUser => ({
   id: user.id,
   name: user.name,
+  username: user.username,
   email: user.email,
   department: user.department,
   role: user.role as PmsRole,
