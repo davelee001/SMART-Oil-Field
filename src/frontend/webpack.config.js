@@ -6,6 +6,7 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'bundle.js',
+        publicPath: '/',
         clean: true,
     },
     resolve: {
@@ -50,7 +51,7 @@ module.exports = {
         compress: true,
         port: Number(process.env.PORT || 3001),
         hot: true,
-        historyApiFallback: true,
+        historyApiFallback: { disableDotRule: true },
         proxy: {
             '/api': {
                 target: 'http://localhost:4000',
