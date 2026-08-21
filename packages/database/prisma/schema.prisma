@@ -379,6 +379,7 @@ enum FormalReportStatus {
 model User {
   id                           String                      @id @default(uuid()) @db.Uuid
   name                         String
+  username                     String?                     @unique
   email                        String                      @unique
   department                   String?
   passwordHash                 String
