@@ -274,7 +274,7 @@ const Home: React.FC = () => {
                 px: { xs: 1.5, sm: 2.5, md: 4 },
                 py: 2.5,
                 color: (theme) => theme.palette.mode === 'dark' ? '#eef4f7' : '#172b3a',
-                backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#070a10' : '#e7ecef',
+                backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#070a10' : '#d8e0e5',
                 '& .MuiTypography-colorTextSecondary': {
                     color: (theme) => theme.palette.mode === 'dark' ? '#aebbc5' : '#5b6b78',
                 },
@@ -373,10 +373,10 @@ const Home: React.FC = () => {
                 sx={{
                     mb: 3,
                     p: { xs: 2, sm: 3 },
-                    borderRadius: 3,
+                    borderRadius: 2,
                     background: (theme) => theme.palette.mode === 'dark'
                         ? 'linear-gradient(135deg, #0b0f18 0%, #070a10 100%)'
-                        : '#f7f9fa',
+                        : '#e4e9ec',
                     border: '1px solid',
                     borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#cbd5dc',
                     borderLeft: '5px solid #f59e0b',
@@ -385,7 +385,7 @@ const Home: React.FC = () => {
                     alignItems: { xs: 'flex-start', md: 'center' },
                     justifyContent: 'space-between',
                     gap: 3,
-                    boxShadow: '0 15px 35px -15px rgba(0,0,0,0.1)'
+                    boxShadow: '0 12px 28px -18px rgba(15, 41, 66, 0.55)'
                 }}
             >
                 <Box>
@@ -409,19 +409,19 @@ const Home: React.FC = () => {
 
                 {/* Real-time system diagnostics KPIs */}
                 <Box sx={{ alignSelf: { xs: 'stretch', md: 'auto' }, display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' }, gap: 1 }}>
-                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 0, textAlign: 'center' }}>
+                    <Box sx={{ px: 2, py: 1, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(20, 31, 44, 0.9)' : '#bdc7ce', borderRadius: 1, border: '1px solid', borderColor: (theme) => theme.palette.mode === 'dark' ? '#273747' : '#aab6bf', minWidth: 0, textAlign: 'center' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>LIVE FLOW</Typography>
                         <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.flow.toLocaleString()} bbl/d</Typography>
                     </Box>
-                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 0, textAlign: 'center' }}>
+                    <Box sx={{ px: 2, py: 1, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(20, 31, 44, 0.9)' : '#bdc7ce', borderRadius: 1, border: '1px solid', borderColor: (theme) => theme.palette.mode === 'dark' ? '#273747' : '#aab6bf', minWidth: 0, textAlign: 'center' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>LINE PRESS</Typography>
                         <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.pressure} PSI</Typography>
                     </Box>
-                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 0, textAlign: 'center' }}>
+                    <Box sx={{ px: 2, py: 1, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(20, 31, 44, 0.9)' : '#bdc7ce', borderRadius: 1, border: '1px solid', borderColor: (theme) => theme.palette.mode === 'dark' ? '#273747' : '#aab6bf', minWidth: 0, textAlign: 'center' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>WELL TEMP</Typography>
                         <Typography variant="subtitle2" fontWeight={850} color="#06b6d4" className="font-mono">{scadaMetrics.temp} °F</Typography>
                     </Box>
-                    <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(10, 15, 29, 0.25)', borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 0, textAlign: 'center', position: 'relative' }}>
+                    <Box sx={{ px: 2, py: 1, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(20, 31, 44, 0.9)' : '#bdc7ce', borderRadius: 1, border: '1px solid', borderColor: (theme) => theme.palette.mode === 'dark' ? '#273747' : '#aab6bf', minWidth: 0, textAlign: 'center', position: 'relative' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.62rem', fontWeight: 800 }}>APTOS MOVE</Typography>
                         <Typography variant="subtitle2" fontWeight={850} color="#f59e0b" className="font-mono" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                             <Box component="span" sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#10b981', display: 'inline-block', animation: `${ledPulse} 1s infinite` }} />
@@ -437,9 +437,11 @@ const Home: React.FC = () => {
                 sx={{
                     mb: 3,
                     p: 2.5,
-                    borderRadius: 3,
-                    background: (theme) => theme.palette.mode === 'dark' ? '#18150f' : '#f5eddd',
-                    border: '1px dashed rgba(245, 158, 11, 0.2)',
+                    borderRadius: 2,
+                    background: (theme) => theme.palette.mode === 'dark' ? '#121820' : '#cfd7dc',
+                    border: '1px solid',
+                    borderColor: (theme) => theme.palette.mode === 'dark' ? '#2b333c' : '#b4c0c7',
+                    borderLeft: '4px solid #d89a2b',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -448,16 +450,16 @@ const Home: React.FC = () => {
                 }}
             >
                 <Box sx={{ textAlign: 'left' }}>
-                    <Chip label="REFINERY PROMOTIONS" size="small" sx={{ bgcolor: '#f59e0b', color: '#000', fontWeight: 900, mb: 1, height: 20, fontSize: '0.65rem' }} />
-                    <Typography variant="subtitle1" fontWeight={900} sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#fef08a' : '#65430b', fontSize: '1.05rem', mb: 0.2 }}>
-                        🔥 High-Season Discount Active: Receive 30% OFF Plan Subscriptions!
+                    <Chip label="COMMERCIAL ACCESS" size="small" sx={{ bgcolor: '#173f5f', color: '#fff', fontWeight: 800, mb: 1, height: 22, fontSize: '0.65rem' }} />
+                    <Typography variant="subtitle1" fontWeight={800} sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#f4f7fa' : '#172b3a', fontSize: '1rem', mb: 0.2 }}>
+                        Seasonal subscription rate: 30% reduction on eligible plans
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.78rem' }}>
                         Valid in March, August, and October on Aptos subscription renewals. Returning loyal users get an automatic 15% discount.
                     </Typography>
                 </Box>
-                <Button variant="contained" component={Link} to="/subscriptions" sx={{ bgcolor: '#f59e0b', color: '#000', fontWeight: 800, '&:hover': { bgcolor: '#d19830' } }}>
-                    Deploy Web3 Access
+                <Button variant="contained" component={Link} to="/subscriptions" sx={{ bgcolor: '#173f5f', color: '#fff', fontWeight: 800, '&:hover': { bgcolor: '#0f2942' } }}>
+                    View access plans
                 </Button>
             </Paper>
 
@@ -467,11 +469,11 @@ const Home: React.FC = () => {
                 sx={{
                     p: 3,
                     mb: 3,
-                    borderRadius: 3,
-                    background: (theme) => theme.palette.mode === 'dark' ? '#0a0e16' : '#f7f9fa',
+                    borderRadius: 2,
+                    background: (theme) => theme.palette.mode === 'dark' ? '#0a0e16' : '#e2e7ea',
                     border: '1px solid',
                     borderColor: 'divider',
-                    boxShadow: '0 8px 24px -10px rgba(0,0,0,0.1)'
+                    boxShadow: '0 8px 22px -16px rgba(15, 41, 66, 0.5)'
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
