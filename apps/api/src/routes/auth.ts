@@ -7,6 +7,12 @@ import { clearAccessTokenCookie, jwtConfiguration, setAccessTokenCookie, signAcc
 
 const router = Router();
 
+const loginSchema = z.object({
+  identifier: z.string().trim().min(3).max(254).optional(),
+  email: z.string().trim().max(254).optional(),
+  password: z.string().min(8).max(128),
+}).refine((value) => value.identifier || value.email, { message: 'Username or email is required' });
+
 const credentialsSchema = z.object({
   email: z.string().trim().email().transform((value) => value.toLowerCase()),
   password: z.string().min(12).max(128),
@@ -61,8 +67,11 @@ router.post('/register', async (req, res, next) => {
 
 router.post('/login', async (req, res, next) => {
   try {
-    const input = credentialsSchema.parse(req.body);
-    const user = await prisma.user.findUnique({ where: { email: input.email } });
+    const input = loginSchema.parse(req.body);
+    const identifier = (input.identifier || input.email!).toLowerCase();
+    const user = await prisma.user.findUnique({
+      where: identifier.includes('@') ? { email: identifier } : { username: identifier },
+    });
     if (!user || !user.isActive || !(await bcrypt.compare(input.password, user.passwordHash))) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
