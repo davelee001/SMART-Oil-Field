@@ -1,17 +1,18 @@
 import bcrypt from 'bcryptjs';
-import { FormalReportType, PrismaClient, ReportTemplateStatus, Role } from '@prisma/client';
+import { FormalReportType, OperatorScope, PrismaClient, ReportTemplateStatus, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const username = process.env.ADMIN_USERNAME?.trim().toLowerCase() || null;
   const password = process.env.ADMIN_PASSWORD;
 
   if (!email || !password) {
     throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD are required to seed the first administrator');
   }
-  if (password.length < 12) {
-    throw new Error('ADMIN_PASSWORD must contain at least 12 characters');
+  if (password.length < 8) {
+    throw new Error('ADMIN_PASSWORD must contain at least 8 characters');
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
@@ -20,6 +21,7 @@ async function main() {
     where: { email },
     update: {
       name: process.env.ADMIN_NAME || 'System Administrator',
+      username,
       passwordHash,
       role: Role.ADMINISTRATOR,
       operatorScope: null,
@@ -28,12 +30,52 @@ async function main() {
     },
     create: {
       name: process.env.ADMIN_NAME || 'System Administrator',
+      username,
       email,
       passwordHash,
       role: Role.ADMINISTRATOR,
       operatorScope: null,
     },
   });
+
+  const departmentalAccounts = [
+    { scope: OperatorScope.SPOC, username: process.env.SPOC_ADMIN_USERNAME, password: process.env.SPOC_ADMIN_PASSWORD, name: 'SPOC Departmental Administrator' },
+    { scope: OperatorScope.DPOC, username: process.env.DPOC_ADMIN_USERNAME, password: process.env.DPOC_ADMIN_PASSWORD, name: 'DPOC Departmental Administrator' },
+    { scope: OperatorScope.GPOC, username: process.env.GPOC_ADMIN_USERNAME, password: process.env.GPOC_ADMIN_PASSWORD, name: 'GPOC Departmental Administrator' },
+  ];
+
+  for (const account of departmentalAccounts) {
+    if (!account.username && !account.password) continue;
+    if (!account.username || !account.password) {
+      throw new Error(`${account.scope}_ADMIN_USERNAME and ${account.scope}_ADMIN_PASSWORD must be provided together`);
+    }
+    if (account.password.length < 8) throw new Error(`${account.scope}_ADMIN_PASSWORD must contain at least 8 characters`);
+
+    const accountUsername = account.username.trim().toLowerCase();
+    const accountEmail = `${accountUsername}@smart-oil-field.local`;
+    await prisma.user.upsert({
+      where: { username: accountUsername },
+      update: {
+        name: account.name,
+        email: accountEmail,
+        passwordHash: await bcrypt.hash(account.password, 12),
+        role: Role.DEPARTMENT_HEAD,
+        operatorScope: account.scope,
+        department: `${account.scope} Administration`,
+        isActive: true,
+        tokenVersion: { increment: 1 },
+      },
+      create: {
+        name: account.name,
+        username: accountUsername,
+        email: accountEmail,
+        passwordHash: await bcrypt.hash(account.password, 12),
+        role: Role.DEPARTMENT_HEAD,
+        operatorScope: account.scope,
+        department: `${account.scope} Administration`,
+      },
+    });
+  }
 
   const reportTemplates: Array<{ code: string; name: string; type: FormalReportType; description: string; allowedRoles: Role[]; sections: string[] }> = [
     { code: 'PMS-PROJECT', name: 'Project Performance Report', type: FormalReportType.PROJECT, description: 'Formal project delivery, finance, results, risk, compliance, supply-chain, and training report.', allowedRoles: [Role.ADMINISTRATOR, Role.PROJECT_MANAGER, Role.DEPARTMENT_HEAD], sections: ['Executive summary', 'Delivery progress', 'Results and KPIs', 'Financial performance', 'Risks and issues', 'Compliance', 'Supply chain', 'Workforce capacity', 'Recommendations'] },
