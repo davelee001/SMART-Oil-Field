@@ -41,13 +41,15 @@ Produced water continues from the CPI Goose Neck to the Induced Gas Flotation (I
 
 ### Operator workspaces and access
 
-Users can sign in with either a normalized username or email address. The main Administrator enters through `/workspaces`, chooses SPOC, DPOC, or GPOC, and can return to the selector from any operator dashboard. Departmental administrators bypass the selector and are sent directly to their assigned operator: SPOC users enter the yellow Tharjaath workspace, DPOC users enter the gray Paloch workspace, and GPOC users enter the light-blue Unity workspace. Route guards prevent departmental accounts from using another operator's workspace or the main Administrator's selector.
+Users can sign in with either a normalized username or email address. The main Administrator enters through `/workspaces`, chooses SPOC, DPOC, or GPOC, and can return to the selector from any operator dashboard. Departmental administrators bypass the selector and are sent directly to their assigned operator: SPOC users enter the yellow Tharjaath workspace, DPOC users enter the gray Paloch workspace, and GPOC users enter the light-blue Unity workspace. The SPOC homepage displays the operational area simply as `Tharjaath`, while the formal basin register retains the name `Tharjaath Basin`. Route guards prevent departmental accounts from using another operator's workspace or the main Administrator's selector.
 
 Operator assignment is controlled from `/admin/users`. Creating a non-administrator requires an `SPOC`, `DPOC`, or `GPOC` assignment; changing the assignment invalidates existing sessions. Direct workspace URLs are guarded in both the React router and the Express API. DPOC and GPOC currently display an empty operational state until their field and well records are supplied.
 
 ### Operations dashboard
 
 The primary React dashboard presents the three-basin management structure, a Block 5A field map, and the complete 55-well Tharjaath/Mala inventory. Operators can search and filter wells by field, pump type, status, gathering manifold, and CPF route. A standalone SCADA-oriented interface is also retained in `src/frontend/index.html` for the specialist operational service.
+
+The React application uses hash-based client routing so authenticated workspace URLs remain reload-safe on static hosts and development servers. Unknown routes return to the application entry point, a lightweight startup shell remains visible while JavaScript loads, and a top-level error boundary provides reload and homepage recovery actions instead of leaving a blank screen after an unexpected rendering failure.
 
 The seeded well topology is authoritative reference data, but the changing production rates, pressures, temperatures, alerts, and online/offline indicators currently shown by the dashboard are demonstration values. They must not be used for operational decisions until the frontend is connected to authenticated field telemetry and the target environment passes the production acceptance checks.
 
