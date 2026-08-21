@@ -33,13 +33,15 @@ The Tharjaath inventory contains 28 wells across `OGM1` to `OGM5`; Mala contains
 
 The Tharjaath CPF register contains seven inlet lines: `OGM1` through `OGM6`, plus `OGM Mala`. `OGM6` is registered as an inlet but has no wells assigned pending controlled source data. Each inlet line has a local pressure gauge, a local temperature gauge, and a temperature transmitter that sends the pipe temperature signal to the Distributed Control System (DCS). The inlet lines combine at the `CPF Main Header`, which supplies two Free Water Knock Out tanks: `FWKO 1` and `FWKO 2`.
 
-Each FWKO has one inlet, one water outlet, one crude outlet, and an 18-point interface scale. Readings `1-8` indicate water and permit water release; `9-10` identify the emulsion band and require monitoring; `11-18` indicate crude routing. Operators must take the interface reading from each FWKO twice daily and report it to the CPF Control Room.
+Each FWKO performs three-phase separation. Water collects in the outer tank and leaves through the produced-water outlet, crude collects in the inner tank and leaves through the crude outlet, and gas is removed from the vessel top. The gas passes through the Flare Knock Out Drum before controlled flaring, which prevents direct release of unprocessed hydrocarbon gas and reduces atmospheric pollution risk. Each FWKO also has an 18-point interface scale: readings `1-8` indicate water and permit water release, `9-10` identify the emulsion band and require monitoring, and `11-18` indicate crude routing. Operators must take the interface reading from each FWKO twice daily and report it to the CPF Control Room.
 
-Produced water receives reverse-demulsifier injection immediately downstream of the FWKO water outlet before entering the Corrugated Plate Interceptor (CPI). The CPF records three CPI units: `CPI 1` is in service, while `CPI 2` and `CPI 3` are on standby. Crude recovered by the active CPI is routed to the Dry Oil Sump Pump and then to the Feed Pump.
+The CPF exposes two treatment areas: Produced Water Treatment and Crude Oil Treatment. Produced water receives reverse-demulsifier injection immediately downstream of the FWKO water outlet before entering the Corrugated Plate Interceptor (CPI). The CPF records three CPI units: `CPI 1` is in service, while `CPI 2` and `CPI 3` are on standby. Each CPI separates water and crude into dedicated compartments and uses a Goose Neck outlet to indicate and route the produced-water level. Crude recovered by the CPI is routed to the Dry Oil Sump Pump and then to the Feed Pump.
+
+Produced water continues from the CPI Goose Neck to the Induced Gas Flotation (IGF) system for final oil removal. `IGF 1` is in service; `IGF 2` is damaged and requires repair before production can be stepped up. The IGF blower moves remaining crude from the water compartment into the crude compartment. Treated water is discharged to the produced-water pond, while recovered crude enters the IGF pit and is pumped back through the CPF Main Header to the FWKO for re-separation. Crude Oil Treatment remains marked as awaiting the next controlled process details.
 
 ### Operator workspaces and access
 
-Authenticated users enter through `/workspaces` and can open only the operating-company workspace assigned to their account. SPOC users enter the yellow Tharjaath workspace, DPOC users enter the gray Paloch workspace, and GPOC users enter the light-blue Unity workspace. Administrators can enter all three workspaces.
+Users can sign in with either a normalized username or email address. The main Administrator enters through `/workspaces`, chooses SPOC, DPOC, or GPOC, and can return to the selector from any operator dashboard. Departmental administrators bypass the selector and are sent directly to their assigned operator: SPOC users enter the yellow Tharjaath workspace, DPOC users enter the gray Paloch workspace, and GPOC users enter the light-blue Unity workspace. Route guards prevent departmental accounts from using another operator's workspace or the main Administrator's selector.
 
 Operator assignment is controlled from `/admin/users`. Creating a non-administrator requires an `SPOC`, `DPOC`, or `GPOC` assignment; changing the assignment invalidates existing sessions. Direct workspace URLs are guarded in both the React router and the Express API. DPOC and GPOC currently display an empty operational state until their field and well records are supplied.
 
@@ -81,7 +83,7 @@ Only Administrators can access `/admin/users` and `/api/admin/users` to create a
 
 ### PMS setup
 
-1. Copy `.env.example` to `.env` and set a unique `JWT_SECRET` of at least 64 characters, plus a strong `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Set `OPERATIONAL_API_URL` for a locally running PMS API and `DOCKER_OPERATIONAL_API_URL` for the Compose API when KPI connectors need telemetry or analytics data.
+1. Copy `.env.example` to `.env` and set a unique `JWT_SECRET` of at least 64 characters, plus `ADMIN_USERNAME`, `ADMIN_EMAIL`, and a strong `ADMIN_PASSWORD`. Optional `SPOC_ADMIN_*`, `DPOC_ADMIN_*`, and `GPOC_ADMIN_*` username/password pairs provision the three operator-scoped departmental accounts. Set `OPERATIONAL_API_URL` for a locally running specialist API and `DOCKER_OPERATIONAL_API_URL` for the Compose API when KPI connectors need telemetry or analytics data. Never commit populated credentials.
 2. Start PostgreSQL: `docker compose up -d postgres`.
 3. Install dependencies and generate Prisma: `npm install` then `npm run db:generate`.
 4. Set `DATABASE_URL`, then apply all PostgreSQL migrations with `npm run db:migrate` for development or `npm run db:migrate:deploy` in controlled environments.
@@ -131,6 +133,8 @@ The `/supply-chain` workspace and `/api/supply-chain` API provide an oil-sector 
 Supply Chain Officers and Administrators control suppliers, qualification decisions, contracts, and performance reviews. Project Managers and Department Heads can prepare procurement requests and record deliveries. Four-eyes controls prevent supplier registrants from deciding their own qualification and prevent requesters from approving their own purchase requests. Existing oil-batch movement and blockchain provenance remain unchanged specialist services; PMS projects can link to supplier contracts and requests without duplicating those records. See [docs/PMS_SUPPLY_CHAIN.md](docs/PMS_SUPPLY_CHAIN.md).
 
 The authenticated supplier CSV export is `GET /api/supply-chain/reports/suppliers.csv`.
+
+The seeded SPOC supplier register includes `Dietsmann` and `Serona` as manpower providers for operators, electricians, and maintenance personnel. `Guba` is recorded as operating from the Old Base Camp with personnel assigned to SPOC. These records start in `PENDING_QUALIFICATION` status so registration does not bypass the governed supplier qualification workflow.
 
 ## PMS KPI and Performance Engine (Phase 7)
 
