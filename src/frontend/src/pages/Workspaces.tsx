@@ -1,13 +1,16 @@
 import React from 'react';
 import { Alert, Box, Button, Card, CardContent, Chip, Container, Grid, Typography } from '@mui/material';
 import { ArrowForward, Business, LocationOn } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { OPERATOR_WORKSPACES } from '../data/operators';
+import { OPERATOR_WORKSPACES, operatorPath } from '../data/operators';
 
 const Workspaces: React.FC = () => {
     const { user } = useAuth();
     if (!user) return null;
+    if (user.role !== 'ADMINISTRATOR' && user.operatorScope) {
+        return <Navigate to={operatorPath(user.operatorScope)} replace />;
+    }
     const workspaces = Object.values(OPERATOR_WORKSPACES).filter(
         (workspace) => user.role === 'ADMINISTRATOR' || user.operatorScope === workspace.scope,
     );
@@ -15,9 +18,9 @@ const Workspaces: React.FC = () => {
     return (
         <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
             <Box sx={{ mb: 3 }}>
-                <Typography variant="h4" fontWeight={800}>Operations workspace</Typography>
+                <Typography variant="h4" fontWeight={800}>Choose an operations workspace</Typography>
                 <Typography color="text.secondary">
-                    Select the operator environment authorized for your account.
+                    Select SPOC, DPOC, or GPOC. You can return here later to change destinations.
                 </Typography>
             </Box>
             {workspaces.length === 0 ? (
